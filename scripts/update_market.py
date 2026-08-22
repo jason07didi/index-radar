@@ -4,47 +4,30 @@ from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import requests
 import pandas as pd
+import requests
 import yfinance as yf
 
 
 # =========================================================
-# INDEX RADAR Strategy 3.0
+# INDEX RADAR Strategy 3.1
 #
-# 核心逻辑：
-#
-# 1. 长期配置吸引力
-#    越低估/越深回撤 → 越值得长期关注
-#
-# 2. 市场温度
-#    越高 → 越不适合追涨
-#    越低 → 越值得关注分批配置
-#
-# 3. 短期技术状态
-#    MA / RSI / MACD / BOLL
-#    用于决定加仓节奏，而不是长期价值
-#
-# 4. 历史相似情境概率
-#    寻找历史上与当前状态相似的日期，
-#    统计未来20个交易日的表现
-#
-# 5. 宏观情绪
-#    VIX
-#    美国10年期国债收益率
+# 目标：
+# 1) 长期配置吸引力：回答“长期资金现在值不值得增加”
+# 2) 价格温度：回答“价格相对长期锚点热不热”
+# 3) 指数专属市场情绪：
+#    - 上证50：指数自身回撤 / 动量 / 波动率
+#    - 纳斯达克100：VXN + 美债 + 指数自身状态
+#    - 标普500：VIX + 美债 + 指数自身状态
+# 4) 短期技术：回答“什么时候分批动手”
+# 5) 历史相似情境：回答“未来20日历史上更常见哪条路径”
 #
 # 注意：
-# 当前长期配置吸引力仍属于“价格型代理指标”。
-# PE / PB / 盈利收益率等真正估值数据后续再接入。
+# 当前仍未接入 PE / PB / 盈利收益率等严格意义上的估值数据。
 # =========================================================
 
-
-# =========================================================
-# 美股指数
-# =========================================================
 
 US_INDICES = {
-
     "nasdaq100": {
         "name": "纳斯达克100",
         "symbol": "^NDX"
@@ -53,9 +36,51 @@ US_INDICES = {
     "sp500": {
         "name": "标普500",
         "symbol": "^GSPC"
-    }
-
+    },
 }
+
+
+# =========================================================
+# 通用工具
+# =========================================================
+
+def clamp(value, low=0, high=100):
+
+    return max(
+        low,
+        min(
+            high,
+            value
+        )
+    )
+
+
+def round_or_none(
+    value,
+    digits=2
+):
+
+    if (
+        value is None
+        or pd.isna(value)
+    ):
+        return None
+
+    return round(
+        float(value),
+        digits
+    )
+
+
+def now_shanghai():
+
+    return datetime.now(
+        ZoneInfo(
+            "Asia/Shanghai"
+        )
+    ).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
 
 # =========================================================
@@ -64,12 +89,13 @@ US_INDICES = {
 
 def calculate_indicators(df):
 
-    df = df.copy().sort_index()
+    df = (
+        df.copy()
+        .sort_index()
+    )
 
     close = df["Close"]
-
     high = df["High"]
-
     low = df["Low"]
 
 
@@ -83,13 +109,11 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     df["MA20"] = (
         close
         .rolling(20)
         .mean()
     )
-
 
     df["MA60"] = (
         close
@@ -97,8 +121,6 @@ def calculate_indicators(df):
         .mean()
     )
 
-
-    # 年线
     df["MA200"] = (
         close
         .rolling(200)
@@ -116,24 +138,20 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     boll_std = (
         close
         .rolling(20)
         .std(ddof=0)
     )
 
-
     df["BOLL_MID"] = (
         boll_mid
     )
-
 
     df["BOLL_UPPER"] = (
         boll_mid
         + 2 * boll_std
     )
-
 
     df["BOLL_LOWER"] = (
         boll_mid
@@ -143,7 +161,7 @@ def calculate_indicators(df):
 
     # =====================================================
     # RSI14
-    # Wilder方法
+    # Wilder
     # =====================================================
 
     delta = (
@@ -151,18 +169,15 @@ def calculate_indicators(df):
         .diff()
     )
 
-
     gain = (
         delta
         .clip(lower=0)
     )
 
-
     loss = (
         -delta
         .clip(upper=0)
     )
-
 
     avg_gain = (
         gain
@@ -174,7 +189,6 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     avg_loss = (
         loss
         .ewm(
@@ -185,22 +199,17 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     rs = (
         avg_gain
         / avg_loss
     )
 
-
     df["RSI14"] = (
-
         100
-        -
-        (
+        - (
             100
             / (1 + rs)
         )
-
     )
 
 
@@ -217,7 +226,6 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     ema26 = (
         close
         .ewm(
@@ -227,12 +235,10 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     df["DIF"] = (
         ema12
         - ema26
     )
-
 
     df["DEA"] = (
         df["DIF"]
@@ -243,40 +249,29 @@ def calculate_indicators(df):
         .mean()
     )
 
-
     df["MACD"] = (
-
         2
-        *
-        (
+        * (
             df["DIF"]
             - df["DEA"]
         )
-
     )
 
 
     # =====================================================
-    # 20 / 60 日收益率
+    # 收益率
     # =====================================================
 
     df["RET20"] = (
-
         close
         .pct_change(20)
-
         * 100
-
     )
 
-
     df["RET60"] = (
-
         close
         .pct_change(60)
-
         * 100
-
     )
 
 
@@ -289,17 +284,12 @@ def calculate_indicators(df):
         .pct_change()
     )
 
-
     df["VOL20"] = (
-
         daily_return
         .rolling(20)
         .std(ddof=0)
-
         * math.sqrt(252)
-
         * 100
-
     )
 
 
@@ -313,7 +303,6 @@ def calculate_indicators(df):
         .max()
     )
 
-
     df["LOW20"] = (
         low
         .rolling(20)
@@ -323,8 +312,6 @@ def calculate_indicators(df):
 
     # =====================================================
     # 52周区间
-    #
-    # 252个交易日
     # =====================================================
 
     df["HIGH252"] = (
@@ -335,7 +322,6 @@ def calculate_indicators(df):
         )
         .max()
     )
-
 
     df["LOW252"] = (
         low
@@ -348,95 +334,58 @@ def calculate_indicators(df):
 
 
     # =====================================================
-    # 距离52周高点的回撤
-    #
-    # 例如：
-    #
-    # -5  → 距离高点回撤5%
-    # -20 → 距离高点回撤20%
+    # 长期价格位置
     # =====================================================
 
     df["DRAWDOWN_52W"] = (
-
         (
             close
             / df["HIGH252"]
         )
-
         - 1
-
     ) * 100
 
-
-    # =====================================================
-    # 价格相对于均线的偏离
-    # =====================================================
-
     df["DEV_MA20"] = (
-
         (
             close
             / df["MA20"]
         )
-
         - 1
-
     ) * 100
 
-
     df["DEV_MA60"] = (
-
         (
             close
             / df["MA60"]
         )
-
         - 1
-
     ) * 100
 
-
     df["DEV_MA200"] = (
-
         (
             close
             / df["MA200"]
         )
-
         - 1
-
     ) * 100
 
 
     # =====================================================
     # MACD标准化
-    #
-    # 不同指数点位差异很大，
-    # 用价格标准化后用于历史相似度匹配
+    # 用于不同指数之间的历史状态匹配
     # =====================================================
 
     df["MACD_NORM"] = (
-
         df["MACD"]
         / close
         * 100
-
     )
-
 
     return df
 
 
 # =========================================================
 # 短期技术评分
-#
-# 技术强 ≠ 长期值得追涨
-#
-# 它以后主要用来判断：
-#
-# 是否企稳
-# 是否开始修复
-# 加仓是否需要等待确认
 # =========================================================
 
 def calculate_technical_score(latest):
@@ -445,65 +394,50 @@ def calculate_technical_score(latest):
         latest["Close"]
     )
 
-
     ma5 = float(
         latest["MA5"]
     )
-
 
     ma20 = float(
         latest["MA20"]
     )
 
-
     ma60 = float(
         latest["MA60"]
     )
-
 
     boll_mid = float(
         latest["BOLL_MID"]
     )
 
-
     boll_upper = float(
         latest["BOLL_UPPER"]
     )
-
 
     boll_lower = float(
         latest["BOLL_LOWER"]
     )
 
-
     rsi = float(
         latest["RSI14"]
     )
-
 
     dif = float(
         latest["DIF"]
     )
 
-
     dea = float(
         latest["DEA"]
     )
-
 
     macd = float(
         latest["MACD"]
     )
 
-
     score = 50
 
     reasons = []
 
-
-    # =====================================================
-    # MA20
-    # =====================================================
 
     if close > ma20:
 
@@ -512,7 +446,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "指数位于MA20上方"
         )
-
 
     else:
 
@@ -523,10 +456,6 @@ def calculate_technical_score(latest):
         )
 
 
-    # =====================================================
-    # MA60
-    # =====================================================
-
     if close > ma60:
 
         score += 10
@@ -534,7 +463,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "指数位于MA60上方"
         )
-
 
     else:
 
@@ -545,10 +473,6 @@ def calculate_technical_score(latest):
         )
 
 
-    # =====================================================
-    # MA5 / MA20
-    # =====================================================
-
     if ma5 > ma20:
 
         score += 5
@@ -556,7 +480,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "MA5位于MA20上方"
         )
-
 
     else:
 
@@ -567,10 +490,6 @@ def calculate_technical_score(latest):
         )
 
 
-    # =====================================================
-    # MA20 / MA60
-    # =====================================================
-
     if ma20 > ma60:
 
         score += 7
@@ -578,7 +497,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "MA20位于MA60上方"
         )
-
 
     else:
 
@@ -589,10 +507,6 @@ def calculate_technical_score(latest):
         )
 
 
-    # =====================================================
-    # MACD
-    # =====================================================
-
     if dif > dea:
 
         score += 6
@@ -600,7 +514,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "MACD保持多头结构"
         )
-
 
     else:
 
@@ -615,15 +528,10 @@ def calculate_technical_score(latest):
 
         score += 4
 
-
     else:
 
         score -= 4
 
-
-    # =====================================================
-    # RSI
-    # =====================================================
 
     if 50 <= rsi <= 70:
 
@@ -633,7 +541,6 @@ def calculate_technical_score(latest):
             "RSI处于偏强区间"
         )
 
-
     elif 40 <= rsi < 50:
 
         score -= 2
@@ -641,7 +548,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "RSI动能偏弱"
         )
-
 
     elif 30 <= rsi < 40:
 
@@ -651,7 +557,6 @@ def calculate_technical_score(latest):
             "RSI处于弱势区间"
         )
 
-
     elif rsi < 30:
 
         score -= 8
@@ -660,7 +565,6 @@ def calculate_technical_score(latest):
             "RSI进入超卖区"
         )
 
-
     elif 70 < rsi <= 75:
 
         score += 2
@@ -668,7 +572,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "RSI处于强势区域"
         )
-
 
     elif rsi > 75:
 
@@ -679,10 +582,6 @@ def calculate_technical_score(latest):
         )
 
 
-    # =====================================================
-    # BOLL
-    # =====================================================
-
     if close > boll_mid:
 
         score += 5
@@ -690,7 +589,6 @@ def calculate_technical_score(latest):
         reasons.append(
             "指数运行于BOLL中轨上方"
         )
-
 
     else:
 
@@ -709,7 +607,6 @@ def calculate_technical_score(latest):
             "指数接近或跌破BOLL下轨"
         )
 
-
     elif close >= boll_upper:
 
         score -= 3
@@ -720,22 +617,9 @@ def calculate_technical_score(latest):
 
 
     score = int(
-
         round(
-
-            max(
-
-                0,
-
-                min(
-                    100,
-                    score
-                )
-
-            )
-
+            clamp(score)
         )
-
     )
 
 
@@ -743,21 +627,17 @@ def calculate_technical_score(latest):
 
         state = "强势"
 
-
     elif score >= 65:
 
         state = "偏强"
-
 
     elif score >= 45:
 
         state = "中性"
 
-
     elif score >= 30:
 
         state = "偏弱"
-
 
     else:
 
@@ -780,38 +660,53 @@ def calculate_technical_score(latest):
 
 # =========================================================
 # 长期配置吸引力
-#
-# 这里与趋势策略相反：
-#
-# 涨得越高
-# → 不代表越值得加仓
-#
-# 回撤越深
-# 长期价格越合理
-# → 配置吸引力提高
-#
-# 当前尚未包含PE/PB等基本面估值。
 # =========================================================
+
+def allocation_action_label(score):
+
+    if score >= 80:
+
+        return "值得重点关注"
+
+    if score >= 65:
+
+        return "适合适度增强"
+
+    if score >= 45:
+
+        return "正常定投"
+
+    if score >= 30:
+
+        return "谨慎增加"
+
+    return "暂停额外加仓"
+
 
 def calculate_allocation_attractiveness(latest):
 
     drawdown = float(
-        latest["DRAWDOWN_52W"]
+        latest[
+            "DRAWDOWN_52W"
+        ]
     )
-
 
     dev200 = float(
-        latest["DEV_MA200"]
+        latest[
+            "DEV_MA200"
+        ]
     )
-
 
     rsi = float(
-        latest["RSI14"]
+        latest[
+            "RSI14"
+        ]
     )
 
-
     ret20 = float(
-        latest["RET20"]
+        latest[
+            "RET20"
+        ]
     )
 
 
@@ -821,7 +716,7 @@ def calculate_allocation_attractiveness(latest):
 
 
     # =====================================================
-    # 1. 52周回撤
+    # 52周回撤
     # =====================================================
 
     if drawdown >= -3:
@@ -829,7 +724,7 @@ def calculate_allocation_attractiveness(latest):
         score -= 12
 
         reasons.append(
-            "价格接近52周高位，安全边际偏低"
+            "价格接近52周高位，价格安全边际偏低"
         )
 
 
@@ -879,7 +774,7 @@ def calculate_allocation_attractiveness(latest):
 
 
     # =====================================================
-    # 2. MA200偏离
+    # MA200偏离
     # =====================================================
 
     if dev200 > 20:
@@ -946,9 +841,7 @@ def calculate_allocation_attractiveness(latest):
 
 
     # =====================================================
-    # 3. RSI
-    #
-    # 只赋较低权重
+    # RSI
     # =====================================================
 
     if rsi > 75:
@@ -980,7 +873,7 @@ def calculate_allocation_attractiveness(latest):
 
 
     # =====================================================
-    # 4. 20日涨跌
+    # 近20日涨跌
     # =====================================================
 
     if ret20 > 12:
@@ -1012,44 +905,31 @@ def calculate_allocation_attractiveness(latest):
 
 
     score = int(
-
         round(
-
-            max(
-
-                0,
-
-                min(
-                    100,
-                    score
-                )
-
-            )
-
+            clamp(score)
         )
-
     )
 
+
+    # -----------------------------------------------------
+    # 保留旧字段，兼容目前前端
+    # -----------------------------------------------------
 
     if score >= 80:
 
         state = "高吸引力"
 
-
     elif score >= 65:
 
         state = "较高吸引力"
-
 
     elif score >= 45:
 
         state = "中性"
 
-
     elif score >= 30:
 
         state = "偏低"
-
 
     else:
 
@@ -1064,6 +944,11 @@ def calculate_allocation_attractiveness(latest):
         "state":
             state,
 
+        "action_label":
+            allocation_action_label(
+                score
+            ),
+
         "reasons":
             reasons
 
@@ -1071,40 +956,61 @@ def calculate_allocation_attractiveness(latest):
 
 
 # =========================================================
-# 市场温度
+# 价格温度
 #
-# 0   = 极冷
-# 50  = 中性
-# 100 = 极热
+# 注意：
+# 这是“价格位置”，不是“市场情绪”。
 #
-# 对长期投资者：
-#
-# 热度越高
-# → 越不应该追涨
-#
-# 热度越低
-# → 越值得关注长期分批配置
+# 0   = 很冷
+# 50  = 平衡
+# 100 = 很热
 # =========================================================
+
+def temperature_label(score):
+
+    if score < 25:
+
+        return "明显偏冷"
+
+    if score < 40:
+
+        return "偏冷"
+
+    if score <= 60:
+
+        return "平衡"
+
+    if score < 75:
+
+        return "偏热"
+
+    return "明显过热"
+
 
 def calculate_market_temperature(latest):
 
     dev200 = float(
-        latest["DEV_MA200"]
+        latest[
+            "DEV_MA200"
+        ]
     )
-
 
     drawdown = float(
-        latest["DRAWDOWN_52W"]
+        latest[
+            "DRAWDOWN_52W"
+        ]
     )
-
 
     rsi = float(
-        latest["RSI14"]
+        latest[
+            "RSI14"
+        ]
     )
 
-
     ret20 = float(
-        latest["RET20"]
+        latest[
+            "RET20"
+        ]
     )
 
 
@@ -1112,33 +1018,28 @@ def calculate_market_temperature(latest):
 
 
     # =====================================================
-    # MA200
+    # 年线偏离
     # =====================================================
 
     if dev200 > 20:
 
         temperature += 20
 
-
     elif dev200 > 10:
 
         temperature += 12
-
 
     elif dev200 > 3:
 
         temperature += 6
 
-
     elif dev200 >= -5:
 
         temperature += 0
 
-
     elif dev200 >= -15:
 
         temperature -= 10
-
 
     else:
 
@@ -1146,33 +1047,28 @@ def calculate_market_temperature(latest):
 
 
     # =====================================================
-    # 回撤
+    # 52周回撤
     # =====================================================
 
     if drawdown >= -3:
 
         temperature += 15
 
-
     elif drawdown >= -8:
 
         temperature += 8
-
 
     elif drawdown >= -15:
 
         temperature += 0
 
-
     elif drawdown >= -25:
 
         temperature -= 10
 
-
     elif drawdown >= -35:
 
         temperature -= 17
-
 
     else:
 
@@ -1187,26 +1083,21 @@ def calculate_market_temperature(latest):
 
         temperature += 10
 
-
     elif rsi >= 65:
 
         temperature += 6
-
 
     elif rsi >= 55:
 
         temperature += 3
 
-
     elif rsi >= 45:
 
         temperature += 0
 
-
     elif rsi >= 35:
 
         temperature -= 4
-
 
     else:
 
@@ -1221,16 +1112,13 @@ def calculate_market_temperature(latest):
 
         temperature += 8
 
-
     elif ret20 > 6:
 
         temperature += 4
 
-
     elif ret20 < -12:
 
         temperature -= 8
-
 
     elif ret20 < -6:
 
@@ -1238,48 +1126,12 @@ def calculate_market_temperature(latest):
 
 
     temperature = int(
-
         round(
-
-            max(
-
-                0,
-
-                min(
-                    100,
-                    temperature
-                )
-
+            clamp(
+                temperature
             )
-
         )
-
     )
-
-
-    if temperature >= 80:
-
-        state = "过热"
-
-
-    elif temperature >= 65:
-
-        state = "偏热"
-
-
-    elif temperature >= 40:
-
-        state = "中性"
-
-
-    elif temperature >= 25:
-
-        state = "偏冷"
-
-
-    else:
-
-        state = "深冷"
 
 
     return {
@@ -1288,14 +1140,22 @@ def calculate_market_temperature(latest):
             temperature,
 
         "state":
-            state
+            temperature_label(
+                temperature
+            ),
+
+        "meaning":
+            (
+                "价格温度描述当前价格相对长期锚点是否偏热或偏冷。"
+                "对长期定投者而言，温度低通常意味着价格机会在改善，"
+                "但不等于短期已经见底。"
+            )
 
     }
 
 
 # =========================================================
-# 根据三种方向概率
-# 给出用户容易理解的路径名称
+# 历史相似情境
 # =========================================================
 
 def build_path_label(
@@ -1306,7 +1166,8 @@ def build_path_label(
 
     if (
         up_pct >= 45
-        and up_pct >= down_pct + 10
+        and
+        up_pct >= down_pct + 10
     ):
 
         return "偏强上行"
@@ -1314,7 +1175,8 @@ def build_path_label(
 
     if (
         down_pct >= 45
-        and down_pct >= up_pct + 10
+        and
+        down_pct >= up_pct + 10
     ):
 
         return "偏弱下行"
@@ -1322,21 +1184,13 @@ def build_path_label(
 
     if sideways_pct >= 40:
 
-        if (
-            up_pct
-            >= down_pct + 8
-        ):
+        if up_pct >= down_pct + 8:
 
             return "震荡偏强"
 
-
-        if (
-            down_pct
-            >= up_pct + 8
-        ):
+        if down_pct >= up_pct + 8:
 
             return "震荡偏弱"
-
 
         return "震荡整理"
 
@@ -1354,21 +1208,6 @@ def build_path_label(
     return "震荡整理"
 
 
-# =========================================================
-# 历史相似情境概率
-#
-# 当前定义：
-#
-# 未来20个交易日收益：
-#
-# > +3%  → 上涨
-# -3~+3% → 震荡
-# < -3%  → 下跌
-#
-# 这是历史条件频率，
-# 不是确定性预测。
-# =========================================================
-
 def calculate_historical_scenarios(
     df,
     horizon=20,
@@ -1380,10 +1219,6 @@ def calculate_historical_scenarios(
         df.iloc[-1]
     )
 
-
-    # =====================================================
-    # 用于寻找历史相似状态的指标
-    # =====================================================
 
     required_features = [
 
@@ -1407,7 +1242,9 @@ def calculate_historical_scenarios(
     for feature in required_features:
 
         if pd.isna(
-            current[feature]
+            current[
+                feature
+            ]
         ):
 
             return None
@@ -1417,7 +1254,9 @@ def calculate_historical_scenarios(
 
         feature:
             float(
-                current[feature]
+                current[
+                    feature
+                ]
             )
 
         for feature
@@ -1425,10 +1264,6 @@ def calculate_historical_scenarios(
 
     }
 
-
-    # =====================================================
-    # 相似度标准化尺度
-    # =====================================================
 
     scales = {
 
@@ -1458,26 +1293,12 @@ def calculate_historical_scenarios(
 
     candidates = []
 
-
-    # =====================================================
-    # 从拥有完整MA200之后开始
-    # =====================================================
-
     start_index = 252
 
-
-    # =====================================================
-    # 必须留下未来20日
-    # =====================================================
-
     end_index = (
-
         len(df)
-
         - horizon
-
         - 1
-
     )
 
 
@@ -1486,30 +1307,24 @@ def calculate_historical_scenarios(
         return None
 
 
-    # =====================================================
-    # 每隔3个交易日选择一个候选点
-    #
-    # 防止连续日期高度重复
-    # =====================================================
+    # -----------------------------------------------------
+    # 每隔3个交易日取一个候选点
+    # 减少相邻日期重复
+    # -----------------------------------------------------
 
     for i in range(
-
         start_index,
-
         end_index,
-
         3
-
     ):
 
         row = (
             df.iloc[i]
         )
 
+        distance_parts = []
 
         valid = True
-
-        distance_parts = []
 
 
         for feature in required_features:
@@ -1519,7 +1334,9 @@ def calculate_historical_scenarios(
             ]
 
 
-            if pd.isna(value):
+            if pd.isna(
+                value
+            ):
 
                 valid = False
 
@@ -1531,12 +1348,14 @@ def calculate_historical_scenarios(
                 (
                     float(value)
 
-                    - current_features[
+                    -
+                    current_features[
                         feature
                     ]
                 )
 
-                / scales[
+                /
+                scales[
                     feature
                 ]
 
@@ -1544,9 +1363,7 @@ def calculate_historical_scenarios(
 
 
             distance_parts.append(
-
                 difference ** 2
-
             )
 
 
@@ -1580,22 +1397,19 @@ def calculate_historical_scenarios(
         })
 
 
-    if len(candidates) < 30:
+    if len(
+        candidates
+    ) < 30:
 
         return None
 
 
-    # =====================================================
-    # 距离越小
-    # 越相似
-    # =====================================================
-
-    candidates = sorted(
-
-        candidates,
+    candidates.sort(
 
         key=lambda x:
-            x["distance"]
+            x[
+                "distance"
+            ]
 
     )
 
@@ -1634,15 +1448,10 @@ def calculate_historical_scenarios(
 
     weighted_return_sum = 0.0
 
-
     future_returns = []
 
     selected_distances = []
 
-
-    # =====================================================
-    # 分析历史相似日期之后20日
-    # =====================================================
 
     for candidate in selected:
 
@@ -1650,16 +1459,10 @@ def calculate_historical_scenarios(
             "index"
         ]
 
-
         distance = candidate[
             "distance"
         ]
 
-
-        # =================================================
-        # 相似度越高
-        # 权重越高
-        # =================================================
 
         weight = math.exp(
 
@@ -1688,7 +1491,9 @@ def calculate_historical_scenarios(
         ]
 
 
-        if len(future) < horizon:
+        if len(
+            future
+        ) < horizon:
 
             continue
 
@@ -1725,24 +1530,18 @@ def calculate_historical_scenarios(
 
 
         future_returns.append(
-
             future_return
-
         )
 
 
         selected_distances.append(
-
             distance
-
         )
 
 
         weighted_return_sum += (
-
             future_return
             * weight
-
         )
 
 
@@ -1752,30 +1551,18 @@ def calculate_historical_scenarios(
 
 
         sum_weight_squared += (
-
             weight ** 2
-
         )
 
 
-        # =================================================
-        # 三种方向
-        # =================================================
-
-        if (
-            future_return
-            > direction_threshold
-        ):
+        if future_return > direction_threshold:
 
             up_weight += (
                 weight
             )
 
 
-        elif (
-            future_return
-            < -direction_threshold
-        ):
+        elif future_return < -direction_threshold:
 
             down_weight += (
                 weight
@@ -1788,10 +1575,6 @@ def calculate_historical_scenarios(
                 weight
             )
 
-
-        # =================================================
-        # 当前历史状态对应的关键参考位
-        # =================================================
 
         current_ma20 = float(
 
@@ -1829,10 +1612,6 @@ def calculate_historical_scenarios(
         )
 
 
-        # =================================================
-        # 未来20日是否曾站上当前MA20
-        # =================================================
-
         if (
 
             future[
@@ -1847,10 +1626,6 @@ def calculate_historical_scenarios(
                 weight
             )
 
-
-        # =================================================
-        # 未来20日是否曾站上当前MA60
-        # =================================================
 
         if (
 
@@ -1867,44 +1642,28 @@ def calculate_historical_scenarios(
             )
 
 
-        # =================================================
-        # 未来最低 / 最高
-        # =================================================
-
-        future_low = float(
+        if float(
 
             future[
                 "Low"
             ]
             .min()
 
-        )
-
-
-        future_high = float(
-
-            future[
-                "High"
-            ]
-            .max()
-
-        )
-
-
-        if (
-            future_low
-            < current_low20
-        ):
+        ) < current_low20:
 
             break_low20_weight += (
                 weight
             )
 
 
-        if (
-            future_high
-            > current_high20
-        ):
+        if float(
+
+            future[
+                "High"
+            ]
+            .max()
+
+        ) > current_high20:
 
             break_high20_weight += (
                 weight
@@ -1916,22 +1675,14 @@ def calculate_historical_scenarios(
         return None
 
 
-    # =====================================================
-    # 权重转换为百分比
-    # =====================================================
-
     def pct(weight):
 
         return int(
-
             round(
-
                 weight
                 / total_weight
                 * 100
-
             )
-
         )
 
 
@@ -1949,46 +1700,27 @@ def calculate_historical_scenarios(
     )
 
 
-    # =====================================================
-    # 保证三者加起来严格等于100%
-    # =====================================================
-
-    sideways_pct = (
-
-        100
-
-        - up_pct
-
-        - down_pct
-
-    )
-
-
     sideways_pct = max(
 
         0,
 
-        sideways_pct
+        (
+            100
+            - up_pct
+            - down_pct
+        )
 
     )
 
-
-    # =====================================================
-    # 历史平均收益
-    # =====================================================
 
     weighted_avg_return = (
 
         weighted_return_sum
-
-        / total_weight
+        /
+        total_weight
 
     )
 
-
-    # =====================================================
-    # 历史中位数收益
-    # =====================================================
 
     median_return = float(
 
@@ -2000,56 +1732,46 @@ def calculate_historical_scenarios(
     )
 
 
-    # =====================================================
-    # 平均相似距离
-    # =====================================================
+    if selected_distances:
 
-    average_distance = (
+        average_distance = (
 
-        sum(
-            selected_distances
+            sum(
+                selected_distances
+            )
+
+            /
+            len(
+                selected_distances
+            )
+
         )
 
-        /
-        len(
-            selected_distances
-        )
+    else:
 
-    )
+        average_distance = 999
 
 
-    # =====================================================
-    # 有效样本量
-    #
-    # 比简单显示120个更合理。
-    # 因为某些样本权重非常低。
-    # =====================================================
+    if sum_weight_squared > 0:
 
-    effective_sample_size = (
+        effective_sample_size = (
 
-        (
             total_weight ** 2
-        )
 
-        /
-        sum_weight_squared
+        ) / sum_weight_squared
 
-        if sum_weight_squared > 0
+    else:
 
-        else 0
+        effective_sample_size = 0
 
-    )
-
-
-    # =====================================================
-    # 可信度
-    # =====================================================
 
     if (
 
         effective_sample_size >= 60
 
-        and average_distance <= 1.25
+        and
+
+        average_distance <= 1.25
 
     ):
 
@@ -2060,7 +1782,9 @@ def calculate_historical_scenarios(
 
         effective_sample_size >= 35
 
-        and average_distance <= 1.75
+        and
+
+        average_distance <= 1.75
 
     ):
 
@@ -2070,23 +1794,6 @@ def calculate_historical_scenarios(
     else:
 
         confidence = "较低"
-
-
-    # =====================================================
-    # 最可能路径
-    # =====================================================
-
-    path_label = (
-        build_path_label(
-
-            up_pct,
-
-            sideways_pct,
-
-            down_pct
-
-        )
-    )
 
 
     return {
@@ -2130,7 +1837,15 @@ def calculate_historical_scenarios(
             down_pct,
 
         "path_label":
-            path_label,
+            build_path_label(
+
+                up_pct,
+
+                sideways_pct,
+
+                down_pct
+
+            ),
 
         "average_return_pct":
             round(
@@ -2173,16 +1888,6 @@ def calculate_historical_scenarios(
 
 # =========================================================
 # 最近1年走势图
-#
-# 252个交易日
-#
-# 前端以后可以切换：
-#
-# 3个月
-# 6个月
-# 1年
-#
-# 不需要后台重新获取数据。
 # =========================================================
 
 def build_history(
@@ -2208,182 +1913,81 @@ def build_history(
                     "%Y-%m-%d"
                 ),
 
-
             "open":
-                round(
-                    float(
-                        row["Open"]
-                    ),
-                    2
+                round_or_none(
+                    row[
+                        "Open"
+                    ]
                 ),
-
 
             "high":
-                round(
-                    float(
-                        row["High"]
-                    ),
-                    2
+                round_or_none(
+                    row[
+                        "High"
+                    ]
                 ),
-
 
             "low":
-                round(
-                    float(
-                        row["Low"]
-                    ),
-                    2
+                round_or_none(
+                    row[
+                        "Low"
+                    ]
                 ),
-
 
             "close":
-                round(
-                    float(
-                        row["Close"]
-                    ),
-                    2
+                round_or_none(
+                    row[
+                        "Close"
+                    ]
                 ),
-
-
-            # =================================================
-            # MA5仍保留给后台/后续功能
-            # 但下一版图表默认不展示
-            # =================================================
 
             "ma5":
-                (
-
-                    round(
-                        float(
-                            row["MA5"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["MA5"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "MA5"
+                    ]
                 ),
-
 
             "ma20":
-                (
-
-                    round(
-                        float(
-                            row["MA20"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["MA20"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "MA20"
+                    ]
                 ),
-
 
             "ma60":
-                (
-
-                    round(
-                        float(
-                            row["MA60"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["MA60"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "MA60"
+                    ]
                 ),
-
-
-            # =================================================
-            # MA200 年线
-            # =================================================
 
             "ma200":
-                (
-
-                    round(
-                        float(
-                            row["MA200"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["MA200"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "MA200"
+                    ]
                 ),
-
 
             "boll_upper":
-                (
-
-                    round(
-                        float(
-                            row["BOLL_UPPER"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["BOLL_UPPER"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "BOLL_UPPER"
+                    ]
                 ),
-
 
             "boll_mid":
-                (
-
-                    round(
-                        float(
-                            row["BOLL_MID"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["BOLL_MID"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "BOLL_MID"
+                    ]
                 ),
 
-
             "boll_lower":
-                (
-
-                    round(
-                        float(
-                            row["BOLL_LOWER"]
-                        ),
-                        2
-                    )
-
-                    if pd.notna(
-                        row["BOLL_LOWER"]
-                    )
-
-                    else None
-
+                round_or_none(
+                    row[
+                        "BOLL_LOWER"
+                    ]
                 )
 
         })
@@ -2393,7 +1997,60 @@ def build_history(
 
 
 # =========================================================
-# 整理单个指数
+# 3年波动率历史分位
+# =========================================================
+
+def calculate_volatility_percentile_3y(df):
+
+    values = (
+
+        df[
+            "VOL20"
+        ]
+        .dropna()
+        .tail(756)
+
+    )
+
+
+    if len(
+        values
+    ) < 60:
+
+        return None
+
+
+    current = float(
+
+        values.iloc[-1]
+
+    )
+
+
+    percentile = float(
+
+        (
+            values
+            <= current
+        )
+        .mean()
+
+        * 100
+
+    )
+
+
+    return round(
+
+        percentile,
+
+        1
+
+    )
+
+
+# =========================================================
+# 单个指数基础结果
 # =========================================================
 
 def build_result(
@@ -2410,12 +2067,9 @@ def build_result(
     )
 
 
-    # =====================================================
-    # MA200 + 历史概率
-    # 至少需要320日
-    # =====================================================
-
-    if len(df) < 320:
+    if len(
+        df
+    ) < 320:
 
         raise ValueError(
 
@@ -2427,7 +2081,6 @@ def build_result(
     latest = (
         df.iloc[-1]
     )
-
 
     previous = (
         df.iloc[-2]
@@ -2458,7 +2111,9 @@ def build_result(
     for field in required_latest:
 
         if pd.isna(
-            latest[field]
+            latest[
+                field
+            ]
         ):
 
             raise ValueError(
@@ -2468,43 +2123,28 @@ def build_result(
             )
 
 
-    # =====================================================
-    # 三套判断
-    # =====================================================
-
     technical = (
-
         calculate_technical_score(
             latest
         )
-
     )
 
 
     attractiveness = (
-
         calculate_allocation_attractiveness(
             latest
         )
-
     )
 
 
     temperature = (
-
         calculate_market_temperature(
             latest
         )
-
     )
 
 
-    # =====================================================
-    # 未来20日历史条件概率
-    # =====================================================
-
     scenarios = (
-
         calculate_historical_scenarios(
 
             df,
@@ -2516,7 +2156,6 @@ def build_result(
             direction_threshold=3.0
 
         )
-
     )
 
 
@@ -2541,8 +2180,8 @@ def build_result(
     change = (
 
         close
-
-        - prev_close
+        -
+        prev_close
 
     )
 
@@ -2550,27 +2189,9 @@ def build_result(
     change_pct = (
 
         change
-
-        / prev_close
-
+        /
+        prev_close
         * 100
-
-    )
-
-
-    # =====================================================
-    # 最近252个交易日
-    # =====================================================
-
-    history = (
-
-        build_history(
-
-            df,
-
-            periods=252
-
-        )
 
     )
 
@@ -2627,35 +2248,31 @@ def build_result(
         # =================================================
 
         "ma5":
-            round(
-                float(
-                    latest["MA5"]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "MA5"
+                ]
             ),
 
         "ma20":
-            round(
-                float(
-                    latest["MA20"]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "MA20"
+                ]
             ),
 
         "ma60":
-            round(
-                float(
-                    latest["MA60"]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "MA60"
+                ]
             ),
 
         "ma200":
-            round(
-                float(
-                    latest["MA200"]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "MA200"
+                ]
             ),
 
 
@@ -2664,33 +2281,24 @@ def build_result(
         # =================================================
 
         "boll_upper":
-            round(
-                float(
-                    latest[
-                        "BOLL_UPPER"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "BOLL_UPPER"
+                ]
             ),
 
         "boll_mid":
-            round(
-                float(
-                    latest[
-                        "BOLL_MID"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "BOLL_MID"
+                ]
             ),
 
         "boll_lower":
-            round(
-                float(
-                    latest[
-                        "BOLL_LOWER"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "BOLL_LOWER"
+                ]
             ),
 
 
@@ -2699,148 +2307,109 @@ def build_result(
         # =================================================
 
         "rsi14":
-            round(
-                float(
-                    latest[
-                        "RSI14"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "RSI14"
+                ]
             ),
 
         "macd_dif":
-            round(
-                float(
-                    latest[
-                        "DIF"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "DIF"
+                ]
             ),
 
         "macd_dea":
-            round(
-                float(
-                    latest[
-                        "DEA"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "DEA"
+                ]
             ),
 
         "macd_hist":
-            round(
-                float(
-                    latest[
-                        "MACD"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "MACD"
+                ]
             ),
 
 
         # =================================================
-        # 20日位置
+        # 区间位置
         # =================================================
 
         "high20":
-            round(
-                float(
-                    latest[
-                        "HIGH20"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "HIGH20"
+                ]
             ),
 
         "low20":
-            round(
-                float(
-                    latest[
-                        "LOW20"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "LOW20"
+                ]
             ),
 
-
-        # =================================================
-        # 52周位置
-        # =================================================
-
         "high52w":
-            round(
-                float(
-                    latest[
-                        "HIGH252"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "HIGH252"
+                ]
             ),
 
         "low52w":
-            round(
-                float(
-                    latest[
-                        "LOW252"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "LOW252"
+                ]
             ),
 
 
         # =================================================
-        # 长期价格状态
+        # 长期状态
         # =================================================
 
         "drawdown_52w_pct":
-            round(
-                float(
-                    latest[
-                        "DRAWDOWN_52W"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "DRAWDOWN_52W"
+                ]
             ),
 
         "dev_ma200_pct":
-            round(
-                float(
-                    latest[
-                        "DEV_MA200"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "DEV_MA200"
+                ]
             ),
 
         "return20_pct":
-            round(
-                float(
-                    latest[
-                        "RET20"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "RET20"
+                ]
             ),
 
         "return60_pct":
-            round(
-                float(
-                    latest[
-                        "RET60"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "RET60"
+                ]
             ),
 
         "volatility20":
-            round(
-                float(
-                    latest[
-                        "VOL20"
-                    ]
-                ),
-                2
+            round_or_none(
+                latest[
+                    "VOL20"
+                ]
+            ),
+
+        "volatility_percentile_3y":
+            calculate_volatility_percentile_3y(
+                df
             ),
 
 
@@ -2858,6 +2427,11 @@ def build_result(
                 "state"
             ],
 
+        "allocation_action_label":
+            attractiveness[
+                "action_label"
+            ],
+
         "allocation_reasons":
             attractiveness[
                 "reasons"
@@ -2865,7 +2439,7 @@ def build_result(
 
 
         # =================================================
-        # 市场温度
+        # 价格温度
         # =================================================
 
         "market_temperature":
@@ -2878,9 +2452,12 @@ def build_result(
                 "state"
             ],
 
+        "price_temperature":
+            temperature,
+
 
         # =================================================
-        # 短期技术
+        # 技术状态
         # =================================================
 
         "technical_score":
@@ -2900,10 +2477,7 @@ def build_result(
 
 
         # =================================================
-        # 兼容旧网页
-        #
-        # 下一步重构前端后，
-        # 这些字段可以不再作为核心展示
+        # 兼容旧前端
         # =================================================
 
         "market_score":
@@ -2923,7 +2497,7 @@ def build_result(
 
 
         # =================================================
-        # 未来20日概率
+        # 历史概率
         # =================================================
 
         "scenario_probability":
@@ -2936,27 +2510,26 @@ def build_result(
 
         "valuation_note":
             (
-                "当前长期配置吸引力为价格型代理评分，"
+                "当前长期配置吸引力仍属于价格型代理评分，"
                 "尚未接入PE、PB、盈利收益率等基本面估值数据。"
             ),
 
 
         # =================================================
-        # 最近1年走势图
+        # 1年历史
         # =================================================
 
         "history":
-            history
+            build_history(
+                df,
+                periods=252
+            )
 
     }
 
 
 # =========================================================
 # Yahoo Finance
-#
-# 纳指100 / 标普500
-#
-# 获取10年历史
 # =========================================================
 
 def get_yahoo_history(
@@ -2971,8 +2544,10 @@ def get_yahoo_history(
     )
 
 
-    ticker = yf.Ticker(
-        symbol
+    ticker = (
+        yf.Ticker(
+            symbol
+        )
     )
 
 
@@ -3005,27 +2580,12 @@ def get_yahoo_history(
             "Close"
         ]
 
-    ]
+    ].dropna()
 
 
-    df = df.dropna(
-
-        subset=[
-
-            "Open",
-
-            "High",
-
-            "Low",
-
-            "Close"
-
-        ]
-
-    )
-
-
-    if len(df) < 320:
+    if len(
+        df
+    ) < 320:
 
         raise ValueError(
 
@@ -3048,11 +2608,7 @@ def get_yahoo_history(
 
 
 # =========================================================
-# 腾讯财经
-#
-# 上证50
-#
-# 获取约1500个交易日
+# 腾讯财经：上证50
 # =========================================================
 
 def get_sse50_tencent():
@@ -3166,7 +2722,9 @@ def get_sse50_tencent():
     )
 
 
-    if len(klines) < 320:
+    if len(
+        klines
+    ) < 320:
 
         raise ValueError(
 
@@ -3223,7 +2781,9 @@ def get_sse50_tencent():
     )
 
 
-    if len(df) < 320:
+    if len(
+        df
+    ) < 320:
 
         raise ValueError(
 
@@ -3235,7 +2795,9 @@ def get_sse50_tencent():
     df["Date"] = (
 
         pd.to_datetime(
-            df["Date"]
+            df[
+                "Date"
+            ]
         )
 
     )
@@ -3267,21 +2829,12 @@ def get_sse50_tencent():
     )
 
 
-# =========================================================
-# 上证50
-#
-# 腾讯优先
-# Yahoo备用
-# =========================================================
-
 def get_sse50_data():
 
     try:
 
         return (
-
             get_sse50_tencent()
-
         )
 
 
@@ -3314,26 +2867,91 @@ def get_sse50_data():
         )
 
 
-        data["symbol"] = (
-
-            "000016.SH"
-
-        )
+        data[
+            "symbol"
+        ] = "000016.SH"
 
 
         return data
 
 
 # =========================================================
-# VIX
-#
-# 用于美国市场情绪
+# VIX / VXN
 # =========================================================
 
-def get_vix_context():
+def classify_volatility_index(
+    value,
+    kind
+):
 
-    ticker = yf.Ticker(
-        "^VIX"
+    # =====================================================
+    # VXN
+    # 纳斯达克100本身波动通常高于标普500
+    # 所以阈值与VIX不同
+    # =====================================================
+
+    if kind == "vxn":
+
+        if value < 16:
+
+            return "低波动"
+
+        if value < 20:
+
+            return "较低"
+
+        if value < 25:
+
+            return "正常"
+
+        if value < 30:
+
+            return "偏高"
+
+        if value < 40:
+
+            return "高波动"
+
+        return "极端波动"
+
+
+    # =====================================================
+    # VIX
+    # =====================================================
+
+    if value < 13:
+
+        return "低波动"
+
+    if value < 16:
+
+        return "较低"
+
+    if value < 20:
+
+        return "正常"
+
+    if value < 25:
+
+        return "偏高"
+
+    if value < 35:
+
+        return "高波动"
+
+    return "极端波动"
+
+
+def get_volatility_index_context(
+    symbol,
+    name,
+    kind
+):
+
+    ticker = (
+        yf.Ticker(
+            symbol
+        )
     )
 
 
@@ -3352,24 +2970,28 @@ def get_vix_context():
 
         raise ValueError(
 
-            "VIX未返回数据"
+            f"{name} 未返回数据"
 
         )
 
 
     close = (
 
-        df["Close"]
+        df[
+            "Close"
+        ]
         .dropna()
 
     )
 
 
-    if len(close) < 30:
+    if len(
+        close
+    ) < 60:
 
         raise ValueError(
 
-            "VIX历史数据不足"
+            f"{name} 历史数据不足"
 
         )
 
@@ -3388,11 +3010,7 @@ def get_vix_context():
     )
 
 
-    # =====================================================
-    # 当前VIX在过去5年的历史百分位
-    # =====================================================
-
-    percentile_5y = (
+    percentile_5y = float(
 
         (
             close
@@ -3405,62 +3023,13 @@ def get_vix_context():
     )
 
 
-    # =====================================================
-    # 情绪标签
-    # =====================================================
-
-    if current < 15:
-
-        state = "低波动"
-
-        sentiment = (
-            "市场情绪较平静"
-        )
-
-
-    elif current < 20:
-
-        state = "正常"
-
-        sentiment = (
-            "市场情绪总体正常"
-        )
-
-
-    elif current < 30:
-
-        state = "偏高"
-
-        sentiment = (
-            "市场担忧上升"
-        )
-
-
-    elif current < 40:
-
-        state = "恐慌"
-
-        sentiment = (
-            "市场处于明显恐慌区"
-        )
-
-
-    else:
-
-        state = "极端恐慌"
-
-        sentiment = (
-            "市场波动进入极端区间"
-        )
-
-
     return {
 
         "name":
-            "VIX",
+            name,
 
         "symbol":
-            "^VIX",
+            symbol,
 
         "source":
             "Yahoo Finance / Cboe",
@@ -3506,28 +3075,27 @@ def get_vix_context():
             ),
 
         "state":
-            state,
+            classify_volatility_index(
 
-        "sentiment":
-            sentiment
+                current,
+
+                kind
+
+            )
 
     }
 
 
 # =========================================================
 # 美国10年期国债收益率
-#
-# ^TNX 数值例如：
-#
-# 4.7
-#
-# 即约4.7%
 # =========================================================
 
 def get_us10y_context():
 
-    ticker = yf.Ticker(
-        "^TNX"
+    ticker = (
+        yf.Ticker(
+            "^TNX"
+        )
     )
 
 
@@ -3553,13 +3121,17 @@ def get_us10y_context():
 
     close = (
 
-        df["Close"]
+        df[
+            "Close"
+        ]
         .dropna()
 
     )
 
 
-    if len(close) < 22:
+    if len(
+        close
+    ) < 22:
 
         raise ValueError(
 
@@ -3588,12 +3160,6 @@ def get_us10y_context():
 
     )
 
-
-    # =====================================================
-    # 20日变化
-    #
-    # 1个百分点 = 100bp
-    # =====================================================
 
     change_20d_bp = (
 
@@ -3678,10 +3244,7 @@ def get_us10y_context():
 
 
 # =========================================================
-# 宏观数据
-#
-# 即使VIX或美债获取失败，
-# 也不能让三个指数更新失败。
+# 宏观 / 波动率数据
 # =========================================================
 
 def get_macro_context():
@@ -3689,17 +3252,7 @@ def get_macro_context():
     macro = {
 
         "updated_at":
-
-            datetime.now(
-
-                ZoneInfo(
-                    "Asia/Shanghai"
-                )
-
-            )
-            .strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            now_shanghai()
 
     }
 
@@ -3710,22 +3263,75 @@ def get_macro_context():
 
     try:
 
-        macro["vix"] = (
+        macro[
+            "vix"
+        ] = (
 
-            get_vix_context()
+            get_volatility_index_context(
+
+                "^VIX",
+
+                "Cboe VIX",
+
+                "vix"
+
+            )
 
         )
 
 
     except Exception as e:
 
-        macro["vix"] = {
+        macro[
+            "vix"
+        ] = {
 
             "name":
-                "VIX",
+                "Cboe VIX",
 
             "symbol":
                 "^VIX",
+
+            "error":
+                str(e)
+
+        }
+
+
+    # =====================================================
+    # VXN
+    # =====================================================
+
+    try:
+
+        macro[
+            "vxn"
+        ] = (
+
+            get_volatility_index_context(
+
+                "^VXN",
+
+                "Cboe Nasdaq-100 Volatility Index",
+
+                "vxn"
+
+            )
+
+        )
+
+
+    except Exception as e:
+
+        macro[
+            "vxn"
+        ] = {
+
+            "name":
+                "Cboe Nasdaq-100 Volatility Index",
+
+            "symbol":
+                "^VXN",
 
             "error":
                 str(e)
@@ -3739,7 +3345,9 @@ def get_macro_context():
 
     try:
 
-        macro["us10y"] = (
+        macro[
+            "us10y"
+        ] = (
 
             get_us10y_context()
 
@@ -3748,7 +3356,9 @@ def get_macro_context():
 
     except Exception as e:
 
-        macro["us10y"] = {
+        macro[
+            "us10y"
+        ] = {
 
             "name":
                 "美国10年期国债收益率",
@@ -3766,43 +3376,1442 @@ def get_macro_context():
 
 
 # =========================================================
+# 指数专属市场情绪
+#
+# score：
+#
+# 0   = 风险偏好非常低
+# 50  = 平衡
+# 100 = 风险偏好非常高
+#
+# 注意：
+# 市场情绪 ≠ 价格温度
+# =========================================================
+
+def sentiment_state(score):
+
+    if score < 25:
+
+        return "明显偏冷"
+
+    if score < 40:
+
+        return "偏冷"
+
+    if score <= 60:
+
+        return "平衡"
+
+    if score < 75:
+
+        return "偏热"
+
+    return "明显过热"
+
+
+def sentiment_investment_read(score):
+
+    if score < 25:
+
+        return (
+            "风险偏好明显下降。对长期定投者而言，"
+            "这通常意味着机会可能在改善，但短期仍可能继续波动。"
+        )
+
+
+    if score < 40:
+
+        return (
+            "市场情绪偏谨慎。长期资金可以提高关注度，"
+            "但仍应结合价格位置与技术企稳分批执行。"
+        )
+
+
+    if score <= 60:
+
+        return (
+            "情绪整体平衡，没有明显恐慌或亢奋。"
+            "更适合按照长期计划执行，而不是因情绪频繁调整。"
+        )
+
+
+    if score < 75:
+
+        return (
+            "风险偏好偏高，追涨意愿增强。"
+            "长期投资者应降低额外追价冲动。"
+        )
+
+
+    return (
+        "市场情绪明显偏热。即使短期趋势仍强，"
+        "也应警惕高位追涨和仓位过度集中。"
+    )
+
+
+# =========================================================
+# 通用价格动量情绪组件
+# =========================================================
+
+def apply_price_momentum_component(
+    score,
+    ret20,
+    components,
+    weight=1.0
+):
+
+    if ret20 >= 8:
+
+        score += (
+            16
+            * weight
+        )
+
+        components.append(
+
+            f"近20日上涨 {ret20:.1f}%，风险偏好升温"
+
+        )
+
+
+    elif ret20 >= 3:
+
+        score += (
+            8
+            * weight
+        )
+
+        components.append(
+
+            f"近20日上涨 {ret20:.1f}%，情绪偏积极"
+
+        )
+
+
+    elif ret20 <= -8:
+
+        score -= (
+            16
+            * weight
+        )
+
+        components.append(
+
+            (
+                f"近20日下跌 {abs(ret20):.1f}%，"
+                "市场情绪明显降温"
+            )
+
+        )
+
+
+    elif ret20 <= -3:
+
+        score -= (
+            8
+            * weight
+        )
+
+        components.append(
+
+            (
+                f"近20日下跌 {abs(ret20):.1f}%，"
+                "市场情绪偏谨慎"
+            )
+
+        )
+
+
+    else:
+
+        components.append(
+
+            "近20日涨跌幅有限，情绪动量接近平衡"
+
+        )
+
+
+    return score
+
+
+# =========================================================
+# 上证50情绪
+#
+# 第一版：
+# 自身价格 + 回撤 + MA200 + 波动率
+#
+# 不伪造北向、成交宽度等当前没有的数据。
+# =========================================================
+
+def calculate_sse50_sentiment(data):
+
+    score = 50.0
+
+    components = []
+
+
+    ret20 = float(
+        data[
+            "return20_pct"
+        ]
+    )
+
+
+    drawdown = float(
+        data[
+            "drawdown_52w_pct"
+        ]
+    )
+
+
+    dev200 = float(
+        data[
+            "dev_ma200_pct"
+        ]
+    )
+
+
+    vol_pct = (
+        data.get(
+            "volatility_percentile_3y"
+        )
+    )
+
+
+    rsi = float(
+        data[
+            "rsi14"
+        ]
+    )
+
+
+    score = (
+
+        apply_price_momentum_component(
+
+            score,
+
+            ret20,
+
+            components,
+
+            weight=1.0
+
+        )
+
+    )
+
+
+    # =====================================================
+    # 52周位置
+    # =====================================================
+
+    if drawdown >= -3:
+
+        score += 12
+
+        components.append(
+
+            "指数接近52周高位，风险偏好较强"
+
+        )
+
+
+    elif drawdown >= -8:
+
+        score += 6
+
+        components.append(
+
+            "指数距离52周高位较近"
+
+        )
+
+
+    elif drawdown <= -25:
+
+        score -= 12
+
+        components.append(
+
+            "指数处于较深回撤，市场情绪明显降温"
+
+        )
+
+
+    elif drawdown <= -15:
+
+        score -= 7
+
+        components.append(
+
+            "指数处于中等回撤区间"
+
+        )
+
+
+    # =====================================================
+    # MA200
+    # =====================================================
+
+    if dev200 >= 10:
+
+        score += 9
+
+        components.append(
+
+            "指数明显高于年线，市场交易情绪偏热"
+
+        )
+
+
+    elif dev200 >= 3:
+
+        score += 4
+
+
+    elif dev200 <= -15:
+
+        score -= 9
+
+        components.append(
+
+            "指数明显低于年线，风险偏好较弱"
+
+        )
+
+
+    elif dev200 <= -5:
+
+        score -= 4
+
+
+    # =====================================================
+    # 波动率历史分位
+    # =====================================================
+
+    if vol_pct is not None:
+
+        if (
+            vol_pct >= 80
+            and
+            ret20 < 0
+        ):
+
+            score -= 10
+
+            components.append(
+
+                (
+                    f"20日波动率处于近3年约 {vol_pct:.0f}% 分位，"
+                    "且价格下跌，风险厌恶增强"
+                )
+
+            )
+
+
+        elif (
+            vol_pct >= 80
+            and
+            ret20 >= 0
+        ):
+
+            score += 3
+
+            components.append(
+
+                (
+                    f"20日波动率处于近3年约 {vol_pct:.0f}% 分位，"
+                    "交易活跃度较高"
+                )
+
+            )
+
+
+        elif vol_pct <= 20:
+
+            score += 3
+
+            components.append(
+
+                (
+                    f"20日波动率处于近3年约 {vol_pct:.0f}% 分位，"
+                    "市场较平静"
+                )
+
+            )
+
+
+    # =====================================================
+    # RSI
+    # =====================================================
+
+    if rsi >= 70:
+
+        score += 5
+
+
+    elif rsi <= 35:
+
+        score -= 5
+
+
+    score = int(
+
+        round(
+            clamp(
+                score
+            )
+        )
+
+    )
+
+
+    return {
+
+        "label":
+            "A股蓝筹情绪",
+
+        "score":
+            score,
+
+        "state":
+            sentiment_state(
+                score
+            ),
+
+        "confidence":
+            "中等",
+
+        "method":
+            "上证50自身价格动量 + 回撤 + 年线位置 + 波动率",
+
+        "primary_indicator": {
+
+            "name":
+                "上证50自身情绪组合",
+
+            "value":
+                score,
+
+            "unit":
+                "分"
+
+        },
+
+        "components":
+            components,
+
+        "summary":
+            sentiment_investment_read(
+                score
+            ),
+
+        "note":
+            (
+                "上证50暂未使用VIX类指标。当前情绪评分来自指数自身价格与波动状态，"
+                "后续可继续加入成交额、市场宽度等A股专属数据。"
+            )
+
+    }
+
+
+# =========================================================
+# 纳斯达克100情绪
+#
+# 核心：
+# VXN
+#
+# 辅助：
+# 纳指自身趋势 + 波动率 + 10Y美债
+# =========================================================
+
+def calculate_nasdaq100_sentiment(
+    data,
+    macro
+):
+
+    score = 50.0
+
+    components = []
+
+
+    ret20 = float(
+        data[
+            "return20_pct"
+        ]
+    )
+
+
+    dev200 = float(
+        data[
+            "dev_ma200_pct"
+        ]
+    )
+
+
+    vol_pct = (
+        data.get(
+            "volatility_percentile_3y"
+        )
+    )
+
+
+    vxn = (
+        macro.get(
+            "vxn",
+            {}
+        )
+    )
+
+
+    us10y = (
+        macro.get(
+            "us10y",
+            {}
+        )
+    )
+
+
+    vxn_available = (
+
+        bool(vxn)
+
+        and
+
+        not vxn.get(
+            "error"
+        )
+
+    )
+
+
+    # =====================================================
+    # VXN
+    #
+    # VXN越高：
+    # 市场越恐慌
+    #
+    # 所以情绪热度分数越低
+    # =====================================================
+
+    if vxn_available:
+
+        value = float(
+            vxn[
+                "value"
+            ]
+        )
+
+
+        if value < 16:
+
+            score += 22
+
+
+        elif value < 20:
+
+            score += 14
+
+
+        elif value < 25:
+
+            score += 5
+
+
+        elif value < 30:
+
+            score -= 5
+
+
+        elif value < 40:
+
+            score -= 16
+
+
+        else:
+
+            score -= 25
+
+
+        percentile = float(
+
+            vxn.get(
+                "percentile_5y",
+                50
+            )
+
+        )
+
+
+        if percentile <= 20:
+
+            score += 7
+
+
+        elif percentile >= 80:
+
+            score -= 7
+
+
+        components.append(
+
+            (
+                f"VXN {value:.2f}，"
+                f"5年历史分位约 {percentile:.0f}%"
+            )
+
+        )
+
+
+    else:
+
+        components.append(
+
+            "VXN暂不可用，本次主要依据纳指自身价格与波动状态"
+
+        )
+
+
+    # =====================================================
+    # 纳指自身动量
+    # =====================================================
+
+    score = (
+
+        apply_price_momentum_component(
+
+            score,
+
+            ret20,
+
+            components,
+
+            weight=0.75
+
+        )
+
+    )
+
+
+    # =====================================================
+    # MA200
+    # =====================================================
+
+    if dev200 >= 15:
+
+        score += 8
+
+        components.append(
+
+            "纳指明显高于年线，科技股风险偏好偏高"
+
+        )
+
+
+    elif dev200 >= 5:
+
+        score += 4
+
+
+    elif dev200 <= -15:
+
+        score -= 8
+
+        components.append(
+
+            "纳指明显低于年线，科技股风险偏好偏弱"
+
+        )
+
+
+    elif dev200 <= -5:
+
+        score -= 4
+
+
+    # =====================================================
+    # 纳指自身波动率
+    # =====================================================
+
+    if (
+        vol_pct is not None
+        and
+        vol_pct >= 80
+        and
+        ret20 < 0
+    ):
+
+        score -= 5
+
+        components.append(
+
+            (
+                "纳指自身波动率处于近3年约 "
+                f"{vol_pct:.0f}% 分位"
+            )
+
+        )
+
+
+    # =====================================================
+    # 10年美债
+    #
+    # 纳指对利率变化给予较高权重
+    # =====================================================
+
+    if (
+        us10y
+        and
+        not us10y.get(
+            "error"
+        )
+    ):
+
+        bp = float(
+            us10y[
+                "change_20d_bp"
+            ]
+        )
+
+
+        if bp >= 25:
+
+            score -= 6
+
+            components.append(
+
+                (
+                    f"10年美债近20日上行 {bp:.0f}bp，"
+                    "对成长股情绪形成压力"
+                )
+
+            )
+
+
+        elif bp >= 10:
+
+            score -= 3
+
+            components.append(
+
+                (
+                    f"10年美债近20日温和上行 "
+                    f"{bp:.0f}bp"
+                )
+
+            )
+
+
+        elif bp <= -25:
+
+            score += 6
+
+            components.append(
+
+                (
+                    f"10年美债近20日下降 {abs(bp):.0f}bp，"
+                    "对成长股情绪较友好"
+                )
+
+            )
+
+
+        elif bp <= -10:
+
+            score += 3
+
+
+    score = int(
+
+        round(
+            clamp(
+                score
+            )
+        )
+
+    )
+
+
+    primary_indicator = {
+
+        "name":
+            "VXN",
+
+        "value":
+            (
+                vxn.get(
+                    "value"
+                )
+
+                if vxn_available
+
+                else None
+            ),
+
+        "unit":
+            "",
+
+        "state":
+            (
+                vxn.get(
+                    "state"
+                )
+
+                if vxn_available
+
+                else "暂缺"
+            ),
+
+        "percentile_5y":
+            (
+                vxn.get(
+                    "percentile_5y"
+                )
+
+                if vxn_available
+
+                else None
+            )
+
+    }
+
+
+    return {
+
+        "label":
+            "科技股情绪",
+
+        "score":
+            score,
+
+        "state":
+            sentiment_state(
+                score
+            ),
+
+        "confidence":
+            (
+                "较高"
+                if vxn_available
+                else "中等"
+            ),
+
+        "method":
+            "VXN + 纳指自身价格状态 + 10年美债",
+
+        "primary_indicator":
+            primary_indicator,
+
+        "components":
+            components,
+
+        "summary":
+            sentiment_investment_read(
+                score
+            ),
+
+        "note":
+            (
+                "纳斯达克100优先使用VXN，因为VXN对应Nasdaq-100期权隐含波动率，"
+                "比VIX更贴近科技成长股风险情绪。"
+            )
+
+    }
+
+
+# =========================================================
+# 标普500情绪
+#
+# 核心：
+# VIX
+#
+# 辅助：
+# 标普自身趋势 + 波动率 + 10Y美债
+# =========================================================
+
+def calculate_sp500_sentiment(
+    data,
+    macro
+):
+
+    score = 50.0
+
+    components = []
+
+
+    ret20 = float(
+        data[
+            "return20_pct"
+        ]
+    )
+
+
+    dev200 = float(
+        data[
+            "dev_ma200_pct"
+        ]
+    )
+
+
+    vol_pct = (
+        data.get(
+            "volatility_percentile_3y"
+        )
+    )
+
+
+    vix = (
+
+        macro.get(
+            "vix",
+            {}
+        )
+
+    )
+
+
+    us10y = (
+
+        macro.get(
+            "us10y",
+            {}
+        )
+
+    )
+
+
+    vix_available = (
+
+        bool(vix)
+
+        and
+
+        not vix.get(
+            "error"
+        )
+
+    )
+
+
+    # =====================================================
+    # VIX
+    # =====================================================
+
+    if vix_available:
+
+        value = float(
+            vix[
+                "value"
+            ]
+        )
+
+
+        if value < 13:
+
+            score += 22
+
+
+        elif value < 16:
+
+            score += 14
+
+
+        elif value < 20:
+
+            score += 5
+
+
+        elif value < 25:
+
+            score -= 5
+
+
+        elif value < 35:
+
+            score -= 16
+
+
+        else:
+
+            score -= 25
+
+
+        percentile = float(
+
+            vix.get(
+                "percentile_5y",
+                50
+            )
+
+        )
+
+
+        if percentile <= 20:
+
+            score += 7
+
+
+        elif percentile >= 80:
+
+            score -= 7
+
+
+        components.append(
+
+            (
+                f"VIX {value:.2f}，"
+                f"5年历史分位约 {percentile:.0f}%"
+            )
+
+        )
+
+
+    else:
+
+        components.append(
+
+            "VIX暂不可用，本次主要依据标普500自身价格与波动状态"
+
+        )
+
+
+    # =====================================================
+    # 标普自身动量
+    # =====================================================
+
+    score = (
+
+        apply_price_momentum_component(
+
+            score,
+
+            ret20,
+
+            components,
+
+            weight=0.70
+
+        )
+
+    )
+
+
+    # =====================================================
+    # MA200
+    # =====================================================
+
+    if dev200 >= 15:
+
+        score += 7
+
+        components.append(
+
+            "标普500明显高于年线，风险偏好较高"
+
+        )
+
+
+    elif dev200 >= 5:
+
+        score += 3
+
+
+    elif dev200 <= -15:
+
+        score -= 7
+
+        components.append(
+
+            "标普500明显低于年线，风险偏好较弱"
+
+        )
+
+
+    elif dev200 <= -5:
+
+        score -= 3
+
+
+    # =====================================================
+    # 自身波动率
+    # =====================================================
+
+    if (
+        vol_pct is not None
+        and
+        vol_pct >= 80
+        and
+        ret20 < 0
+    ):
+
+        score -= 4
+
+        components.append(
+
+            (
+                "标普自身波动率处于近3年约 "
+                f"{vol_pct:.0f}% 分位"
+            )
+
+        )
+
+
+    # =====================================================
+    # 10年美债
+    #
+    # 标普权重低于纳指
+    # =====================================================
+
+    if (
+        us10y
+        and
+        not us10y.get(
+            "error"
+        )
+    ):
+
+        bp = float(
+
+            us10y[
+                "change_20d_bp"
+            ]
+
+        )
+
+
+        if bp >= 25:
+
+            score -= 4
+
+            components.append(
+
+                (
+                    f"10年美债近20日上行 {bp:.0f}bp，"
+                    "估值折现压力上升"
+                )
+
+            )
+
+
+        elif bp >= 10:
+
+            score -= 2
+
+
+        elif bp <= -25:
+
+            score += 4
+
+            components.append(
+
+                (
+                    f"10年美债近20日下降 {abs(bp):.0f}bp，"
+                    "利率环境有所缓和"
+                )
+
+            )
+
+
+        elif bp <= -10:
+
+            score += 2
+
+
+    score = int(
+
+        round(
+            clamp(
+                score
+            )
+        )
+
+    )
+
+
+    primary_indicator = {
+
+        "name":
+            "VIX",
+
+        "value":
+            (
+                vix.get(
+                    "value"
+                )
+
+                if vix_available
+
+                else None
+            ),
+
+        "unit":
+            "",
+
+        "state":
+            (
+                vix.get(
+                    "state"
+                )
+
+                if vix_available
+
+                else "暂缺"
+            ),
+
+        "percentile_5y":
+            (
+                vix.get(
+                    "percentile_5y"
+                )
+
+                if vix_available
+
+                else None
+            )
+
+    }
+
+
+    return {
+
+        "label":
+            "美股大盘情绪",
+
+        "score":
+            score,
+
+        "state":
+            sentiment_state(
+                score
+            ),
+
+        "confidence":
+            (
+                "较高"
+                if vix_available
+                else "中等"
+            ),
+
+        "method":
+            "VIX + 标普500自身价格状态 + 10年美债",
+
+        "primary_indicator":
+            primary_indicator,
+
+        "components":
+            components,
+
+        "summary":
+            sentiment_investment_read(
+                score
+            ),
+
+        "note":
+            (
+                "标普500优先使用VIX，因为VIX基于S&P 500期权，"
+                "更贴近美国大盘股整体风险情绪。"
+            )
+
+    }
+
+
+# =========================================================
+# 把不同情绪模型挂载到不同指数
+# =========================================================
+
+def attach_index_sentiment(
+    index_key,
+    data,
+    macro
+):
+
+    if "error" in data:
+
+        return data
+
+
+    if index_key == "sse50":
+
+        data[
+            "sentiment"
+        ] = (
+
+            calculate_sse50_sentiment(
+                data
+            )
+
+        )
+
+
+    elif index_key == "nasdaq100":
+
+        data[
+            "sentiment"
+        ] = (
+
+            calculate_nasdaq100_sentiment(
+
+                data,
+
+                macro
+
+            )
+
+        )
+
+
+    elif index_key == "sp500":
+
+        data[
+            "sentiment"
+        ] = (
+
+            calculate_sp500_sentiment(
+
+                data,
+
+                macro
+
+            )
+
+        )
+
+
+    return data
+
+
+# =========================================================
+# 使用说明
+#
+# 下一步前端会把它做成：
+#
+# ⓘ 如何使用
+#
+# 的弹窗
+# =========================================================
+
+def build_guide():
+
+    return {
+
+        "allocation": {
+
+            "title":
+                "长期配置吸引力",
+
+            "question":
+                "现在是否值得增加长期资金？",
+
+            "meaning":
+                (
+                    "分数越高，代表从回撤、年线位置等价格条件看，"
+                    "长期配置吸引力越好。当前尚未加入PE/PB，"
+                    "因此不是严格估值。"
+                )
+
+        },
+
+
+        "price_temperature": {
+
+            "title":
+                "价格温度",
+
+            "question":
+                "当前价格相对长期锚点热不热？",
+
+            "meaning":
+                (
+                    "温度高代表价格偏热，额外加仓应更克制；"
+                    "温度低代表价格机会在改善，"
+                    "但不代表短期已经见底。"
+                )
+
+        },
+
+
+        "sentiment": {
+
+            "title":
+                "市场情绪",
+
+            "question":
+                "投资者现在更恐惧还是更亢奋？",
+
+            "meaning":
+                (
+                    "不同指数使用不同情绪来源："
+                    "上证50使用自身价格与波动状态，"
+                    "纳指100优先使用VXN，"
+                    "标普500优先使用VIX。"
+                )
+
+        },
+
+
+        "technical": {
+
+            "title":
+                "技术状态",
+
+            "question":
+                "现在是不是适合分批动手？",
+
+            "meaning":
+                (
+                    "MA20、MA60、RSI、MACD等只用于辅助加减仓时点，"
+                    "不直接代表长期价值。"
+                )
+
+        },
+
+
+        "probability": {
+
+            "title":
+                "未来20日历史条件概率",
+
+            "question":
+                "历史上类似状态之后更常见哪种路径？",
+
+            "meaning":
+                (
+                    "上涨、震荡、下跌百分比来自历史相似状态的加权频率，"
+                    "不是对未来结果的确定性预测。"
+                )
+
+        }
+
+    }
+
+
+# =========================================================
 # 主程序
 # =========================================================
 
 def main():
 
+    macro = (
+        get_macro_context()
+    )
+
+
     market_data = {
 
         "updated_at":
-
-            datetime.now(
-
-                ZoneInfo(
-                    "Asia/Shanghai"
-                )
-
-            )
-            .strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-
+            now_shanghai(),
 
         "strategy_version":
+            "3.1-per-index-sentiment",
 
-            "3.0-value-allocation-probability",
-
-
-        # =================================================
-        # 宏观市场情绪
-        # =================================================
+        "guide":
+            build_guide(),
 
         "macro":
-
-            get_macro_context(),
-
+            macro,
 
         "indices":
-
             {}
 
     }
@@ -3814,13 +4823,26 @@ def main():
 
     try:
 
+        data = (
+            get_sse50_data()
+        )
+
+
         market_data[
             "indices"
         ][
             "sse50"
         ] = (
 
-            get_sse50_data()
+            attach_index_sentiment(
+
+                "sse50",
+
+                data,
+
+                macro
+
+            )
 
         )
 
@@ -3864,11 +4886,7 @@ def main():
 
         try:
 
-            market_data[
-                "indices"
-            ][
-                key
-            ] = (
+            data = (
 
                 get_yahoo_history(
 
@@ -3879,6 +4897,25 @@ def main():
                     item[
                         "symbol"
                     ]
+
+                )
+
+            )
+
+
+            market_data[
+                "indices"
+            ][
+                key
+            ] = (
+
+                attach_index_sentiment(
+
+                    key,
+
+                    data,
+
+                    macro
 
                 )
 
@@ -3917,7 +4954,7 @@ def main():
 
 
     # =====================================================
-    # 保存 market.json
+    # 保存
     # =====================================================
 
     output_path = Path(
@@ -3954,7 +4991,9 @@ def main():
 
             ensure_ascii=False,
 
-            indent=2
+            indent=2,
+
+            allow_nan=False
 
         )
 
@@ -3972,14 +5011,14 @@ def main():
 
     print(
 
-        "INDEX RADAR Strategy 3.0 更新完成"
+        "INDEX RADAR Strategy 3.1 更新完成"
 
     )
 
 
     print(
 
-        "1年趋势 + MA200 + 历史概率 + VIX + US10Y"
+        "指数专属情绪：SSE50 / VXN / VIX"
 
     )
 
@@ -3991,44 +5030,73 @@ def main():
     )
 
 
-    # =====================================================
-    # 宏观摘要
-    # =====================================================
+    print(
 
-    macro = market_data.get(
-
-        "macro",
-
-        {}
+        "\n宏观数据："
 
     )
 
 
-    print(
+    for key in [
 
-        "\n宏观情绪："
+        "vix",
 
-    )
+        "vxn",
 
+        "us10y"
 
-    print(
+    ]:
 
-        json.dumps(
+        item = (
 
-            macro,
-
-            ensure_ascii=False,
-
-            indent=2
+            macro.get(
+                key,
+                {}
+            )
 
         )
 
-    )
+
+        if item.get(
+            "error"
+        ):
+
+            print(
+
+                f"{key}: ERROR {item['error']}"
+
+            )
 
 
-    # =====================================================
-    # 指数摘要
-    # =====================================================
+        else:
+
+            print(
+
+                f"{key}:",
+
+                item.get(
+
+                    "value",
+
+                    item.get(
+                        "yield_pct"
+                    )
+
+                ),
+
+                item.get(
+
+                    "state",
+
+                    item.get(
+                        "trend_20d",
+                        ""
+                    )
+
+                )
+
+            )
+
 
     for key, data in (
 
@@ -4062,19 +5130,7 @@ def main():
 
             )
 
-
             continue
-
-
-        print(
-
-            "close:",
-
-            data[
-                "close"
-            ]
-
-        )
 
 
         print(
@@ -4086,7 +5142,7 @@ def main():
             ],
 
             data[
-                "allocation_state"
+                "allocation_action_label"
             ]
 
         )
@@ -4094,7 +5150,7 @@ def main():
 
         print(
 
-            "temperature:",
+            "price temperature:",
 
             data[
                 "market_temperature"
@@ -4109,6 +5165,37 @@ def main():
 
         print(
 
+            "sentiment:",
+
+            data[
+                "sentiment"
+            ][
+                "score"
+            ],
+
+            data[
+                "sentiment"
+            ][
+                "state"
+            ],
+
+            (
+                "("
+                +
+                data[
+                    "sentiment"
+                ][
+                    "label"
+                ]
+                +
+                ")"
+            )
+
+        )
+
+
+        print(
+
             "technical:",
 
             data[
@@ -4117,39 +5204,6 @@ def main():
 
             data[
                 "technical_state"
-            ]
-
-        )
-
-
-        print(
-
-            "MA200:",
-
-            data[
-                "ma200"
-            ]
-
-        )
-
-
-        print(
-
-            "drawdown52w:",
-
-            data[
-                "drawdown_52w_pct"
-            ]
-
-        )
-
-
-        print(
-
-            "dev_ma200:",
-
-            data[
-                "dev_ma200_pct"
             ]
 
         )
@@ -4200,10 +5254,6 @@ def main():
 
             )
 
-
-# =========================================================
-# 程序入口
-# =========================================================
 
 if __name__ == "__main__":
 
