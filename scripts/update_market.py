@@ -7,9 +7,9 @@ import requests
 import yfinance as yf
 
 
-# =========================
+# =========================================================
 # 美股指数
-# =========================
+# =========================================================
 
 US_INDICES = {
     "nasdaq100": {
@@ -23,9 +23,10 @@ US_INDICES = {
 }
 
 
-# =========================
-# 获取 Yahoo Finance 数据
-# =========================
+# =========================================================
+# Yahoo Finance
+# 用于纳斯达克100、标普500
+# =========================================================
 
 def get_yahoo_data(name, symbol):
 
@@ -34,7 +35,7 @@ def get_yahoo_data(name, symbol):
     ticker = yf.Ticker(symbol)
 
     df = ticker.history(
-        period="10d",
+        period="1mo",
         interval="1d",
         auto_adjust=False
     )
@@ -64,37 +65,30 @@ def get_yahoo_data(name, symbol):
     }
 
 
-# =========================
-# 获取上证50
-# 东方财富接口
-# =========================
+# =========================================================
+# 腾讯财经
+# 用于上证50
+# =========================================================
 
-def get_sse50_data():
+def get_sse50_tencent():
 
     name = "上证50"
-    symbol = "000016"
+    code = "sh000016"
 
-    print(f"正在获取：{name} ({symbol})")
+    print(f"正在通过腾讯获取：{name} ({code})")
 
-    url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+    url = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
 
     params = {
-        "secid": "1.000016",
-        "fields1": "f1,f2,f3,f4,f5,f6",
-        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
-        "klt": "101",
-        "fqt": "0",
-        "beg": "0",
-        "end": "20500101",
-        "lmt": "10"
+        "param": f"{code},day,,,20,qfq"
     }
 
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 Chrome/124 Safari/537.36"
-        ),
-        "Referer": "https://quote.eastmoney.com/"
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        )
     }
 
     response = requests.get(
@@ -106,21 +100,32 @@ def get_sse50_data():
 
     response.raise_for_status()
 
-    data = response.json()
+    result = response.json()
 
-    if not data.get("data"):
-        raise ValueError("东方财富未返回上证50数据")
+    if "data" not in result:
+        raise ValueError("腾讯接口没有返回 data")
 
-    klines = data["data"].get("klines", [])
+    if code not in result["data"]:
+        raise ValueError("腾讯接口没有返回上证50")
+
+    stock_data = result["data"][code]
+
+    # 普通股票可能返回 qfqday
+    # 指数通常返回 day
+    klines = (
+        stock_data.get("qfqday")
+        or stock_data.get("day")
+        or []
+    )
 
     if len(klines) < 2:
-        raise ValueError("上证50历史数据不足")
+        raise ValueError("腾讯上证50历史数据不足")
 
-    # 格式：
-    # 日期,开盘,收盘,最高,最低,成交量,成交额,...
-    latest = klines[-1].split(",")
-    previous = klines[-2].split(",")
+    latest = klines[-1]
+    previous = klines[-2]
 
+    # 腾讯K线格式通常为：
+    # 日期、开盘、收盘、最高、最低、成交量...
     date = latest[0]
 
     close = float(latest[2])
@@ -140,13 +145,64 @@ def get_sse50_data():
     }
 
 
-# =========================
+# =========================================================
+# Yahoo 作为上证50备用数据源
+# =========================================================
+
+def get_sse50_yahoo_backup():
+
+    print("腾讯获取失败，尝试 Yahoo 备用源...")
+
+    return get_yahoo_data(
+        "上证50",
+        "000016.SS"
+    )
+
+
+# =========================================================
+# 上证50
+# 腾讯优先，Yahoo备用
+# =========================================================
+
+def get_sse50_data():
+
+    try:
+
+        data = get_sse50_tencent()
+
+        data["source"] = "Tencent"
+
+        return data
+
+    except Exception as tencent_error:
+
+        print(f"腾讯获取失败：{tencent_error}")
+
+        try:
+
+            data = get_sse50_yahoo_backup()
+
+            data["symbol"] = "000016.SH"
+            data["source"] = "Yahoo"
+
+            return data
+
+        except Exception as yahoo_error:
+
+            raise ValueError(
+                f"腾讯失败：{tencent_error}; "
+                f"Yahoo失败：{yahoo_error}"
+            )
+
+
+# =========================================================
 # 主程序
-# =========================
+# =========================================================
 
 def main():
 
     market_data = {
+
         "updated_at": datetime.now(
             ZoneInfo("Asia/Shanghai")
         ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -155,9 +211,9 @@ def main():
     }
 
 
-    # -------------------------
+    # -----------------------------------------------------
     # 上证50
-    # -------------------------
+    # -----------------------------------------------------
 
     try:
 
@@ -165,7 +221,7 @@ def main():
 
     except Exception as e:
 
-        print(f"上证50 获取失败：{e}")
+        print(f"上证50最终获取失败：{e}")
 
         market_data["indices"]["sse50"] = {
             "name": "上证50",
@@ -174,18 +230,22 @@ def main():
         }
 
 
-    # -------------------------
-    # 纳指100 / 标普500
-    # -------------------------
+    # -----------------------------------------------------
+    # 纳斯达克100 / 标普500
+    # -----------------------------------------------------
 
     for key, item in US_INDICES.items():
 
         try:
 
-            market_data["indices"][key] = get_yahoo_data(
+            data = get_yahoo_data(
                 item["name"],
                 item["symbol"]
             )
+
+            data["source"] = "Yahoo"
+
+            market_data["indices"][key] = data
 
         except Exception as e:
 
@@ -198,9 +258,9 @@ def main():
             }
 
 
-    # =========================
-    # 保存 JSON
-    # =========================
+    # =====================================================
+    # 写入 JSON
+    # =====================================================
 
     output_path = Path("data/market.json")
 
@@ -223,7 +283,9 @@ def main():
         )
 
 
-    print("\n行情数据已经写入：data/market.json")
+    print("\n======================================")
+    print("行情数据已经写入 data/market.json")
+    print("======================================")
 
     print(
         json.dumps(
