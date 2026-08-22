@@ -1,1 +1,22 @@
-
+{
+  "updated_at": "2026-08-22 16:25:00",
+  "indices": {
+    "sse50": {
+      "name": "上证50",
+      "symbol": "000016.SS",
+      "date": "2026-08-22",
+      "close": 0,
+      "previous_close": 0,
+      "change": 0,
+      "change_pct": 0
+    },
+    "nasdaq100": {
+      "name": "纳斯达克100",
+      "symbol": "^NDX"
+    },
+    "sp500": {
+      "name": "标普500",
+      "symbol": "^GSPC"
+    }
+  }
+}
