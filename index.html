@@ -1,1 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
 
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>指数策略雷达</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+    <!-- ==========================================
+         顶部
+    =========================================== -->
+
+    <header class="header">
+
+        <div>
+
+            <div class="brand">
+                INDEX RADAR
+            </div>
+
+            <h1>
+                指数策略雷达
+            </h1>
+
+            <p class="subtitle">
+                上证50 · 纳斯达克100 · 标普500
+            </p>
+
+        </div>
+
+        <div class="update-box">
+
+            <span>
+                数据更新
+            </span>
+
+            <strong id="updatedAt">
+                --
+            </strong>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ==========================================
+         指数切换
+    =========================================== -->
+
+    <nav class="index-tabs">
+
+        <button
+            class="index-tab active"
+            data-index="sse50"
+        >
+            上证50
+        </button>
+
+        <button
+            class="index-tab"
+            data-index="nasdaq100"
+        >
+            纳斯达克100
+        </button>
+
+        <button
+            class="index-tab"
+            data-index="sp500"
+        >
+            标普500
+        </button>
+
+    </nav>
+
+
+
+    <!-- ==========================================
+         今日概览
+    =========================================== -->
+
+    <section class="hero-card">
+
+        <div class="hero-top">
+
+            <div>
+
+                <div
+                    class="index-name"
+                    id="indexName"
+                >
+                    --
+                </div>
+
+                <div
+                    class="index-symbol"
+                    id="indexSymbol"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div
+                class="market-state"
+                id="marketState"
+            >
+                --
+            </div>
+
+        </div>
+
+
+        <div class="hero-main">
+
+            <div>
+
+                <span class="metric-label">
+                    最新收盘
+                </span>
+
+                <div
+                    class="price"
+                    id="closePrice"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <span class="metric-label">
+                    日涨跌
+                </span>
+
+                <div
+                    class="change"
+                    id="changePct"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <span class="metric-label">
+                    市场评分
+                </span>
+
+                <div class="score-box">
+
+                    <strong id="marketScore">
+                        --
+                    </strong>
+
+                    <span>
+                        / 100
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="score-track">
+
+            <div
+                class="score-progress"
+                id="scoreProgress"
+            ></div>
+
+        </div>
+
+
+        <div class="market-summary">
+
+            <strong>
+                今日判断
+            </strong>
+
+            <p id="marketSummary">
+                正在加载市场数据……
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         用户仓位
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    01
+                </span>
+
+                <h2>
+                    我的仓位
+                </h2>
+
+            </div>
+
+            <span class="section-desc">
+                数据仅保存在当前浏览器
+            </span>
+
+        </div>
+
+
+        <div class="position-card">
+
+            <div class="input-group">
+
+                <label for="positionInput">
+                    当前仓位
+                </label>
+
+                <div class="input-wrap">
+
+                    <input
+                        id="positionInput"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value="50"
+                    >
+
+                    <span>
+                        %
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label for="profitInput">
+                    当前持仓收益
+                </label>
+
+                <div class="input-wrap">
+
+                    <input
+                        id="profitInput"
+                        type="number"
+                        min="-100"
+                        max="1000"
+                        step="0.1"
+                        value="0"
+                    >
+
+                    <span>
+                        %
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label for="riskSelect">
+                    策略风格
+                </label>
+
+                <select id="riskSelect">
+
+                    <option value="conservative">
+                        保守
+                    </option>
+
+                    <option
+                        value="balanced"
+                        selected
+                    >
+                        均衡
+                    </option>
+
+                    <option value="aggressive">
+                        积极
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         个性化策略
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    02
+                </span>
+
+                <h2>
+                    仓位策略
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="strategy-card">
+
+            <div class="strategy-header">
+
+                <div>
+
+                    <span class="metric-label">
+                        当前参考动作
+                    </span>
+
+                    <div
+                        class="strategy-action"
+                        id="strategyAction"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="target-position">
+
+                    <span>
+                        参考仓位
+                    </span>
+
+                    <strong id="targetPosition">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <p
+                class="strategy-text"
+                id="strategyText"
+            >
+                --
+            </p>
+
+
+            <div
+                class="strategy-tags"
+                id="strategyTags"
+            ></div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         技术结构
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    03
+                </span>
+
+                <h2>
+                    技术结构
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="metrics-grid">
+
+            <div class="metric-card">
+
+                <span>
+                    MA5
+                </span>
+
+                <strong id="ma5">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    MA20
+                </span>
+
+                <strong id="ma20">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    MA60
+                </span>
+
+                <strong id="ma60">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    RSI14
+                </span>
+
+                <strong id="rsi14">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    MACD柱
+                </span>
+
+                <strong id="macdHist">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    BOLL中轨
+                </span>
+
+                <strong id="bollMid">
+                    --
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         60日结构图
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    04
+                </span>
+
+                <h2>
+                    60日结构
+                </h2>
+
+            </div>
+
+            <span class="section-desc">
+                收盘 · MA5 · MA20 · MA60
+            </span>
+
+        </div>
+
+
+        <div class="chart-card">
+
+            <canvas id="marketChart"></canvas>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         关键位置
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    05
+                </span>
+
+                <h2>
+                    四个关键位置
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="levels-grid">
+
+            <div class="level-card support">
+
+                <span>
+                    第一支撑
+                </span>
+
+                <strong id="support1">
+                    --
+                </strong>
+
+                <p>
+                    BOLL下轨
+                </p>
+
+            </div>
+
+
+            <div class="level-card support">
+
+                <span>
+                    第二支撑
+                </span>
+
+                <strong id="support2">
+                    --
+                </strong>
+
+                <p>
+                    近20日低点
+                </p>
+
+            </div>
+
+
+            <div class="level-card pressure">
+
+                <span>
+                    第一压力
+                </span>
+
+                <strong id="pressure1">
+                    --
+                </strong>
+
+                <p>
+                    MA20
+                </p>
+
+            </div>
+
+
+            <div class="level-card pressure">
+
+                <span>
+                    第二压力
+                </span>
+
+                <strong id="pressure2">
+                    --
+                </strong>
+
+                <p>
+                    近20日高点
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         判断依据
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    06
+                </span>
+
+                <h2>
+                    判断依据
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="reasons-card"
+            id="marketReasons"
+        >
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         情景推演
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    07
+                </span>
+
+                <h2>
+                    下一阶段推演
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="scenario-list"
+            id="scenarioList"
+        >
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         页脚
+    =========================================== -->
+
+    <footer>
+
+        <p>
+            数据来源：Tencent / Yahoo Finance
+        </p>
+
+        <p>
+            本页面仅用于技术分析、策略研究和个人记录，
+            不构成任何投资建议。
+        </p>
+
+    </footer>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
