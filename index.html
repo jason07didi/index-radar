@@ -12,22 +12,24 @@
 
     <meta
         name="theme-color"
-        content="#f5f5f7"
+        content="#f4f7fa"
     >
 
     <meta
         name="description"
-        content="上证50、纳斯达克100、标普500长期配置与定投策略雷达"
+        content="上证50、纳斯达克100、标普500长期配置、定投增强与历史情境分析"
     >
 
     <title>
         指数策略雷达 · Index Radar
     </title>
 
+
     <link
         rel="stylesheet"
         href="style.css"
     >
+
 
     <script
         src="https://cdn.jsdelivr.net/npm/chart.js"
@@ -48,34 +50,76 @@
 
     <header class="header">
 
+
         <div class="header-main">
 
-            <div class="brand">
-                INDEX RADAR
+            <div class="brand-row">
+
+                <div class="brand">
+                    INDEX RADAR
+                </div>
+
+
+                <span class="brand-version">
+                    LONG-TERM
+                </span>
+
             </div>
+
 
             <h1>
                 指数策略雷达
             </h1>
 
+
             <p class="subtitle">
-                长期配置 · 定投增强 · 历史情境推演
+                长期配置 · 定投增强 · 情绪观察 · 历史情境推演
             </p>
 
         </div>
 
 
-        <div class="update-box">
 
-            <span>
-                数据更新
-            </span>
+        <div class="header-actions">
 
-            <strong id="updatedAt">
-                --
-            </strong>
+
+            <!-- 使用说明 -->
+
+            <button
+                class="guide-button"
+                id="guideButton"
+                type="button"
+            >
+
+                <span class="guide-button-icon">
+                    ?
+                </span>
+
+                <span>
+                    如何使用
+                </span>
+
+            </button>
+
+
+
+            <!-- 更新时间 -->
+
+            <div class="update-box">
+
+                <span>
+                    数据更新
+                </span>
+
+                <strong id="updatedAt">
+                    --
+                </strong>
+
+            </div>
+
 
         </div>
+
 
     </header>
 
@@ -87,28 +131,59 @@
 
     <nav class="index-tabs">
 
+
         <button
             class="index-tab active"
             data-index="sse50"
+            type="button"
         >
-            上证50
+
+            <span class="tab-main">
+                上证50
+            </span>
+
+            <small>
+                A股蓝筹
+            </small>
+
         </button>
+
 
 
         <button
             class="index-tab"
             data-index="nasdaq100"
+            type="button"
         >
-            纳斯达克100
+
+            <span class="tab-main">
+                纳斯达克100
+            </span>
+
+            <small>
+                科技成长
+            </small>
+
         </button>
+
 
 
         <button
             class="index-tab"
             data-index="sp500"
+            type="button"
         >
-            标普500
+
+            <span class="tab-main">
+                标普500
+            </span>
+
+            <small>
+                美国大盘
+            </small>
+
         </button>
+
 
     </nav>
 
@@ -116,22 +191,38 @@
 
     <!-- =====================================================
          00
-         核心判断
+         核心总览
     ====================================================== -->
 
     <section class="hero-card">
 
+
+        <!-- =================================================
+             指数标题
+        ================================================== -->
 
         <div class="hero-top">
 
 
             <div>
 
-                <div
-                    class="index-name"
-                    id="indexName"
-                >
-                    --
+                <div class="hero-title-line">
+
+                    <div
+                        class="index-name"
+                        id="indexName"
+                    >
+                        --
+                    </div>
+
+
+                    <div
+                        class="allocation-badge"
+                        id="allocationState"
+                    >
+                        --
+                    </div>
+
                 </div>
 
 
@@ -145,29 +236,41 @@
             </div>
 
 
-            <div
-                class="allocation-badge"
-                id="allocationState"
-            >
-                --
+            <div class="hero-market-label">
+
+                <span>
+                    当前市场
+                </span>
+
+                <strong id="heroMarketLabel">
+                    分析中
+                </strong>
+
             </div>
+
 
         </div>
 
 
 
         <!-- =================================================
-             市场价格
+             价格 + 当前行动
         ================================================== -->
 
-        <div class="hero-price-row">
+        <div class="hero-primary-grid">
 
+
+            <!-- =================================================
+                 当前指数价格
+            ================================================== -->
 
             <div class="hero-price-main">
+
 
                 <span class="eyebrow">
                     最新收盘
                 </span>
+
 
                 <div
                     class="price"
@@ -184,112 +287,377 @@
                     --
                 </div>
 
+
+                <div class="hero-price-meta">
+
+                    <span>
+                        数据以日线为基础
+                    </span>
+
+                </div>
+
+
             </div>
 
 
 
             <!-- =================================================
-                 三个核心状态
+                 最重要：当前配置状态
             ================================================== -->
 
-            <div class="hero-status-grid">
+            <div class="decision-card">
 
 
-                <div class="hero-status-card">
-
-                    <span>
-                        长期配置吸引力
-                    </span>
-
-                    <div class="status-value-row">
-
-                        <strong id="allocationScore">
-                            --
-                        </strong>
-
-                        <small>
-                            /100
-                        </small>
-
-                    </div>
-
-                    <p id="allocationStateText">
-                        --
-                    </p>
-
-                </div>
+                <div class="decision-card-top">
 
 
+                    <div>
 
-                <div class="hero-status-card">
+                        <span class="decision-kicker">
+                            当前配置状态
+                        </span>
 
-                    <span>
-                        市场温度
-                    </span>
 
-                    <div class="status-value-row">
-
-                        <strong id="marketTemperature">
-                            --
-                        </strong>
-
-                        <small>
-                            /100
-                        </small>
+                        <div
+                            class="decision-title"
+                            id="decisionTitle"
+                        >
+                            正在判断
+                        </div>
 
                     </div>
 
-                    <p id="temperatureState">
-                        --
-                    </p>
-
-                </div>
-
-
-
-                <div class="hero-status-card">
-
-                    <span>
-                        短期技术状态
-                    </span>
 
                     <div
-                        class="technical-state-value"
-                        id="technicalState"
+                        class="decision-signal"
+                        id="decisionSignal"
                     >
-                        --
+                        <span></span>
                     </div>
 
-                    <p>
-                        用于辅助加减仓时点
-                    </p>
+
+                </div>
+
+
+                <p
+                    class="decision-description"
+                    id="decisionDescription"
+                >
+                    正在根据长期价格位置、市场情绪和短期技术状态生成判断。
+                </p>
+
+
+                <div class="decision-mini-grid">
+
+
+                    <div>
+
+                        <span>
+                            长期配置
+                        </span>
+
+                        <strong id="decisionAllocation">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            价格温度
+                        </span>
+
+                        <strong id="decisionTemperature">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            市场情绪
+                        </span>
+
+                        <strong id="decisionSentiment">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            未来20日
+                        </span>
+
+                        <strong id="decisionPath">
+                            --
+                        </strong>
+
+                    </div>
+
 
                 </div>
 
 
             </div>
+
 
         </div>
 
 
 
         <!-- =================================================
-             一句话结论
+             四套指标
+        ================================================== -->
+
+        <div class="hero-status-grid hero-status-grid-four">
+
+
+            <!-- =================================================
+                 长期配置
+            ================================================== -->
+
+            <div class="hero-status-card status-allocation">
+
+
+                <div class="metric-title-row">
+
+                    <span>
+                        长期配置吸引力
+                    </span>
+
+
+                    <button
+                        class="help-dot"
+                        type="button"
+                        data-help="allocation"
+                        aria-label="长期配置吸引力说明"
+                    >
+                        ?
+                    </button>
+
+                </div>
+
+
+                <div class="status-value-row">
+
+                    <strong id="allocationScore">
+                        --
+                    </strong>
+
+                    <small>
+                        /100
+                    </small>
+
+                </div>
+
+
+                <p
+                    class="status-main-text"
+                    id="allocationStateText"
+                >
+                    --
+                </p>
+
+
+                <span class="status-question">
+                    现在值不值得增加长期资金？
+                </span>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 价格温度
+            ================================================== -->
+
+            <div class="hero-status-card status-temperature">
+
+
+                <div class="metric-title-row">
+
+                    <span>
+                        价格温度
+                    </span>
+
+
+                    <button
+                        class="help-dot"
+                        type="button"
+                        data-help="price_temperature"
+                        aria-label="价格温度说明"
+                    >
+                        ?
+                    </button>
+
+                </div>
+
+
+                <div class="status-value-row">
+
+                    <strong id="marketTemperature">
+                        --
+                    </strong>
+
+                    <small>
+                        /100
+                    </small>
+
+                </div>
+
+
+                <p
+                    class="status-main-text"
+                    id="temperatureState"
+                >
+                    --
+                </p>
+
+
+                <span class="status-question">
+                    当前价格相对长期锚点热不热？
+                </span>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 市场情绪
+            ================================================== -->
+
+            <div class="hero-status-card status-sentiment">
+
+
+                <div class="metric-title-row">
+
+                    <span id="sentimentCardTitle">
+                        市场情绪
+                    </span>
+
+
+                    <button
+                        class="help-dot"
+                        type="button"
+                        data-help="sentiment"
+                        aria-label="市场情绪说明"
+                    >
+                        ?
+                    </button>
+
+                </div>
+
+
+                <div class="status-value-row">
+
+                    <strong id="sentimentScore">
+                        --
+                    </strong>
+
+                    <small>
+                        /100
+                    </small>
+
+                </div>
+
+
+                <p
+                    class="status-main-text"
+                    id="sentimentState"
+                >
+                    --
+                </p>
+
+
+                <span class="status-question">
+                    投资者现在更恐惧还是更亢奋？
+                </span>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 短期技术
+            ================================================== -->
+
+            <div class="hero-status-card status-technical">
+
+
+                <div class="metric-title-row">
+
+                    <span>
+                        短期技术
+                    </span>
+
+
+                    <button
+                        class="help-dot"
+                        type="button"
+                        data-help="technical"
+                        aria-label="短期技术说明"
+                    >
+                        ?
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="technical-state-value"
+                    id="technicalState"
+                >
+                    --
+                </div>
+
+
+                <p class="status-main-text">
+                    择时辅助
+                </p>
+
+
+                <span class="status-question">
+                    现在是否适合分批动手？
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             核心判断
         ================================================== -->
 
         <div class="hero-conclusion">
+
 
             <div class="conclusion-label">
 
                 <span class="conclusion-dot"></span>
 
-                当前判断
+                今日核心判断
 
             </div>
+
 
             <p id="coreConclusion">
                 正在分析当前市场状态……
             </p>
+
 
         </div>
 
@@ -308,6 +676,7 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
@@ -325,6 +694,7 @@
                 数据仅保存在当前浏览器
             </span>
 
+
         </div>
 
 
@@ -339,6 +709,7 @@
                 <label for="positionInput">
                     当前仓位
                 </label>
+
 
                 <div class="input-wrap">
 
@@ -361,13 +732,14 @@
 
 
 
-            <!-- 持仓收益 -->
+            <!-- 当前收益 -->
 
             <div class="input-group">
 
                 <label for="profitInput">
                     当前持仓收益
                 </label>
+
 
                 <div class="input-wrap">
 
@@ -398,11 +770,13 @@
                     每月基础定投
                 </label>
 
+
                 <div class="input-wrap investment-input">
 
                     <span class="currency-prefix">
                         ¥
                     </span>
+
 
                     <input
                         id="baseInvestmentInput"
@@ -426,6 +800,7 @@
                 <label for="riskSelect">
                     投资风格
                 </label>
+
 
                 <select id="riskSelect">
 
@@ -458,13 +833,14 @@
 
     <!-- =====================================================
          02
-         当前该怎么做
+         当前策略
     ====================================================== -->
 
     <section class="section">
 
 
         <div class="section-title">
+
 
             <div>
 
@@ -480,14 +856,18 @@
 
 
             <span class="section-desc">
-                长期配置优先，技术择时辅助
+                长期配置优先 · 技术择时辅助
             </span>
+
 
         </div>
 
 
 
         <div class="strategy-card">
+
+
+            <div class="strategy-accent"></div>
 
 
             <div class="strategy-main">
@@ -498,6 +878,7 @@
                     <span class="strategy-kicker">
                         当前建议
                     </span>
+
 
                     <div
                         class="strategy-action"
@@ -579,6 +960,7 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
@@ -589,12 +971,23 @@
                     未来20个交易日
                 </h2>
 
+
+                <button
+                    class="help-dot section-help"
+                    type="button"
+                    data-help="probability"
+                    aria-label="历史概率说明"
+                >
+                    ?
+                </button>
+
             </div>
 
 
             <span class="section-desc">
-                历史相似状态推演
+                历史相似状态条件频率
             </span>
+
 
         </div>
 
@@ -604,7 +997,7 @@
 
 
             <!-- =================================================
-                 最可能路径
+                 大概率路径
             ================================================== -->
 
             <div class="probability-hero">
@@ -613,8 +1006,9 @@
                 <div>
 
                     <span class="probability-kicker">
-                        历史上最常见路径
+                        历史相似状态下的最常见路径
                     </span>
+
 
                     <div
                         class="path-label"
@@ -622,6 +1016,7 @@
                     >
                         --
                     </div>
+
 
                     <p id="pathDescription">
                         --
@@ -723,7 +1118,7 @@
 
 
                     <small>
-                        未来20日收益介于 ±3%
+                        未来20日收益位于 -3% 至 +3%
                     </small>
 
 
@@ -773,7 +1168,7 @@
 
 
             <!-- =================================================
-                 历史统计
+                 统计摘要
             ================================================== -->
 
             <div class="probability-stats">
@@ -837,8 +1232,8 @@
 
             <div class="probability-note">
 
-                这里展示的是历史相似市场状态下的条件频率，
-                不是对未来结果的确定性预测。
+                历史条件概率用于理解相似市场环境下更常见的走势，
+                不代表未来真实发生概率，也不构成收益承诺。
 
             </div>
 
@@ -860,6 +1255,7 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
@@ -877,6 +1273,7 @@
                 未来20个交易日内
             </span>
 
+
         </div>
 
 
@@ -884,15 +1281,17 @@
         <div class="event-grid">
 
 
-            <div class="event-card">
+            <div class="event-card event-repair">
 
                 <span class="event-label">
                     重新站上 MA20
                 </span>
 
+
                 <strong id="aboveMa20Probability">
                     --%
                 </strong>
+
 
                 <p id="ma20Value">
                     MA20 --
@@ -902,15 +1301,17 @@
 
 
 
-            <div class="event-card">
+            <div class="event-card event-trend">
 
                 <span class="event-label">
                     站上 MA60
                 </span>
 
+
                 <strong id="aboveMa60Probability">
                     --%
                 </strong>
+
 
                 <p id="ma60Value">
                     MA60 --
@@ -920,15 +1321,17 @@
 
 
 
-            <div class="event-card">
+            <div class="event-card event-breakout">
 
                 <span class="event-label">
                     突破近20日高点
                 </span>
 
+
                 <strong id="breakHighProbability">
                     --%
                 </strong>
+
 
                 <p id="high20Value">
                     --
@@ -938,15 +1341,17 @@
 
 
 
-            <div class="event-card">
+            <div class="event-card event-risk">
 
                 <span class="event-label">
                     跌破近20日低点
                 </span>
 
+
                 <strong id="breakLowProbability">
                     --%
                 </strong>
+
 
                 <p id="low20Value">
                     --
@@ -964,13 +1369,14 @@
 
     <!-- =====================================================
          05
-         长期趋势图
+         长期趋势
     ====================================================== -->
 
     <section class="section">
 
 
         <div class="section-title chart-section-title">
+
 
             <div>
 
@@ -988,9 +1394,11 @@
 
             <div class="chart-range-switch">
 
+
                 <button
                     class="range-button"
                     data-range="63"
+                    type="button"
                 >
                     3个月
                 </button>
@@ -999,6 +1407,7 @@
                 <button
                     class="range-button"
                     data-range="126"
+                    type="button"
                 >
                     6个月
                 </button>
@@ -1007,11 +1416,14 @@
                 <button
                     class="range-button active"
                     data-range="252"
+                    type="button"
                 >
                     1年
                 </button>
 
+
             </div>
+
 
         </div>
 
@@ -1039,7 +1451,7 @@
                 <div>
 
                     <span>
-                        MA20
+                        MA20 · 月线参考
                     </span>
 
                     <strong id="chartMa20">
@@ -1052,7 +1464,7 @@
                 <div>
 
                     <span>
-                        MA60
+                        MA60 · 季度参考
                     </span>
 
                     <strong id="chartMa60">
@@ -1086,6 +1498,15 @@
             </div>
 
 
+            <div class="chart-footnote">
+
+                <span class="chart-legend-note">
+                    MA200 是本系统最重要的长期价格锚点之一
+                </span>
+
+            </div>
+
+
         </div>
 
 
@@ -1103,6 +1524,7 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
@@ -1117,8 +1539,9 @@
 
 
             <span class="section-desc">
-                用于判断是否值得增加长期配置
+                判断价格是否逐渐出现安全边际
             </span>
+
 
         </div>
 
@@ -1127,37 +1550,37 @@
         <div class="longterm-grid">
 
 
-            <!-- 52周回撤 -->
-
             <div class="longterm-card">
 
                 <span>
                     距52周高点
                 </span>
 
+
                 <strong id="drawdown52w">
                     --
                 </strong>
 
+
                 <p>
-                    回撤越深，长期价格吸引力通常越高
+                    回撤越深，长期配置价格通常越有吸引力。
                 </p>
 
             </div>
 
 
 
-            <!-- MA200偏离 -->
-
-            <div class="longterm-card">
+            <div class="longterm-card longterm-yearline">
 
                 <span>
-                    相对年线
+                    相对MA200年线
                 </span>
+
 
                 <strong id="devMa200">
                     --
                 </strong>
+
 
                 <p id="devMa200Description">
                     --
@@ -1167,27 +1590,25 @@
 
 
 
-            <!-- 20日收益 -->
-
             <div class="longterm-card">
 
                 <span>
                     近20日涨跌
                 </span>
 
+
                 <strong id="return20">
                     --
                 </strong>
 
+
                 <p>
-                    用于识别短期快速上涨或快速回撤
+                    识别短期是否出现快速上涨或快速回撤。
                 </p>
 
             </div>
 
 
-
-            <!-- 60日收益 -->
 
             <div class="longterm-card">
 
@@ -1195,12 +1616,14 @@
                     近60日涨跌
                 </span>
 
+
                 <strong id="return60">
                     --
                 </strong>
 
+
                 <p>
-                    观察中期价格趋势
+                    用于观察中期价格趋势。
                 </p>
 
             </div>
@@ -1215,7 +1638,7 @@
 
     <!-- =====================================================
          07
-         市场情绪与利率
+         指数专属情绪
     ====================================================== -->
 
     <section class="section">
@@ -1223,126 +1646,250 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
                     07
                 </span>
 
-                <h2>
-                    市场情绪与利率
+                <h2 id="sentimentSectionTitle">
+                    市场情绪
                 </h2>
+
+
+                <button
+                    class="help-dot section-help"
+                    type="button"
+                    data-help="sentiment"
+                    aria-label="市场情绪说明"
+                >
+                    ?
+                </button>
 
             </div>
 
 
-            <span class="section-desc">
-                美国市场辅助指标
+            <span
+                class="section-desc"
+                id="sentimentSectionDesc"
+            >
+                根据当前指数选择不同的情绪指标
             </span>
+
 
         </div>
 
 
 
-        <div class="macro-grid">
+        <div class="sentiment-layout">
 
 
-            <!-- VIX -->
+            <!-- =================================================
+                 情绪主卡
+            ================================================== -->
 
-            <div class="macro-card">
+            <div class="sentiment-main-card">
 
-                <div class="macro-header">
+
+                <div class="sentiment-main-top">
+
 
                     <div>
 
-                        <span class="macro-name">
-                            VIX
+                        <span
+                            class="sentiment-label"
+                            id="sentimentLabel"
+                        >
+                            市场情绪
                         </span>
 
-                        <p>
-                            市场波动与风险情绪
-                        </p>
+
+                        <div class="sentiment-score-row">
+
+                            <strong id="sentimentMainScore">
+                                --
+                            </strong>
+
+                            <small>
+                                /100
+                            </small>
+
+                        </div>
 
                     </div>
 
 
-                    <div
-                        class="macro-state"
-                        id="vixState"
-                    >
-                        --
+                    <div class="sentiment-state-wrap">
+
+                        <span>
+                            当前状态
+                        </span>
+
+                        <strong id="sentimentMainState">
+                            --
+                        </strong>
+
                     </div>
+
 
                 </div>
 
 
-                <div
-                    class="macro-value"
-                    id="vixValue"
+
+                <p
+                    class="sentiment-summary"
+                    id="sentimentSummary"
                 >
                     --
-                </div>
+                </p>
 
 
-                <div class="macro-footer">
+
+                <div class="sentiment-method">
 
                     <span>
-                        5年历史分位
+                        判断依据
                     </span>
 
-                    <strong id="vixPercentile">
+                    <strong id="sentimentMethod">
                         --
                     </strong>
 
                 </div>
 
 
-                <p
-                    class="macro-description"
-                    id="vixDescription"
+            </div>
+
+
+
+            <!-- =================================================
+                 主指标
+            ================================================== -->
+
+            <div class="sentiment-indicator-card">
+
+
+                <span class="sentiment-indicator-kicker">
+                    核心情绪指标
+                </span>
+
+
+                <strong
+                    class="sentiment-indicator-name"
+                    id="sentimentPrimaryName"
                 >
                     --
-                </p>
+                </strong>
+
+
+                <div class="sentiment-indicator-value-row">
+
+                    <strong id="sentimentPrimaryValue">
+                        --
+                    </strong>
+
+                    <small id="sentimentPrimaryUnit">
+                    </small>
+
+                </div>
+
+
+                <div class="sentiment-indicator-meta">
+
+                    <span id="sentimentPrimaryState">
+                        --
+                    </span>
+
+                    <span id="sentimentPrimaryPercentile">
+                    </span>
+
+                </div>
 
 
             </div>
 
 
-
-            <!-- US10Y -->
-
-            <div class="macro-card">
-
-                <div class="macro-header">
-
-                    <div>
-
-                        <span class="macro-name">
-                            美国10年期国债
-                        </span>
-
-                        <p>
-                            长期无风险收益率参考
-                        </p>
-
-                    </div>
+        </div>
 
 
-                    <div
-                        class="macro-state"
-                        id="us10yTrend"
-                    >
+
+        <!-- =================================================
+             情绪依据列表
+        ================================================== -->
+
+        <div
+            class="sentiment-components"
+            id="sentimentComponents"
+        >
+        </div>
+
+
+        <div
+            class="sentiment-note"
+            id="sentimentNote"
+        >
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         08
+         利率环境
+         美国指数显示
+         上证50可以由JS隐藏
+    ====================================================== -->
+
+    <section
+        class="section"
+        id="rateSection"
+    >
+
+
+        <div class="section-title">
+
+
+            <div>
+
+                <span class="section-number">
+                    08
+                </span>
+
+                <h2>
+                    利率环境
+                </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                美国指数估值环境辅助指标
+            </span>
+
+
+        </div>
+
+
+
+        <div class="rate-card">
+
+
+            <div class="rate-main">
+
+
+                <span>
+                    美国10年期国债收益率
+                </span>
+
+
+                <div class="rate-value">
+
+                    <strong id="us10yValue">
                         --
-                    </div>
-
-                </div>
-
-
-                <div class="macro-value">
-
-                    <span id="us10yValue">
-                        --
-                    </span>
+                    </strong>
 
                     <small>
                         %
@@ -1351,10 +1898,30 @@
                 </div>
 
 
-                <div class="macro-footer">
+            </div>
+
+
+
+            <div class="rate-detail">
+
+
+                <div>
 
                     <span>
-                        20日变化
+                        近20日趋势
+                    </span>
+
+                    <strong id="us10yTrend">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        近20日变化
                     </span>
 
                     <strong id="us10yChange20">
@@ -1364,15 +1931,16 @@
                 </div>
 
 
-                <p class="macro-description">
-
-                    利率持续上升通常会提高股票估值的折现压力；
-                    利率下降则相反。
-
-                </p>
-
-
             </div>
+
+
+
+            <p class="rate-description">
+
+                长期利率上升通常会提高股票估值的折现压力，
+                对高估值成长股尤其敏感；利率下降则通常有利于估值压力缓和。
+
+            </p>
 
 
         </div>
@@ -1383,7 +1951,29 @@
 
 
     <!-- =====================================================
-         08
+         兼容旧JS的 VIX 节点
+         下一版app.js后可以隐藏或删除
+    ====================================================== -->
+
+    <div
+        class="legacy-macro-elements"
+        aria-hidden="true"
+    >
+
+        <span id="vixValue">--</span>
+
+        <span id="vixState">--</span>
+
+        <span id="vixPercentile">--</span>
+
+        <span id="vixDescription">--</span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         09
          技术确认
     ====================================================== -->
 
@@ -1392,22 +1982,34 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
-                    08
+                    09
                 </span>
 
                 <h2>
                     技术确认
                 </h2>
 
+
+                <button
+                    class="help-dot section-help"
+                    type="button"
+                    data-help="technical"
+                    aria-label="技术确认说明"
+                >
+                    ?
+                </button>
+
             </div>
 
 
             <span class="section-desc">
-                决定何时加仓，而不是决定长期价值
+                解决“什么时候动手”，而不是“值不值得买”
             </span>
+
 
         </div>
 
@@ -1422,11 +2024,18 @@
                     MA20
                 </span>
 
+
                 <strong id="ma20">
                     --
                 </strong>
 
+
+                <small>
+                    短期趋势
+                </small>
+
             </div>
+
 
 
             <div class="technical-card">
@@ -1435,11 +2044,18 @@
                     MA60
                 </span>
 
+
                 <strong id="ma60">
                     --
                 </strong>
 
+
+                <small>
+                    中期趋势
+                </small>
+
             </div>
+
 
 
             <div class="technical-card highlight">
@@ -1448,11 +2064,18 @@
                     MA200 · 年线
                 </span>
 
+
                 <strong id="ma200">
                     --
                 </strong>
 
+
+                <small>
+                    长期核心锚点
+                </small>
+
             </div>
+
 
 
             <div class="technical-card">
@@ -1461,11 +2084,18 @@
                     RSI14
                 </span>
 
+
                 <strong id="rsi14">
                     --
                 </strong>
 
+
+                <small>
+                    短期动能
+                </small>
+
             </div>
+
 
 
             <div class="technical-card">
@@ -1474,11 +2104,18 @@
                     MACD柱
                 </span>
 
+
                 <strong id="macdHist">
                     --
                 </strong>
 
+
+                <small>
+                    趋势动能
+                </small>
+
             </div>
+
 
 
             <div class="technical-card">
@@ -1487,114 +2124,15 @@
                     20日波动率
                 </span>
 
+
                 <strong id="volatility20">
                     --
                 </strong>
 
-            </div>
 
-
-        </div>
-
-
-    </section>
-
-
-
-    <!-- =====================================================
-         09
-         为什么这样判断
-    ====================================================== -->
-
-    <section class="section">
-
-
-        <div class="section-title">
-
-            <div>
-
-                <span class="section-number">
-                    09
-                </span>
-
-                <h2>
-                    为什么这样判断
-                </h2>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="reason-layout">
-
-
-            <!-- 长期 -->
-
-            <div class="reason-group">
-
-                <div class="reason-group-title">
-
-                    <span class="reason-icon">
-                        L
-                    </span>
-
-                    <div>
-
-                        <strong>
-                            长期配置
-                        </strong>
-
-                        <p>
-                            为什么当前值得或不值得增加配置
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div
-                    class="reason-list"
-                    id="allocationReasons"
-                >
-                </div>
-
-            </div>
-
-
-
-            <!-- 技术 -->
-
-            <div class="reason-group">
-
-                <div class="reason-group-title">
-
-                    <span class="reason-icon">
-                        T
-                    </span>
-
-                    <div>
-
-                        <strong>
-                            短期技术
-                        </strong>
-
-                        <p>
-                            当前是否已经出现加仓确认
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div
-                    class="reason-list"
-                    id="technicalReasons"
-                >
-                </div>
+                <small>
+                    市场波动程度
+                </small>
 
             </div>
 
@@ -1608,7 +2146,7 @@
 
     <!-- =====================================================
          10
-         估值
+         判断依据
     ====================================================== -->
 
     <section class="section">
@@ -1616,10 +2154,132 @@
 
         <div class="section-title">
 
+
             <div>
 
                 <span class="section-number">
                     10
+                </span>
+
+                <h2>
+                    为什么这样判断
+                </h2>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="reason-layout">
+
+
+            <!-- 长期配置 -->
+
+            <div class="reason-group">
+
+
+                <div class="reason-group-title">
+
+
+                    <span class="reason-icon reason-icon-long">
+                        L
+                    </span>
+
+
+                    <div>
+
+                        <strong>
+                            长期配置
+                        </strong>
+
+
+                        <p>
+                            为什么当前值得或不值得增加长期资金
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div
+                    class="reason-list"
+                    id="allocationReasons"
+                >
+                </div>
+
+
+            </div>
+
+
+
+            <!-- 技术 -->
+
+            <div class="reason-group">
+
+
+                <div class="reason-group-title">
+
+
+                    <span class="reason-icon reason-icon-tech">
+                        T
+                    </span>
+
+
+                    <div>
+
+                        <strong>
+                            短期技术
+                        </strong>
+
+
+                        <p>
+                            当前是否已经出现分批投入确认
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div
+                    class="reason-list"
+                    id="technicalReasons"
+                >
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         11
+         基本面估值
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+
+            <div>
+
+                <span class="section-number">
+                    11
                 </span>
 
                 <h2>
@@ -1633,6 +2293,7 @@
                 下一阶段接入
             </span>
 
+
         </div>
 
 
@@ -1645,17 +2306,22 @@
             </div>
 
 
+
             <div>
 
                 <strong>
-                    PE / 历史估值分位正在规划接入
+                    PE · 盈利收益率 · 历史估值分位
                 </strong>
 
+
                 <p>
+
                     当前“长期配置吸引力”主要依据52周回撤、
-                    MA200长期位置和市场热度计算，
-                    尚不能等同于严格意义上的内在价值估算。
-                    后续接入估值数据后，将进一步提高长期配置判断的完整性。
+                    MA200长期位置、价格热度与市场情绪判断。
+
+                    后续接入PE、盈利收益率和历史估值分位后，
+                    将把“价格便宜”与“真正估值便宜”进一步区分。
+
                 </p>
 
             </div>
@@ -1681,6 +2347,7 @@
                 INDEX RADAR
             </strong>
 
+
             <span>
                 Long-term allocation intelligence
             </span>
@@ -1688,25 +2355,41 @@
         </div>
 
 
+
         <div class="footer-info">
 
             <p>
-                行情数据：
+                行情：
                 Tencent / Yahoo Finance
             </p>
 
-            <p>
-                美国情绪及利率：
-                VIX / US 10Y Treasury Yield
-            </p>
 
             <p>
-                历史概率基于历史相似状态的加权统计，
-                不代表未来事件的真实发生概率。
+                纳斯达克100情绪：
+                VXN + 指数价格状态 + 美国10年期国债
             </p>
 
+
             <p>
-                本页面仅用于个人投资研究、长期配置记录及技术分析，
+                标普500情绪：
+                VIX + 指数价格状态 + 美国10年期国债
+            </p>
+
+
+            <p>
+                上证50情绪：
+                指数自身动量、回撤、MA200位置与波动率
+            </p>
+
+
+            <p>
+                历史概率是历史相似状态的加权条件频率，
+                不是确定性预测。
+            </p>
+
+
+            <p>
+                本页面仅用于个人长期投资研究，
                 不构成任何投资建议。
             </p>
 
@@ -1717,6 +2400,386 @@
 
 
 </div>
+
+
+
+<!-- =========================================================
+     使用手册 Modal
+========================================================= -->
+
+<div
+    class="guide-modal"
+    id="guideModal"
+    aria-hidden="true"
+>
+
+
+    <div class="guide-backdrop"></div>
+
+
+
+    <div
+        class="guide-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guideTitle"
+    >
+
+
+        <div class="guide-panel-header">
+
+
+            <div>
+
+                <span class="guide-kicker">
+                    INDEX RADAR
+                </span>
+
+
+                <h2 id="guideTitle">
+                    如何使用
+                </h2>
+
+
+                <p>
+                    不需要先学会技术分析，按下面的顺序看即可。
+                </p>
+
+            </div>
+
+
+
+            <button
+                class="guide-close"
+                id="guideCloseButton"
+                type="button"
+                aria-label="关闭使用说明"
+            >
+                ×
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             四步使用
+        ================================================== -->
+
+        <div class="guide-steps">
+
+
+            <div class="guide-step">
+
+                <span class="guide-step-number">
+                    1
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        先看长期配置吸引力
+                    </strong>
+
+
+                    <p>
+                        它回答的是：
+                        <b>现在是否值得增加长期资金？</b>
+                        分数越高，代表当前价格条件对长期配置越友好。
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="guide-step">
+
+                <span class="guide-step-number">
+                    2
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        再看价格温度和市场情绪
+                    </strong>
+
+
+                    <p>
+                        价格温度回答“价格热不热”；
+                        市场情绪回答“投资者恐惧还是亢奋”。
+                        两者不是同一个指标。
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="guide-step">
+
+                <span class="guide-step-number">
+                    3
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        看未来20日的大概率路径
+                    </strong>
+
+
+                    <p>
+                        上涨、震荡、下跌来自历史相似状态统计，
+                        用来理解短期可能性，不代表确定预测。
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="guide-step">
+
+                <span class="guide-step-number">
+                    4
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        最后看技术确认
+                    </strong>
+
+
+                    <p>
+                        MA20、MA60、MA200、RSI和MACD主要解决：
+                        <b>什么时候分批动手？</b>
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             指标说明
+        ================================================== -->
+
+        <div class="guide-divider"></div>
+
+
+
+        <div class="guide-glossary">
+
+
+            <h3>
+                指标怎么理解
+            </h3>
+
+
+
+            <div class="guide-glossary-grid">
+
+
+                <div>
+
+                    <strong>
+                        长期配置吸引力
+                    </strong>
+
+                    <p id="guideAllocationText">
+                        衡量当前价格条件是否适合长期资金增加配置。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        价格温度
+                    </strong>
+
+                    <p id="guideTemperatureText">
+                        数字越高代表价格越热；数字越低代表价格机会逐渐改善。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        市场情绪
+                    </strong>
+
+                    <p id="guideSentimentText">
+                        上证50、纳指100和标普500使用不同的情绪来源。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        MA20
+                    </strong>
+
+                    <p>
+                        约一个月平均价格，主要观察短期趋势。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        MA60
+                    </strong>
+
+                    <p>
+                        约一个季度平均价格，用于观察中期趋势。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        MA200 年线
+                    </strong>
+
+                    <p>
+                        约一年的长期平均价格，是本系统的重要长期价格锚点。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        52周回撤
+                    </strong>
+
+                    <p>
+                        当前价格距离过去一年最高点已经下跌多少。
+                    </p>
+
+                </div>
+
+
+
+                <div>
+
+                    <strong>
+                        历史条件概率
+                    </strong>
+
+                    <p id="guideProbabilityText">
+                        统计历史上类似状态之后20个交易日的结果。
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="guide-warning">
+
+            <strong>
+                一个重要原则
+            </strong>
+
+
+            <p>
+
+                短期下跌并不自动等于应该卖出，
+                短期上涨也不自动等于应该加仓。
+
+                INDEX RADAR 的核心逻辑是：
+
+                <b>
+                    长期价值决定是否值得增加资金，
+                    技术分析只辅助决定何时分批执行。
+                </b>
+
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     小型指标解释浮层
+========================================================= -->
+
+<div
+    class="help-popover"
+    id="helpPopover"
+    aria-hidden="true"
+>
+
+
+    <div class="help-popover-title">
+
+        <strong id="helpPopoverTitle">
+            指标说明
+        </strong>
+
+
+        <button
+            id="helpPopoverClose"
+            type="button"
+            aria-label="关闭"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <p id="helpPopoverText">
+        --
+    </p>
+
+
+</div>
+
 
 
 <script src="app.js"></script>
