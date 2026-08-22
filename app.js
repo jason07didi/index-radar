@@ -5,19 +5,14 @@ let currentIndex = "sse50";
 let marketChart = null;
 
 
-const indexKeys = {
-    sse50: "上证50",
-    nasdaq100: "纳斯达克100",
-    sp500: "标普500"
-};
-
-
-/* ========================================================
+/* =========================================================
    工具
-======================================================== */
+   ========================================================= */
 
 function $(id) {
+
     return document.getElementById(id);
+
 }
 
 
@@ -28,86 +23,133 @@ function formatNumber(value) {
         value === undefined ||
         Number.isNaN(Number(value))
     ) {
+
         return "--";
+
     }
 
+
     return Number(value).toLocaleString(
+
         "zh-CN",
+
         {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }
+
     );
+
 }
 
 
-function clamp(value, min, max) {
+function clamp(
+    value,
+    min,
+    max
+) {
+
     return Math.max(
+
         min,
-        Math.min(max, value)
+
+        Math.min(
+            max,
+            value
+        )
+
     );
+
 }
 
 
-/* ========================================================
-   读取数据
-======================================================== */
+/* =========================================================
+   获取市场数据
+   ========================================================= */
 
 async function loadMarketData() {
 
     try {
 
         const response = await fetch(
-            `data/market.json?t=${Date.now()}`
+
+            `data/market.json?t=${Date.now()}`,
+
+            {
+                cache: "no-store"
+            }
+
         );
 
+
         if (!response.ok) {
+
             throw new Error(
                 "market.json 加载失败"
             );
+
         }
 
-        marketData = await response.json();
+
+        marketData =
+            await response.json();
+
 
         $("updatedAt").textContent =
             marketData.updated_at || "--";
 
+
         renderIndex();
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "加载市场数据失败：",
+            error
+        );
+
 
         $("marketSummary").textContent =
             "市场数据加载失败，请稍后刷新页面。";
+
     }
+
 }
 
 
-/* ========================================================
+/* =========================================================
    当前指数
-======================================================== */
+   ========================================================= */
 
 function getCurrentData() {
 
     if (!marketData) {
+
         return null;
+
     }
+
 
     return marketData.indices[
         currentIndex
     ];
+
 }
 
 
-/* ========================================================
-   市场状态颜色
-======================================================== */
+/* =========================================================
+   状态样式
+   ========================================================= */
 
-function setStateStyle(element, state) {
+function setStateStyle(
+    element,
+    state
+) {
 
     element.className =
         "market-state";
+
 
     if (state === "强势") {
 
@@ -115,40 +157,67 @@ function setStateStyle(element, state) {
             "state-strong"
         );
 
-    } else if (state === "偏强") {
+
+    } else if (
+        state === "偏强"
+    ) {
 
         element.classList.add(
             "state-positive"
         );
 
-    } else if (state === "中性") {
+
+    } else if (
+        state === "中性"
+    ) {
 
         element.classList.add(
             "state-neutral"
         );
+
 
     } else {
 
         element.classList.add(
             "state-weak"
         );
+
     }
+
 }
 
 
-/* ========================================================
-   市场摘要
-======================================================== */
+/* =========================================================
+   今日市场判断
+   ========================================================= */
 
-function buildMarketSummary(data) {
+function buildMarketSummary(
+    data
+) {
 
-    const score = data.market_score;
+    const score =
+        Number(
+            data.market_score
+        );
 
-    const close = data.close;
 
-    const ma20 = data.ma20;
+    const close =
+        Number(
+            data.close
+        );
 
-    const ma60 = data.ma60;
+
+    const ma20 =
+        Number(
+            data.ma20
+        );
+
+
+    const ma60 =
+        Number(
+            data.ma60
+        );
+
 
     let text = "";
 
@@ -156,27 +225,38 @@ function buildMarketSummary(data) {
     if (score >= 80) {
 
         text =
-            "中长期技术结构保持强势，价格位于主要趋势均线上方。";
+            "中长期技术结构保持强势，价格与主要趋势指标整体处于较积极状态。";
 
-    } else if (score >= 65) {
 
-        text =
-            "整体结构偏强，但仍需关注短期动能是否继续确认。";
-
-    } else if (score >= 45) {
+    } else if (
+        score >= 65
+    ) {
 
         text =
-            "多空信号交错，目前更接近震荡或方向选择阶段。";
+            "当前市场结构整体偏强，但短期动能仍需要进一步确认。";
 
-    } else if (score >= 30) {
+
+    } else if (
+        score >= 45
+    ) {
+
+        text =
+            "目前多空信号交错，市场更接近震荡或方向选择阶段。";
+
+
+    } else if (
+        score >= 30
+    ) {
 
         text =
             "技术结构偏弱，部分指标尚未形成一致的修复信号。";
+
 
     } else {
 
         text =
             "当前技术结构明显偏弱，趋势修复仍需要更多确认。";
+
     }
 
 
@@ -186,7 +266,8 @@ function buildMarketSummary(data) {
     ) {
 
         text +=
-            " 当前收盘同时位于MA20和MA60下方。";
+            " 当前收盘同时位于 MA20 与 MA60 下方。";
+
 
     } else if (
         close > ma20 &&
@@ -194,17 +275,35 @@ function buildMarketSummary(data) {
     ) {
 
         text +=
-            " 当前收盘位于MA20和MA60上方。";
+            " 当前收盘位于 MA20 与 MA60 上方。";
+
+
+    } else if (
+        close > ma20 &&
+        close < ma60
+    ) {
+
+        text +=
+            " 短期结构有所修复，但中期趋势尚未完全确认。";
+
+
+    } else {
+
+        text +=
+            " 当前短期与中期趋势信号存在分化。";
+
     }
 
 
     return text;
+
 }
 
 
-/* ========================================================
-   用户资料
-======================================================== */
+/* =========================================================
+   localStorage
+   每个指数分别保存仓位
+   ========================================================= */
 
 function storageKey(field) {
 
@@ -214,8 +313,13 @@ function storageKey(field) {
         "_" +
         field
     );
+
 }
 
+
+/* =========================================================
+   加载用户仓位
+   ========================================================= */
 
 function loadUserSettings() {
 
@@ -224,10 +328,12 @@ function loadUserSettings() {
             storageKey("position")
         );
 
+
     const profit =
         localStorage.getItem(
             storageKey("profit")
         );
+
 
     const risk =
         localStorage.getItem(
@@ -249,31 +355,48 @@ function loadUserSettings() {
 
     $("riskSelect").value =
         risk || "balanced";
+
 }
 
+
+/* =========================================================
+   保存用户仓位
+   ========================================================= */
 
 function saveUserSettings() {
 
     localStorage.setItem(
+
         storageKey("position"),
+
         $("positionInput").value
+
     );
 
+
     localStorage.setItem(
+
         storageKey("profit"),
+
         $("profitInput").value
+
     );
 
+
     localStorage.setItem(
+
         storageKey("risk"),
+
         $("riskSelect").value
+
     );
+
 }
 
 
-/* ========================================================
-   根据市场评分获得基础仓位
-======================================================== */
+/* =========================================================
+   根据市场评分确定基础仓位
+   ========================================================= */
 
 function getBaseTargetPosition(
     score,
@@ -283,77 +406,109 @@ function getBaseTargetPosition(
     let ranges;
 
 
-    if (risk === "conservative") {
+    if (
+        risk === "conservative"
+    ) {
 
         ranges = {
+
             strong: [55, 70],
+
             positive: [40, 55],
+
             neutral: [25, 40],
+
             weak: [10, 25],
+
             veryWeak: [0, 15]
+
         };
 
-    } else if (risk === "aggressive") {
+
+    } else if (
+        risk === "aggressive"
+    ) {
 
         ranges = {
+
             strong: [80, 95],
+
             positive: [65, 80],
+
             neutral: [45, 65],
+
             weak: [25, 45],
+
             veryWeak: [10, 30]
+
         };
+
 
     } else {
 
         ranges = {
+
             strong: [70, 85],
+
             positive: [55, 70],
+
             neutral: [35, 55],
+
             weak: [20, 35],
+
             veryWeak: [5, 20]
+
         };
+
     }
 
 
     if (score >= 80) {
+
         return ranges.strong;
+
     }
+
 
     if (score >= 65) {
+
         return ranges.positive;
+
     }
+
 
     if (score >= 45) {
+
         return ranges.neutral;
+
     }
+
 
     if (score >= 30) {
+
         return ranges.weak;
+
     }
 
+
     return ranges.veryWeak;
+
 }
 
 
-/* ========================================================
-   个性化策略
+/* =========================================================
+   用户个性化策略
+   ========================================================= */
 
-   输入：
-   市场评分
-   当前仓位
-   当前收益率
-   风格
-
-   输出：
-   参考动作
-======================================================== */
-
-function calculateUserStrategy(data) {
+function calculateUserStrategy(
+    data
+) {
 
     let position =
         Number(
             $("positionInput").value
         );
+
 
     let profit =
         Number(
@@ -362,11 +517,15 @@ function calculateUserStrategy(data) {
 
 
     position = clamp(
+
         Number.isFinite(position)
             ? position
             : 0,
+
         0,
+
         100
+
     );
 
 
@@ -381,21 +540,24 @@ function calculateUserStrategy(data) {
 
 
     const score =
-        Number(data.market_score);
+        Number(
+            data.market_score
+        );
 
 
     let [
         targetLow,
         targetHigh
-    ] = getBaseTargetPosition(
-        score,
-        risk
-    );
+    ] =
+        getBaseTargetPosition(
+            score,
+            risk
+        );
 
 
     /*
-       高盈利且动能较热：
-       略微降低目标仓位
+       高盈利 + RSI较高
+       适度降低目标仓位
     */
 
     if (
@@ -404,13 +566,15 @@ function calculateUserStrategy(data) {
     ) {
 
         targetLow -= 10;
+
         targetHigh -= 10;
+
     }
 
 
     /*
-       明显亏损 + 弱势结构：
-       不因为亏损而机械加仓
+       大幅浮亏 + 弱势市场
+       避免机械补仓
     */
 
     if (
@@ -419,15 +583,26 @@ function calculateUserStrategy(data) {
     ) {
 
         targetLow -= 5;
+
         targetHigh -= 5;
+
     }
 
 
     targetLow =
-        clamp(targetLow, 0, 100);
+        clamp(
+            targetLow,
+            0,
+            100
+        );
+
 
     targetHigh =
-        clamp(targetHigh, 0, 100);
+        clamp(
+            targetHigh,
+            0,
+            100
+        );
 
 
     let action;
@@ -436,15 +611,18 @@ function calculateUserStrategy(data) {
 
 
     if (
-        position < targetLow - 10
+        position <
+        targetLow - 10
     ) {
 
-        action = "等待后分批增加";
+        action =
+            "等待后分批增加";
+
 
         text =
             `当前仓位 ${position.toFixed(0)}%，` +
-            `低于该市场状态下的参考区间。` +
-            `若价格在关键支撑附近企稳，并重新获得短期均线确认，` +
+            `明显低于当前市场状态对应的参考区间。` +
+            `若价格在关键支撑附近企稳，并重新获得短期趋势确认，` +
             `可考虑分批向 ${targetLow}%–${targetHigh}% 区间调整。`;
 
 
@@ -452,90 +630,120 @@ function calculateUserStrategy(data) {
         position < targetLow
     ) {
 
-        action = "小幅增加";
+        action =
+            "小幅增加";
+
 
         text =
-            `当前仓位略低于参考区间。` +
-            `不建议一次性追价，可等待短期趋势确认后小幅调整仓位。`;
+            "当前仓位略低于参考区间。" +
+            "不建议一次性追价，可等待短期趋势确认后再逐步调整。";
 
 
     } else if (
         position <= targetHigh
     ) {
 
-        action = "维持仓位";
+        action =
+            "维持仓位";
+
 
         text =
-            `当前 ${position.toFixed(0)}% 的仓位已经处于` +
-            `${targetLow}%–${targetHigh}% 的参考区间内，` +
-            `现阶段更适合观察市场结构变化，而不是频繁调整。`;
+            `当前 ${position.toFixed(0)}% 的仓位已经处于 ` +
+            `${targetLow}%–${targetHigh}% 的参考区间内。` +
+            "现阶段更适合观察市场结构变化，而不是频繁调整。";
 
 
     } else if (
-        position <= targetHigh + 10
+        position <=
+        targetHigh + 10
     ) {
 
-        action = "适度降低";
+        action =
+            "适度降低";
+
 
         text =
-            `当前仓位高于该市场状态对应的参考区间。` +
-            `可根据关键压力位、短期均线和已有盈利情况，` +
-            `考虑适度降低风险暴露。`;
+            "当前仓位略高于该市场状态对应的参考区间。" +
+            "可结合关键压力位、短期均线及已有盈利情况，" +
+            "适度降低风险暴露。";
 
 
     } else {
 
-        action = "优先控制仓位";
+        action =
+            "优先控制仓位";
+
 
         text =
-            `当前仓位明显高于技术状态对应的参考区间。` +
-            `如果趋势没有重新强化，应优先关注风险控制，` +
-            `而不是继续扩大仓位。`;
+            "当前仓位明显高于技术状态对应的参考区间。" +
+            "如果趋势没有重新强化，应优先关注风险控制，" +
+            "而不是继续扩大仓位。";
+
     }
 
 
     /*
-       浮盈修正说明
+       盈亏提示
     */
 
     if (profit >= 20) {
 
         text +=
             ` 当前已有 ${profit.toFixed(1)}% 浮盈，` +
-            `应更加关注盈利回撤风险。`;
+            "应更加关注盈利回撤风险。";
 
-    } else if (profit >= 8) {
 
-        text +=
-            ` 当前已有一定浮盈，可将保护已有收益作为辅助考虑。`;
-
-    } else if (profit <= -10) {
+    } else if (
+        profit >= 8
+    ) {
 
         text +=
-            ` 当前处于较明显浮亏状态，策略判断不应以“回本”为主要依据。`;
+            " 当前已有一定浮盈，可将保护已有收益作为辅助考虑。";
+
+
+    } else if (
+        profit <= -10
+    ) {
+
+        text +=
+            " 当前处于较明显浮亏状态，策略判断不应以“回本”为主要依据。";
+
     }
 
 
     return {
+
         action,
+
         text,
+
         targetLow,
+
         targetHigh,
+
         position,
+
         profit,
+
         risk
+
     };
+
 }
 
 
-/* ========================================================
+/* =========================================================
    渲染策略
-======================================================== */
+   ========================================================= */
 
-function renderStrategy(data) {
+function renderStrategy(
+    data
+) {
 
     const result =
-        calculateUserStrategy(data);
+        calculateUserStrategy(
+            data
+        );
 
 
     $("strategyAction").textContent =
@@ -558,92 +766,125 @@ function renderStrategy(data) {
 
         `仓位 ${result.position.toFixed(0)}%`,
 
-        `收益 ${result.profit >= 0 ? "+" : ""}${result.profit.toFixed(1)}%`
+        `收益 ${
+            result.profit >= 0
+                ? "+"
+                : ""
+        }${result.profit.toFixed(1)}%`
 
     ];
 
 
     $("strategyTags").innerHTML =
+
         tags.map(
+
             item =>
-                `<span class="strategy-tag">${item}</span>`
+
+                `<span class="strategy-tag">
+                    ${item}
+                </span>`
+
         ).join("");
+
 }
 
 
-/* ========================================================
+/* =========================================================
    判断依据
-======================================================== */
+   ========================================================= */
 
-function renderReasons(data) {
+function renderReasons(
+    data
+) {
 
     const reasons =
         data.market_reasons || [];
 
 
     $("marketReasons").innerHTML =
+
         reasons.map(
+
             item => `
+
                 <div class="reason-item">
 
-                    <span class="reason-dot"></span>
+                    <span class="reason-dot">
+                    </span>
 
                     <span>
                         ${item}
                     </span>
 
                 </div>
+
             `
+
         ).join("");
+
 }
 
 
-/* ========================================================
-   情景推演
-======================================================== */
+/* =========================================================
+   下一阶段推演
+   ========================================================= */
 
-function renderScenarios(data) {
+function renderScenarios(
+    data
+) {
 
     const scenarios = [
 
         {
+
             title:
                 `重新站上 MA20 ${formatNumber(data.ma20)}`,
 
             text:
-                "若收盘重新站稳MA20，说明短期趋势有所修复，可观察MA5与MA20是否进一步形成多头排列。"
+                "若收盘重新站稳 MA20，说明短期趋势有所修复，可继续观察 MA5 与 MA20 是否进一步形成多头排列。"
+
         },
 
         {
+
             title:
                 `测试 MA60 ${formatNumber(data.ma60)}`,
 
             text:
-                "MA60用于观察中期趋势。有效站稳其上方通常意味着中期结构进一步改善；持续受阻则说明趋势修复仍不充分。"
+                "MA60 用于观察中期趋势。有效站稳其上方通常意味着中期结构进一步改善；持续受阻则说明趋势修复仍不充分。"
+
         },
 
         {
+
             title:
                 `跌破近20日低点 ${formatNumber(data.low20)}`,
 
             text:
                 "若日线进一步跌破近期低点，说明弱势结构可能继续扩展，此时应提高对风险暴露的关注。"
+
         },
 
         {
+
             title:
                 `突破近20日高点 ${formatNumber(data.high20)}`,
 
             text:
-                "若价格有效突破近期高点并伴随均线改善，可视为趋势强化的重要确认条件之一。"
+                "若价格有效突破近期高点并伴随均线改善，可视为趋势进一步强化的重要确认条件之一。"
+
         }
 
     ];
 
 
     $("scenarioList").innerHTML =
+
         scenarios.map(
+
             item => `
+
                 <div class="scenario-card">
 
                     <strong>
@@ -655,16 +896,21 @@ function renderScenarios(data) {
                     </p>
 
                 </div>
+
             `
+
         ).join("");
+
 }
 
 
-/* ========================================================
-   图表
-======================================================== */
+/* =========================================================
+   Apple风格图表
+   ========================================================= */
 
-function renderChart(data) {
+function renderChart(
+    data
+) {
 
     const history =
         data.history || [];
@@ -672,129 +918,404 @@ function renderChart(data) {
 
     const labels =
         history.map(
+
             item =>
                 item.date.slice(5)
+
         );
 
 
     const datasets = [
 
         {
+
             label: "收盘",
-            data: history.map(
-                item => item.close
-            ),
-            borderColor: "#161616",
-            borderWidth: 2.4,
+
+            data:
+                history.map(
+                    item =>
+                        item.close
+                ),
+
+            borderColor:
+                "#1d1d1f",
+
+            backgroundColor:
+                "#1d1d1f",
+
+            borderWidth: 2.6,
+
             pointRadius: 0,
-            tension: 0.15
+
+            pointHoverRadius: 4,
+
+            pointHoverBorderWidth: 0,
+
+            cubicInterpolationMode:
+                "monotone",
+
+            tension: 0.25
+
         },
 
+
         {
+
             label: "MA5",
-            data: history.map(
-                item => item.ma5
-            ),
-            borderColor: "#2869d8",
-            borderWidth: 1.7,
+
+            data:
+                history.map(
+                    item =>
+                        item.ma5
+                ),
+
+            borderColor:
+                "#0071e3",
+
+            backgroundColor:
+                "#0071e3",
+
+            borderWidth: 1.8,
+
             pointRadius: 0,
-            tension: 0.15
+
+            pointHoverRadius: 3,
+
+            cubicInterpolationMode:
+                "monotone",
+
+            tension: 0.25
+
         },
 
+
         {
+
             label: "MA20",
-            data: history.map(
-                item => item.ma20
-            ),
-            borderColor: "#ef8219",
-            borderWidth: 1.5,
+
+            data:
+                history.map(
+                    item =>
+                        item.ma20
+                ),
+
+            borderColor:
+                "#ff9f0a",
+
+            backgroundColor:
+                "#ff9f0a",
+
+            borderWidth: 1.7,
+
             pointRadius: 0,
-            tension: 0.15
+
+            pointHoverRadius: 3,
+
+            cubicInterpolationMode:
+                "monotone",
+
+            tension: 0.25
+
         },
 
+
         {
+
             label: "MA60",
-            data: history.map(
-                item => item.ma60
-            ),
-            borderColor: "#7057d9",
-            borderWidth: 1.5,
+
+            data:
+                history.map(
+                    item =>
+                        item.ma60
+                ),
+
+            borderColor:
+                "#5e5ce6",
+
+            backgroundColor:
+                "#5e5ce6",
+
+            borderWidth: 1.7,
+
             pointRadius: 0,
-            tension: 0.15
+
+            pointHoverRadius: 3,
+
+            cubicInterpolationMode:
+                "monotone",
+
+            tension: 0.25
+
         }
 
     ];
 
 
     if (marketChart) {
+
         marketChart.destroy();
+
     }
 
 
     const ctx =
-        $("marketChart").getContext(
-            "2d"
-        );
+        $("marketChart")
+            .getContext("2d");
 
 
     marketChart =
         new Chart(
+
             ctx,
+
             {
 
                 type: "line",
 
+
                 data: {
+
                     labels,
+
                     datasets
+
                 },
+
 
                 options: {
 
                     responsive: true,
 
-                    maintainAspectRatio: false,
+                    maintainAspectRatio:
+                        false,
+
+
+                    animation: {
+
+                        duration: 450,
+
+                        easing:
+                            "easeOutQuart"
+
+                    },
+
 
                     interaction: {
+
                         mode: "index",
+
                         intersect: false
+
                     },
+
+
+                    layout: {
+
+                        padding: {
+
+                            top: 5,
+
+                            left: 4,
+
+                            right: 8,
+
+                            bottom: 2
+
+                        }
+
+                    },
+
 
                     plugins: {
 
                         legend: {
+
                             position: "top",
-                            align: "start"
+
+                            align: "start",
+
+                            labels: {
+
+                                usePointStyle:
+                                    true,
+
+                                pointStyle:
+                                    "line",
+
+                                boxWidth: 20,
+
+                                boxHeight: 4,
+
+                                padding: 18,
+
+                                color:
+                                    "#6e6e73",
+
+                                font: {
+
+                                    size: 12,
+
+                                    weight: 550
+
+                                }
+
+                            }
+
+                        },
+
+
+                        tooltip: {
+
+                            enabled: true,
+
+                            backgroundColor:
+                                "rgba(29,29,31,0.92)",
+
+                            titleColor:
+                                "#ffffff",
+
+                            bodyColor:
+                                "rgba(255,255,255,0.82)",
+
+                            borderWidth: 0,
+
+                            cornerRadius: 13,
+
+                            padding: 13,
+
+                            boxPadding: 5,
+
+                            usePointStyle:
+                                true,
+
+                            displayColors:
+                                true,
+
+                            titleFont: {
+
+                                size: 12,
+
+                                weight: 600
+
+                            },
+
+                            bodyFont: {
+
+                                size: 12
+
+                            },
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        const value =
+                                            context.parsed.y;
+
+
+                                        return (
+                                            context.dataset.label +
+                                            ": " +
+                                            Number(value)
+                                                .toLocaleString(
+                                                    "zh-CN",
+                                                    {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2
+                                                    }
+                                                )
+                                        );
+
+                                    }
+
+                            }
+
                         }
 
                     },
+
 
                     scales: {
 
                         x: {
 
+                            border: {
+
+                                display:
+                                    false
+
+                            },
+
                             grid: {
-                                display: false
+
+                                display:
+                                    false
+
                             },
 
                             ticks: {
-                                maxTicksLimit: 8
+
+                                color:
+                                    "#86868b",
+
+                                maxTicksLimit: 7,
+
+                                maxRotation: 0,
+
+                                font: {
+
+                                    size: 11
+
+                                }
+
                             }
 
                         },
 
+
                         y: {
 
+                            border: {
+
+                                display:
+                                    false
+
+                            },
+
                             grid: {
+
                                 color:
-                                    "rgba(0,0,0,0.055)"
+                                    "rgba(60,60,67,0.075)",
+
+                                lineWidth:
+                                    1
+
                             },
 
                             ticks: {
+
+                                color:
+                                    "#86868b",
+
+                                padding:
+                                    10,
+
+                                font: {
+
+                                    size: 11
+
+                                },
+
                                 callback:
-                                    value =>
-                                        Number(value)
-                                            .toLocaleString()
+                                    function(value) {
+
+                                        return Number(
+                                            value
+                                        ).toLocaleString();
+
+                                    }
+
                             }
 
                         }
@@ -804,13 +1325,15 @@ function renderChart(data) {
                 }
 
             }
+
         );
+
 }
 
 
-/* ========================================================
-   渲染整个指数
-======================================================== */
+/* =========================================================
+   渲染指数
+   ========================================================= */
 
 function renderIndex() {
 
@@ -819,7 +1342,9 @@ function renderIndex() {
 
 
     if (!data) {
+
         return;
+
     }
 
 
@@ -829,6 +1354,7 @@ function renderIndex() {
             `数据获取失败：${data.error}`;
 
         return;
+
     }
 
 
@@ -844,7 +1370,9 @@ function renderIndex() {
 
 
     $("closePrice").textContent =
-        formatNumber(data.close);
+        formatNumber(
+            data.close
+        );
 
 
     const changeElement =
@@ -852,16 +1380,24 @@ function renderIndex() {
 
 
     changeElement.textContent =
-        `${data.change_pct >= 0 ? "+" : ""}${data.change_pct.toFixed(2)}%`;
+
+        `${data.change_pct >= 0 ? "+" : ""}` +
+
+        `${Number(data.change_pct).toFixed(2)}%`;
 
 
     changeElement.className =
         "change " +
+
         (
             data.change_pct > 0
+
                 ? "positive"
+
                 : data.change_pct < 0
+
                     ? "negative"
+
                     : "neutral"
         );
 
@@ -870,8 +1406,24 @@ function renderIndex() {
         data.market_score;
 
 
+    /*
+       先归零再动画
+    */
+
     $("scoreProgress").style.width =
-        `${data.market_score}%`;
+        "0%";
+
+
+    requestAnimationFrame(
+
+        () => {
+
+            $("scoreProgress").style.width =
+                `${data.market_score}%`;
+
+        }
+
+    );
 
 
     $("marketState").textContent =
@@ -879,78 +1431,118 @@ function renderIndex() {
 
 
     setStateStyle(
+
         $("marketState"),
+
         data.market_state
+
     );
 
 
     $("marketSummary").textContent =
-        buildMarketSummary(data);
+        buildMarketSummary(
+            data
+        );
 
 
     $("ma5").textContent =
-        formatNumber(data.ma5);
+        formatNumber(
+            data.ma5
+        );
 
 
     $("ma20").textContent =
-        formatNumber(data.ma20);
+        formatNumber(
+            data.ma20
+        );
 
 
     $("ma60").textContent =
-        formatNumber(data.ma60);
+        formatNumber(
+            data.ma60
+        );
 
 
     $("rsi14").textContent =
-        formatNumber(data.rsi14);
+        formatNumber(
+            data.rsi14
+        );
 
 
     $("macdHist").textContent =
-        formatNumber(data.macd_hist);
+        formatNumber(
+            data.macd_hist
+        );
 
 
     $("bollMid").textContent =
-        formatNumber(data.boll_mid);
+        formatNumber(
+            data.boll_mid
+        );
 
 
     $("support1").textContent =
-        formatNumber(data.boll_lower);
+        formatNumber(
+            data.boll_lower
+        );
 
 
     $("support2").textContent =
-        formatNumber(data.low20);
+        formatNumber(
+            data.low20
+        );
 
 
     $("pressure1").textContent =
-        formatNumber(data.ma20);
+        formatNumber(
+            data.ma20
+        );
 
 
     $("pressure2").textContent =
-        formatNumber(data.high20);
+        formatNumber(
+            data.high20
+        );
 
 
-    renderStrategy(data);
+    renderStrategy(
+        data
+    );
 
-    renderReasons(data);
 
-    renderScenarios(data);
+    renderReasons(
+        data
+    );
 
-    renderChart(data);
+
+    renderScenarios(
+        data
+    );
+
+
+    renderChart(
+        data
+    );
+
 }
 
 
-/* ========================================================
-   指数切换
-======================================================== */
+/* =========================================================
+   指数按钮
+   ========================================================= */
 
 document
     .querySelectorAll(
         ".index-tab"
     )
     .forEach(
+
         button => {
 
             button.addEventListener(
+
                 "click",
+
                 () => {
 
                     document
@@ -958,10 +1550,13 @@ document
                             ".index-tab"
                         )
                         .forEach(
+
                             item =>
+
                                 item.classList.remove(
                                     "active"
                                 )
+
                         );
 
 
@@ -975,16 +1570,19 @@ document
 
 
                     renderIndex();
+
                 }
+
             );
 
         }
+
     );
 
 
-/* ========================================================
-   用户输入变化
-======================================================== */
+/* =========================================================
+   用户仓位变化
+   ========================================================= */
 
 [
     "positionInput",
@@ -992,57 +1590,81 @@ document
     "riskSelect"
 ]
 .forEach(
+
     id => {
 
         $(id).addEventListener(
+
             "input",
+
             () => {
 
                 saveUserSettings();
 
+
                 const data =
                     getCurrentData();
 
+
                 if (data) {
-                    renderStrategy(data);
+
+                    renderStrategy(
+                        data
+                    );
+
                 }
 
             }
+
         );
 
 
         $(id).addEventListener(
+
             "change",
+
             () => {
 
                 saveUserSettings();
 
+
                 const data =
                     getCurrentData();
 
+
                 if (data) {
-                    renderStrategy(data);
+
+                    renderStrategy(
+                        data
+                    );
+
                 }
 
             }
+
         );
 
     }
+
 );
 
 
-/* ========================================================
+/* =========================================================
    启动
-======================================================== */
+   ========================================================= */
 
 loadMarketData();
 
 
-/*
-   页面打开期间每5分钟重新检查一次market.json
-*/
+/* =========================================================
+   页面保持打开时
+   每5分钟读取一次新的 market.json
+   ========================================================= */
 
 setInterval(
+
     loadMarketData,
+
     5 * 60 * 1000
+
 );
