@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-22 16:31:08",
+  "updated_at": "2026-08-22 16:34:56",
   "indices": {
     "sse50": {
       "name": "上证50",
@@ -22,6 +22,17 @@
       "macd_hist": -10.18,
       "high20": 2980.64,
       "low20": 2867.93,
+      "market_score": 3,
+      "market_state": "弱势",
+      "market_reasons": [
+        "指数位于MA20下方",
+        "指数位于MA60下方",
+        "MA5位于MA20下方",
+        "MA20位于MA60下方",
+        "MACD处于空头结构",
+        "RSI动能偏弱",
+        "指数运行于BOLL中轨下方"
+      ],
       "history": [
         {
           "date": "2026-05-29",
@@ -826,6 +837,17 @@
       "macd_hist": -3.81,
       "high20": 30195.72,
       "low20": 27176.03,
+      "market_score": 39,
+      "market_state": "偏弱",
+      "market_reasons": [
+        "指数位于MA20上方",
+        "指数位于MA60下方",
+        "MA5位于MA20上方",
+        "MA20位于MA60下方",
+        "MACD处于空头结构",
+        "RSI动能偏弱",
+        "指数运行于BOLL中轨上方"
+      ],
       "history": [
         {
           "date": "2026-05-28",
@@ -1630,6 +1652,17 @@
       "macd_hist": -19.82,
       "high20": 7816.7,
       "low20": 7313.92,
+      "market_score": 81,
+      "market_state": "强势",
+      "market_reasons": [
+        "指数位于MA20上方",
+        "指数位于MA60上方",
+        "MA5位于MA20上方",
+        "MA20位于MA60上方",
+        "MACD处于空头结构",
+        "RSI处于偏强区间",
+        "指数运行于BOLL中轨上方"
+      ],
       "history": [
         {
           "date": "2026-05-28",
