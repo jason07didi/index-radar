@@ -10,29 +10,45 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>指数策略雷达</title>
+    <meta
+        name="theme-color"
+        content="#f5f5f7"
+    >
+
+    <meta
+        name="description"
+        content="上证50、纳斯达克100、标普500长期配置与定投策略雷达"
+    >
+
+    <title>
+        指数策略雷达 · Index Radar
+    </title>
 
     <link
         rel="stylesheet"
         href="style.css"
     >
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
 
 </head>
 
 
 <body>
 
+
 <div class="page">
 
-    <!-- ==========================================
-         顶部
-    =========================================== -->
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
     <header class="header">
 
-        <div>
+        <div class="header-main">
 
             <div class="brand">
                 INDEX RADAR
@@ -43,10 +59,11 @@
             </h1>
 
             <p class="subtitle">
-                上证50 · 纳斯达克100 · 标普500
+                长期配置 · 定投增强 · 历史情境推演
             </p>
 
         </div>
+
 
         <div class="update-box">
 
@@ -64,9 +81,9 @@
 
 
 
-    <!-- ==========================================
-         指数切换
-    =========================================== -->
+    <!-- =====================================================
+         INDEX SWITCH
+    ====================================================== -->
 
     <nav class="index-tabs">
 
@@ -77,12 +94,14 @@
             上证50
         </button>
 
+
         <button
             class="index-tab"
             data-index="nasdaq100"
         >
             纳斯达克100
         </button>
+
 
         <button
             class="index-tab"
@@ -95,13 +114,16 @@
 
 
 
-    <!-- ==========================================
-         今日概览
-    =========================================== -->
+    <!-- =====================================================
+         00
+         核心判断
+    ====================================================== -->
 
     <section class="hero-card">
 
+
         <div class="hero-top">
+
 
             <div>
 
@@ -111,6 +133,7 @@
                 >
                     --
                 </div>
+
 
                 <div
                     class="index-symbol"
@@ -123,8 +146,8 @@
 
 
             <div
-                class="market-state"
-                id="marketState"
+                class="allocation-badge"
+                id="allocationState"
             >
                 --
             </div>
@@ -132,11 +155,17 @@
         </div>
 
 
-        <div class="hero-main">
 
-            <div>
+        <!-- =================================================
+             市场价格
+        ================================================== -->
 
-                <span class="metric-label">
+        <div class="hero-price-row">
+
+
+            <div class="hero-price-main">
+
+                <span class="eyebrow">
                     最新收盘
                 </span>
 
@@ -147,17 +176,9 @@
                     --
                 </div>
 
-            </div>
-
-
-            <div>
-
-                <span class="metric-label">
-                    日涨跌
-                </span>
 
                 <div
-                    class="change"
+                    class="price-change"
                     id="changePct"
                 >
                     --
@@ -166,60 +187,124 @@
             </div>
 
 
-            <div>
 
-                <span class="metric-label">
-                    市场评分
-                </span>
+            <!-- =================================================
+                 三个核心状态
+            ================================================== -->
 
-                <div class="score-box">
+            <div class="hero-status-grid">
 
-                    <strong id="marketScore">
-                        --
-                    </strong>
+
+                <div class="hero-status-card">
 
                     <span>
-                        / 100
+                        长期配置吸引力
                     </span>
 
+                    <div class="status-value-row">
+
+                        <strong id="allocationScore">
+                            --
+                        </strong>
+
+                        <small>
+                            /100
+                        </small>
+
+                    </div>
+
+                    <p id="allocationStateText">
+                        --
+                    </p>
+
                 </div>
+
+
+
+                <div class="hero-status-card">
+
+                    <span>
+                        市场温度
+                    </span>
+
+                    <div class="status-value-row">
+
+                        <strong id="marketTemperature">
+                            --
+                        </strong>
+
+                        <small>
+                            /100
+                        </small>
+
+                    </div>
+
+                    <p id="temperatureState">
+                        --
+                    </p>
+
+                </div>
+
+
+
+                <div class="hero-status-card">
+
+                    <span>
+                        短期技术状态
+                    </span>
+
+                    <div
+                        class="technical-state-value"
+                        id="technicalState"
+                    >
+                        --
+                    </div>
+
+                    <p>
+                        用于辅助加减仓时点
+                    </p>
+
+                </div>
+
 
             </div>
 
         </div>
 
 
-        <div class="score-track">
 
-            <div
-                class="score-progress"
-                id="scoreProgress"
-            ></div>
+        <!-- =================================================
+             一句话结论
+        ================================================== -->
 
-        </div>
+        <div class="hero-conclusion">
 
+            <div class="conclusion-label">
 
-        <div class="market-summary">
+                <span class="conclusion-dot"></span>
 
-            <strong>
-                今日判断
-            </strong>
+                当前判断
 
-            <p id="marketSummary">
-                正在加载市场数据……
+            </div>
+
+            <p id="coreConclusion">
+                正在分析当前市场状态……
             </p>
 
         </div>
+
 
     </section>
 
 
 
-    <!-- ==========================================
-         用户仓位
-    =========================================== -->
+    <!-- =====================================================
+         01
+         我的投资计划
+    ====================================================== -->
 
     <section class="section">
+
 
         <div class="section-title">
 
@@ -230,10 +315,11 @@
                 </span>
 
                 <h2>
-                    我的仓位
+                    我的投资计划
                 </h2>
 
             </div>
+
 
             <span class="section-desc">
                 数据仅保存在当前浏览器
@@ -242,7 +328,11 @@
         </div>
 
 
+
         <div class="position-card">
+
+
+            <!-- 当前仓位 -->
 
             <div class="input-group">
 
@@ -270,6 +360,9 @@
             </div>
 
 
+
+            <!-- 持仓收益 -->
+
             <div class="input-group">
 
                 <label for="profitInput">
@@ -296,10 +389,42 @@
             </div>
 
 
+
+            <!-- 月定投 -->
+
+            <div class="input-group">
+
+                <label for="baseInvestmentInput">
+                    每月基础定投
+                </label>
+
+                <div class="input-wrap investment-input">
+
+                    <span class="currency-prefix">
+                        ¥
+                    </span>
+
+                    <input
+                        id="baseInvestmentInput"
+                        type="number"
+                        min="0"
+                        max="10000000"
+                        step="100"
+                        value="3000"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 投资风格 -->
+
             <div class="input-group">
 
                 <label for="riskSelect">
-                    策略风格
+                    投资风格
                 </label>
 
                 <select id="riskSelect">
@@ -323,17 +448,21 @@
 
             </div>
 
+
         </div>
+
 
     </section>
 
 
 
-    <!-- ==========================================
-         个性化策略
-    =========================================== -->
+    <!-- =====================================================
+         02
+         当前该怎么做
+    ====================================================== -->
 
     <section class="section">
+
 
         <div class="section-title">
 
@@ -344,22 +473,30 @@
                 </span>
 
                 <h2>
-                    仓位策略
+                    当前策略
                 </h2>
 
             </div>
 
+
+            <span class="section-desc">
+                长期配置优先，技术择时辅助
+            </span>
+
         </div>
+
 
 
         <div class="strategy-card">
 
-            <div class="strategy-header">
+
+            <div class="strategy-main">
+
 
                 <div>
 
-                    <span class="metric-label">
-                        当前参考动作
+                    <span class="strategy-kicker">
+                        当前建议
                     </span>
 
                     <div
@@ -372,19 +509,41 @@
                 </div>
 
 
-                <div class="target-position">
 
-                    <span>
-                        参考仓位
-                    </span>
+                <div class="strategy-investment">
 
-                    <strong id="targetPosition">
-                        --
-                    </strong>
+
+                    <div>
+
+                        <span>
+                            本期参考投入
+                        </span>
+
+                        <strong id="recommendedInvestment">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            定投倍率
+                        </span>
+
+                        <strong id="investmentMultiplier">
+                            --
+                        </strong>
+
+                    </div>
+
 
                 </div>
 
+
             </div>
+
 
 
             <p
@@ -395,22 +554,28 @@
             </p>
 
 
+
             <div
                 class="strategy-tags"
                 id="strategyTags"
-            ></div>
+            >
+            </div>
+
 
         </div>
+
 
     </section>
 
 
 
-    <!-- ==========================================
-         技术结构
-    =========================================== -->
+    <!-- =====================================================
+         03
+         未来20个交易日
+    ====================================================== -->
 
-    <section class="section">
+    <section class="section probability-section">
+
 
         <div class="section-title">
 
@@ -421,30 +586,837 @@
                 </span>
 
                 <h2>
-                    技术结构
+                    未来20个交易日
                 </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                历史相似状态推演
+            </span>
+
+        </div>
+
+
+
+        <div class="probability-card">
+
+
+            <!-- =================================================
+                 最可能路径
+            ================================================== -->
+
+            <div class="probability-hero">
+
+
+                <div>
+
+                    <span class="probability-kicker">
+                        历史上最常见路径
+                    </span>
+
+                    <div
+                        class="path-label"
+                        id="pathLabel"
+                    >
+                        --
+                    </div>
+
+                    <p id="pathDescription">
+                        --
+                    </p>
+
+                </div>
+
+
+
+                <div class="confidence-box">
+
+                    <span>
+                        参考可信度
+                    </span>
+
+                    <strong id="scenarioConfidence">
+                        --
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 上涨 / 震荡 / 下跌
+            ================================================== -->
+
+            <div class="direction-probability-grid">
+
+
+                <!-- 上涨 -->
+
+                <div class="direction-item direction-up">
+
+
+                    <div class="direction-head">
+
+                        <span>
+                            上涨
+                        </span>
+
+                        <strong id="upProbability">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="probability-track">
+
+                        <div
+                            class="probability-fill"
+                            id="upProbabilityBar"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <small>
+                        未来20日收益高于 +3%
+                    </small>
+
+
+                </div>
+
+
+
+                <!-- 震荡 -->
+
+                <div class="direction-item direction-sideways">
+
+
+                    <div class="direction-head">
+
+                        <span>
+                            震荡
+                        </span>
+
+                        <strong id="sidewaysProbability">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="probability-track">
+
+                        <div
+                            class="probability-fill"
+                            id="sidewaysProbabilityBar"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <small>
+                        未来20日收益介于 ±3%
+                    </small>
+
+
+                </div>
+
+
+
+                <!-- 下跌 -->
+
+                <div class="direction-item direction-down">
+
+
+                    <div class="direction-head">
+
+                        <span>
+                            下跌
+                        </span>
+
+                        <strong id="downProbability">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="probability-track">
+
+                        <div
+                            class="probability-fill"
+                            id="downProbabilityBar"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <small>
+                        未来20日收益低于 -3%
+                    </small>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 历史统计
+            ================================================== -->
+
+            <div class="probability-stats">
+
+
+                <div>
+
+                    <span>
+                        相似历史样本
+                    </span>
+
+                    <strong id="scenarioSampleSize">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        有效样本
+                    </span>
+
+                    <strong id="effectiveSampleSize">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        历史平均20日收益
+                    </span>
+
+                    <strong id="averageFutureReturn">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        历史中位数收益
+                    </span>
+
+                    <strong id="medianFutureReturn">
+                        --
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="probability-note">
+
+                这里展示的是历史相似市场状态下的条件频率，
+                不是对未来结果的确定性预测。
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         04
+         关键事件概率
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    04
+                </span>
+
+                <h2>
+                    关键事件概率
+                </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                未来20个交易日内
+            </span>
+
+        </div>
+
+
+
+        <div class="event-grid">
+
+
+            <div class="event-card">
+
+                <span class="event-label">
+                    重新站上 MA20
+                </span>
+
+                <strong id="aboveMa20Probability">
+                    --%
+                </strong>
+
+                <p id="ma20Value">
+                    MA20 --
+                </p>
+
+            </div>
+
+
+
+            <div class="event-card">
+
+                <span class="event-label">
+                    站上 MA60
+                </span>
+
+                <strong id="aboveMa60Probability">
+                    --%
+                </strong>
+
+                <p id="ma60Value">
+                    MA60 --
+                </p>
+
+            </div>
+
+
+
+            <div class="event-card">
+
+                <span class="event-label">
+                    突破近20日高点
+                </span>
+
+                <strong id="breakHighProbability">
+                    --%
+                </strong>
+
+                <p id="high20Value">
+                    --
+                </p>
+
+            </div>
+
+
+
+            <div class="event-card">
+
+                <span class="event-label">
+                    跌破近20日低点
+                </span>
+
+                <strong id="breakLowProbability">
+                    --%
+                </strong>
+
+                <p id="low20Value">
+                    --
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         05
+         长期趋势图
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title chart-section-title">
+
+            <div>
+
+                <span class="section-number">
+                    05
+                </span>
+
+                <h2>
+                    长期趋势
+                </h2>
+
+            </div>
+
+
+
+            <div class="chart-range-switch">
+
+                <button
+                    class="range-button"
+                    data-range="63"
+                >
+                    3个月
+                </button>
+
+
+                <button
+                    class="range-button"
+                    data-range="126"
+                >
+                    6个月
+                </button>
+
+
+                <button
+                    class="range-button active"
+                    data-range="252"
+                >
+                    1年
+                </button>
 
             </div>
 
         </div>
 
 
-        <div class="metrics-grid">
 
-            <div class="metric-card">
+        <div class="chart-card">
 
-                <span>
-                    MA5
-                </span>
 
-                <strong id="ma5">
-                    --
-                </strong>
+            <div class="chart-summary">
+
+
+                <div>
+
+                    <span>
+                        当前
+                    </span>
+
+                    <strong id="chartCurrentPrice">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        MA20
+                    </span>
+
+                    <strong id="chartMa20">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        MA60
+                    </span>
+
+                    <strong id="chartMa60">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="year-line-value">
+
+                    <span>
+                        MA200 · 年线
+                    </span>
+
+                    <strong id="chartMa200">
+                        --
+                    </strong>
+
+                </div>
+
 
             </div>
 
 
-            <div class="metric-card">
+
+            <div class="chart-canvas-wrap">
+
+                <canvas id="marketChart"></canvas>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         06
+         长期价格位置
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    06
+                </span>
+
+                <h2>
+                    长期价格位置
+                </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                用于判断是否值得增加长期配置
+            </span>
+
+        </div>
+
+
+
+        <div class="longterm-grid">
+
+
+            <!-- 52周回撤 -->
+
+            <div class="longterm-card">
+
+                <span>
+                    距52周高点
+                </span>
+
+                <strong id="drawdown52w">
+                    --
+                </strong>
+
+                <p>
+                    回撤越深，长期价格吸引力通常越高
+                </p>
+
+            </div>
+
+
+
+            <!-- MA200偏离 -->
+
+            <div class="longterm-card">
+
+                <span>
+                    相对年线
+                </span>
+
+                <strong id="devMa200">
+                    --
+                </strong>
+
+                <p id="devMa200Description">
+                    --
+                </p>
+
+            </div>
+
+
+
+            <!-- 20日收益 -->
+
+            <div class="longterm-card">
+
+                <span>
+                    近20日涨跌
+                </span>
+
+                <strong id="return20">
+                    --
+                </strong>
+
+                <p>
+                    用于识别短期快速上涨或快速回撤
+                </p>
+
+            </div>
+
+
+
+            <!-- 60日收益 -->
+
+            <div class="longterm-card">
+
+                <span>
+                    近60日涨跌
+                </span>
+
+                <strong id="return60">
+                    --
+                </strong>
+
+                <p>
+                    观察中期价格趋势
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         07
+         市场情绪与利率
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    07
+                </span>
+
+                <h2>
+                    市场情绪与利率
+                </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                美国市场辅助指标
+            </span>
+
+        </div>
+
+
+
+        <div class="macro-grid">
+
+
+            <!-- VIX -->
+
+            <div class="macro-card">
+
+                <div class="macro-header">
+
+                    <div>
+
+                        <span class="macro-name">
+                            VIX
+                        </span>
+
+                        <p>
+                            市场波动与风险情绪
+                        </p>
+
+                    </div>
+
+
+                    <div
+                        class="macro-state"
+                        id="vixState"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="macro-value"
+                    id="vixValue"
+                >
+                    --
+                </div>
+
+
+                <div class="macro-footer">
+
+                    <span>
+                        5年历史分位
+                    </span>
+
+                    <strong id="vixPercentile">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <p
+                    class="macro-description"
+                    id="vixDescription"
+                >
+                    --
+                </p>
+
+
+            </div>
+
+
+
+            <!-- US10Y -->
+
+            <div class="macro-card">
+
+                <div class="macro-header">
+
+                    <div>
+
+                        <span class="macro-name">
+                            美国10年期国债
+                        </span>
+
+                        <p>
+                            长期无风险收益率参考
+                        </p>
+
+                    </div>
+
+
+                    <div
+                        class="macro-state"
+                        id="us10yTrend"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="macro-value">
+
+                    <span id="us10yValue">
+                        --
+                    </span>
+
+                    <small>
+                        %
+                    </small>
+
+                </div>
+
+
+                <div class="macro-footer">
+
+                    <span>
+                        20日变化
+                    </span>
+
+                    <strong id="us10yChange20">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <p class="macro-description">
+
+                    利率持续上升通常会提高股票估值的折现压力；
+                    利率下降则相反。
+
+                </p>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         08
+         技术确认
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    08
+                </span>
+
+                <h2>
+                    技术确认
+                </h2>
+
+            </div>
+
+
+            <span class="section-desc">
+                决定何时加仓，而不是决定长期价值
+            </span>
+
+        </div>
+
+
+
+        <div class="technical-grid">
+
+
+            <div class="technical-card">
 
                 <span>
                     MA20
@@ -457,7 +1429,7 @@
             </div>
 
 
-            <div class="metric-card">
+            <div class="technical-card">
 
                 <span>
                     MA60
@@ -470,7 +1442,20 @@
             </div>
 
 
-            <div class="metric-card">
+            <div class="technical-card highlight">
+
+                <span>
+                    MA200 · 年线
+                </span>
+
+                <strong id="ma200">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="technical-card">
 
                 <span>
                     RSI14
@@ -483,7 +1468,7 @@
             </div>
 
 
-            <div class="metric-card">
+            <div class="technical-card">
 
                 <span>
                     MACD柱
@@ -496,246 +1481,246 @@
             </div>
 
 
-            <div class="metric-card">
+            <div class="technical-card">
 
                 <span>
-                    BOLL中轨
+                    20日波动率
                 </span>
 
-                <strong id="bollMid">
+                <strong id="volatility20">
                     --
                 </strong>
 
             </div>
 
+
         </div>
+
 
     </section>
 
 
 
-    <!-- ==========================================
-         60日结构图
-    =========================================== -->
+    <!-- =====================================================
+         09
+         为什么这样判断
+    ====================================================== -->
 
     <section class="section">
+
 
         <div class="section-title">
 
             <div>
 
                 <span class="section-number">
-                    04
+                    09
                 </span>
 
                 <h2>
-                    60日结构
+                    为什么这样判断
                 </h2>
 
             </div>
 
+        </div>
+
+
+
+        <div class="reason-layout">
+
+
+            <!-- 长期 -->
+
+            <div class="reason-group">
+
+                <div class="reason-group-title">
+
+                    <span class="reason-icon">
+                        L
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            长期配置
+                        </strong>
+
+                        <p>
+                            为什么当前值得或不值得增加配置
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="reason-list"
+                    id="allocationReasons"
+                >
+                </div>
+
+            </div>
+
+
+
+            <!-- 技术 -->
+
+            <div class="reason-group">
+
+                <div class="reason-group-title">
+
+                    <span class="reason-icon">
+                        T
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            短期技术
+                        </strong>
+
+                        <p>
+                            当前是否已经出现加仓确认
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="reason-list"
+                    id="technicalReasons"
+                >
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         10
+         估值
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="section-number">
+                    10
+                </span>
+
+                <h2>
+                    基本面估值
+                </h2>
+
+            </div>
+
+
             <span class="section-desc">
-                收盘 · MA5 · MA20 · MA60
+                下一阶段接入
             </span>
 
         </div>
 
 
-        <div class="chart-card">
 
-            <canvas id="marketChart"></canvas>
-
-        </div>
-
-    </section>
+        <div class="valuation-placeholder">
 
 
+            <div class="valuation-placeholder-icon">
+                V
+            </div>
 
-    <!-- ==========================================
-         关键位置
-    =========================================== -->
-
-    <section class="section">
-
-        <div class="section-title">
 
             <div>
 
-                <span class="section-number">
-                    05
-                </span>
+                <strong>
+                    PE / 历史估值分位正在规划接入
+                </strong>
 
-                <h2>
-                    四个关键位置
-                </h2>
+                <p>
+                    当前“长期配置吸引力”主要依据52周回撤、
+                    MA200长期位置和市场热度计算，
+                    尚不能等同于严格意义上的内在价值估算。
+                    后续接入估值数据后，将进一步提高长期配置判断的完整性。
+                </p>
 
             </div>
+
 
         </div>
 
-
-        <div class="levels-grid">
-
-            <div class="level-card support">
-
-                <span>
-                    第一支撑
-                </span>
-
-                <strong id="support1">
-                    --
-                </strong>
-
-                <p>
-                    BOLL下轨
-                </p>
-
-            </div>
-
-
-            <div class="level-card support">
-
-                <span>
-                    第二支撑
-                </span>
-
-                <strong id="support2">
-                    --
-                </strong>
-
-                <p>
-                    近20日低点
-                </p>
-
-            </div>
-
-
-            <div class="level-card pressure">
-
-                <span>
-                    第一压力
-                </span>
-
-                <strong id="pressure1">
-                    --
-                </strong>
-
-                <p>
-                    MA20
-                </p>
-
-            </div>
-
-
-            <div class="level-card pressure">
-
-                <span>
-                    第二压力
-                </span>
-
-                <strong id="pressure2">
-                    --
-                </strong>
-
-                <p>
-                    近20日高点
-                </p>
-
-            </div>
-
-        </div>
 
     </section>
 
 
 
-    <!-- ==========================================
-         判断依据
-    =========================================== -->
-
-    <section class="section">
-
-        <div class="section-title">
-
-            <div>
-
-                <span class="section-number">
-                    06
-                </span>
-
-                <h2>
-                    判断依据
-                </h2>
-
-            </div>
-
-        </div>
-
-
-        <div
-            class="reasons-card"
-            id="marketReasons"
-        >
-        </div>
-
-    </section>
-
-
-
-    <!-- ==========================================
-         情景推演
-    =========================================== -->
-
-    <section class="section">
-
-        <div class="section-title">
-
-            <div>
-
-                <span class="section-number">
-                    07
-                </span>
-
-                <h2>
-                    下一阶段推演
-                </h2>
-
-            </div>
-
-        </div>
-
-
-        <div
-            class="scenario-list"
-            id="scenarioList"
-        >
-        </div>
-
-    </section>
-
-
-
-    <!-- ==========================================
-         页脚
-    =========================================== -->
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
 
     <footer>
 
-        <p>
-            数据来源：Tencent / Yahoo Finance
-        </p>
 
-        <p>
-            本页面仅用于技术分析、策略研究和个人记录，
-            不构成任何投资建议。
-        </p>
+        <div class="footer-brand">
+
+            <strong>
+                INDEX RADAR
+            </strong>
+
+            <span>
+                Long-term allocation intelligence
+            </span>
+
+        </div>
+
+
+        <div class="footer-info">
+
+            <p>
+                行情数据：
+                Tencent / Yahoo Finance
+            </p>
+
+            <p>
+                美国情绪及利率：
+                VIX / US 10Y Treasury Yield
+            </p>
+
+            <p>
+                历史概率基于历史相似状态的加权统计，
+                不代表未来事件的真实发生概率。
+            </p>
+
+            <p>
+                本页面仅用于个人投资研究、长期配置记录及技术分析，
+                不构成任何投资建议。
+            </p>
+
+        </div>
+
 
     </footer>
+
 
 </div>
 
 
 <script src="app.js"></script>
+
 
 </body>
 
