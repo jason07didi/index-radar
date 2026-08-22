@@ -1,12 +1,15 @@
-name: Test Actions
+name: Update Market Data
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test
-        run: echo "Index Radar GitHub Actions is working!"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test workflow
+        run: echo "Index Radar workflow is working!"
