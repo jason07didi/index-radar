@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-08-22 16:19:24",
+  "updated_at": "2026-08-22 16:25:51",
   "indices": {
     "sse50": {
       "name": "上证50",
-      "symbol": "000016.SS",
-      "error": "上证50 获取的数据不足"
+      "symbol": "000016.SH",
+      "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
     },
     "nasdaq100": {
       "name": "纳斯达克100",
