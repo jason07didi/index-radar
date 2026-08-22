@@ -1,29 +1,25 @@
 /* =========================================================
    INDEX RADAR
-   Frontend Strategy Engine 3.1
+   Frontend Strategy Engine 4.0
+   VALUATION FIRST
 
-   核心问题：
+   核心原则：
 
-   1. 长期配置吸引力
-      → 现在值不值得增加长期资金？
+   1. 估值决定：
+      - 定投
+      - 持有
+      - 暂停新增
+      - 再平衡
 
-   2. 价格温度
-      → 当前价格相对长期锚点热不热？
+   2. 估值程度决定：
+      - 定期不定额投入金额
 
-   3. 市场情绪
-      → 投资者现在更恐惧还是更亢奋？
+   3. 价格位置 / 市场情绪 / 技术状态 / 20日情境：
+      - 只用于解释当前市场环境
+      - 不进入长期核心决策
 
-   4. 短期技术
-      → 现在是否适合分批动手？
-
-   5. 历史相似情境
-      → 历史上类似状态之后通常怎么走？
-
-   重要原则：
-
-   基础定投作为长期底仓。
-   市场过热时主要减少“额外加仓”，
-   而不是机械停止长期定投。
+   4. 持仓盈亏：
+      - 不作为买卖依据
 
    ========================================================= */
 
@@ -41,6 +37,14 @@ let currentChartRange = 252;
 let marketChart = null;
 
 let activeHelpButton = null;
+
+
+const DATA_URL =
+    "data/market.json";
+
+
+const REFRESH_INTERVAL =
+    5 * 60 * 1000;
 
 
 /* =========================================================
@@ -73,8 +77,21 @@ function clamp(
 
 function safeNumber(
     value,
-    fallback = 0
+    fallback = null
 ) {
+
+    if (
+        value === null
+        ||
+        value === undefined
+        ||
+        value === ""
+    ) {
+
+        return fallback;
+
+    }
+
 
     const number =
         Number(value);
@@ -92,68 +109,139 @@ function formatNumber(
     digits = 2
 ) {
 
-    if (
-        value === null ||
-        value === undefined ||
-        Number.isNaN(
-            Number(value)
-        )
-    ) {
+    const number =
+        safeNumber(
+            value,
+            null
+        );
+
+
+    if (number === null) {
 
         return "--";
 
     }
 
 
-    return Number(value)
-        .toLocaleString(
+    return number.toLocaleString(
 
-            "zh-CN",
+        "zh-CN",
 
-            {
-                minimumFractionDigits:
-                    digits,
+        {
+            minimumFractionDigits:
+                digits,
 
-                maximumFractionDigits:
-                    digits
-            }
+            maximumFractionDigits:
+                digits
+        }
 
+    );
+
+}
+
+
+function formatCompactNumber(
+    value,
+    maxDigits = 2
+) {
+
+    const number =
+        safeNumber(
+            value,
+            null
         );
+
+
+    if (number === null) {
+
+        return "--";
+
+    }
+
+
+    return number.toLocaleString(
+
+        "zh-CN",
+
+        {
+            maximumFractionDigits:
+                maxDigits
+        }
+
+    );
 
 }
 
 
 function formatPercent(
     value,
-    digits = 2
+    digits = 2,
+    showPlus = true
 ) {
 
-    if (
-        value === null ||
-        value === undefined ||
-        Number.isNaN(
-            Number(value)
-        )
-    ) {
+    const number =
+        safeNumber(
+            value,
+            null
+        );
+
+
+    if (number === null) {
 
         return "--";
 
     }
 
 
-    const number =
-        Number(value);
+    const prefix =
+        (
+            showPlus
+            &&
+            number > 0
+        )
+            ? "+"
+            : "";
 
 
     return (
 
-        (
-            number > 0
-                ? "+"
-                : ""
+        prefix
+
+        +
+
+        number.toFixed(
+            digits
         )
 
         +
+
+        "%"
+
+    );
+
+}
+
+
+function formatPlainPercent(
+    value,
+    digits = 2
+) {
+
+    const number =
+        safeNumber(
+            value,
+            null
+        );
+
+
+    if (number === null) {
+
+        return "--";
+
+    }
+
+
+    return (
 
         number.toFixed(
             digits
@@ -175,8 +263,15 @@ function formatCurrency(
     const number =
         safeNumber(
             value,
-            0
+            null
         );
+
+
+    if (number === null) {
+
+        return "--";
+
+    }
 
 
     return (
@@ -197,13 +292,13 @@ function formatCurrency(
 }
 
 
-function setPercentBar(
-    elementId,
+function setText(
+    id,
     value
 ) {
 
     const element =
-        $(elementId);
+        $(id);
 
 
     if (!element) {
@@ -211,6 +306,47 @@ function setPercentBar(
         return;
 
     }
+
+
+    element.textContent =
+        (
+            value === null
+            ||
+            value === undefined
+            ||
+            value === ""
+        )
+            ? "--"
+            : String(value);
+
+}
+
+
+function setPercentBar(
+    id,
+    value
+) {
+
+    const element =
+        $(id);
+
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    const number =
+        clamp(
+            safeNumber(
+                value,
+                0
+            ),
+            0,
+            100
+        );
 
 
     element.style.width =
@@ -222,14 +358,7 @@ function setPercentBar(
         () => {
 
             element.style.width =
-
-                `${clamp(
-                    safeNumber(
-                        value
-                    ),
-                    0,
-                    100
-                )}%`;
+                `${number}%`;
 
         }
 
@@ -239,214 +368,131 @@ function setPercentBar(
 
 
 /* =========================================================
-   HUMAN-FRIENDLY LABELS
+   SOURCE QUALITY
    ========================================================= */
+
+function humanSourceQuality(
+    quality
+) {
+
+    switch (quality) {
+
+        case "official":
+
+            return "官方";
+
+
+        case "secondary":
+
+            return "二级可靠来源";
+
+
+        case "proxy":
+
+            return "ETF代理";
+
+
+        case "accumulated":
+
+            return "历史积累";
+
+
+        default:
+
+            return quality || "--";
+
+    }
+
+}
 
 
 /* =========================================================
-   长期配置
-
-   尽量不用：
-   高吸引力 / 中性 / 偏低
-
-   改为：
-   值得重点关注 / 适合增强 / 正常定投...
+   VALUATION METHOD SHORT NAME
    ========================================================= */
 
-function getAllocationActionLabel(
-    data
+function getMethodShortName(
+    indexKey,
+    valuation
 ) {
 
     if (
-        data.allocation_action_label
+        indexKey === "sse50"
     ) {
 
-        return (
-            data.allocation_action_label
-        );
+        return "盈利收益率法";
 
     }
 
 
-    const score =
-        safeNumber(
-            data.allocation_score,
-            50
-        );
+    if (
+        indexKey === "sp500"
+    ) {
 
-
-    if (score >= 80) {
-
-        return "值得重点关注";
+        return "博格公式框架";
 
     }
 
 
-    if (score >= 65) {
+    if (
+        indexKey === "nasdaq100"
+    ) {
 
-        return "适合适度增强";
-
-    }
-
-
-    if (score >= 45) {
-
-        return "正常定投";
+        return "成长型博格框架";
 
     }
 
 
-    if (score >= 30) {
-
-        return "谨慎增加";
-
-    }
-
-
-    return "暂停额外加仓";
+    return (
+        valuation.method_name
+        || "--"
+    );
 
 }
 
 
 /* =========================================================
-   价格温度
+   VALUATION STATE
    ========================================================= */
 
-function getTemperatureLabel(
-    score
-) {
-
-    score =
-        safeNumber(
-            score,
-            50
-        );
-
-
-    if (score < 25) {
-
-        return "价格明显偏冷";
-
-    }
-
-
-    if (score < 40) {
-
-        return "价格偏冷";
-
-    }
-
-
-    if (score <= 60) {
-
-        return "价格平衡";
-
-    }
-
-
-    if (score < 75) {
-
-        return "价格偏热";
-
-    }
-
-
-    return "价格明显过热";
-
-}
-
-
-/* =========================================================
-   市场情绪
-
-   避免单纯显示：
-   偏冷 / 中性 / 偏热
-
-   改成更符合心理含义的表达。
-   ========================================================= */
-
-function getHumanSentimentLabel(
-    score
-) {
-
-    score =
-        safeNumber(
-            score,
-            50
-        );
-
-
-    if (score < 25) {
-
-        return "情绪明显谨慎";
-
-    }
-
-
-    if (score < 40) {
-
-        return "情绪偏谨慎";
-
-    }
-
-
-    if (score <= 60) {
-
-        return "情绪平稳";
-
-    }
-
-
-    if (score < 75) {
-
-        return "情绪偏积极";
-
-    }
-
-
-    return "情绪明显亢奋";
-
-}
-
-
-/* =========================================================
-   技术状态
-   ========================================================= */
-
-function getTechnicalDisplay(
+function getValuationSignal(
     state
 ) {
 
     switch (state) {
 
-        case "强势":
+        case "明显低估":
 
-            return "强势";
-
-
-        case "偏强":
-
-            return "偏强";
+            return "deep-undervalued";
 
 
-        case "中性":
+        case "低估":
 
-            return "震荡";
-
-
-        case "偏弱":
-
-            return "偏弱";
+            return "undervalued";
 
 
-        case "弱势":
+        case "合理":
 
-            return "弱势";
+            return "fair";
+
+
+        case "偏高估":
+
+            return "expensive";
+
+
+        case "明显高估":
+
+            return "overvalued";
+
+
+        case "PE异常/需辅助估值":
+
+            return "uncertain";
 
 
         default:
 
-            return state || "--";
+            return "unknown";
 
     }
 
@@ -454,96 +500,156 @@ function getTechnicalDisplay(
 
 
 /* =========================================================
-   LOAD JSON
+   VALUATION DESCRIPTION
    ========================================================= */
 
-async function loadMarketData() {
+function buildValuationDescription(
+    data
+) {
 
-    try {
-
-        const response =
-            await fetch(
-
-                `data/market.json?t=${Date.now()}`,
-
-                {
-                    cache:
-                        "no-store"
-                }
-
-            );
+    const valuation =
+        data.valuation
+        || {};
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                "market.json 加载失败"
-            );
-
-        }
+    const state =
+        valuation.state
+        || "数据不足";
 
 
-        marketData =
-            await response.json();
-
-
-        if ($("updatedAt")) {
-
-            $("updatedAt").textContent =
-                marketData.updated_at
-                || "--";
-
-        }
-
-
-        updateGuideContent();
-
-        renderCurrentIndex();
-
-
-    } catch (error) {
-
-        console.error(
-            "市场数据加载失败：",
-            error
+    const method =
+        getMethodShortName(
+            currentIndex,
+            valuation
         );
 
 
-        if ($("coreConclusion")) {
+    const confidence =
+        valuation.confidence
+        || "较低";
 
-            $("coreConclusion").textContent =
-                "市场数据加载失败，请稍后刷新页面。";
 
-        }
+    if (
+        state === "明显低估"
+    ) {
+
+        return (
+
+            `按${method}判断，当前估值已进入历史较低区域。`
+
+            +
+
+            `在现有数据口径下，估值参考可信度为${confidence}。`
+
+            +
+
+            "长期策略以增强定投为主；短期继续下跌并不会自动推翻低估结论。"
+
+        );
 
     }
 
-}
-
-
-/* =========================================================
-   CURRENT INDEX DATA
-   ========================================================= */
-
-function getCurrentData() {
 
     if (
-        !marketData ||
-        !marketData.indices
+        state === "低估"
     ) {
 
-        return null;
+        return (
+
+            `按${method}判断，当前估值处于相对低估区域。`
+
+            +
+
+            "符合继续定投的条件。"
+
+            +
+
+            "投入金额可以随估值进一步降低而增加，而不是等待技术指标确认。"
+
+        );
+
+    }
+
+
+    if (
+        state === "合理"
+    ) {
+
+        return (
+
+            `按${method}判断，当前估值已经回到相对合理区域。`
+
+            +
+
+            "依据当前模型，已有持仓以继续持有为主，暂停估值驱动的新增资金。"
+
+        );
+
+    }
+
+
+    if (
+        state === "偏高估"
+    ) {
+
+        return (
+
+            `按${method}判断，当前估值已高于较合理的历史区域。`
+
+            +
+
+            "现阶段不适合继续新增长期资金，但偏高估本身也不意味着短期一定下跌。"
+
+        );
+
+    }
+
+
+    if (
+        state === "明显高估"
+    ) {
+
+        return (
+
+            `按${method}判断，当前估值处于自身历史较高区域。`
+
+            +
+
+            "暂停新增；如果实际配置比例已经明显高于长期目标，可考虑分批再平衡，"
+
+            +
+
+            "而不是依据单日走势一次性退出。"
+
+        );
+
+    }
+
+
+    if (
+        state === "PE异常/需辅助估值"
+    ) {
+
+        return (
+
+            "当前PE可能受到盈利异常变化影响，单独使用PE容易形成误判。"
+
+            +
+
+            "系统因此主动降低PE的决策权，等待PB、正常化盈利等辅助估值数据。"
+
+        );
 
     }
 
 
     return (
 
-        marketData.indices[
-            currentIndex
-        ]
+        "当前估值数据或历史样本不足，"
 
-        || null
+        +
+
+        "系统不会为了给出结论而人为补齐缺失信息。"
 
     );
 
@@ -551,7 +657,133 @@ function getCurrentData() {
 
 
 /* =========================================================
-   LOCAL STORAGE
+   CORE CONCLUSION
+   ========================================================= */
+
+function buildCoreConclusion(
+    data
+) {
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    const state =
+        valuation.state
+        || "数据不足";
+
+
+    const pe =
+        safeNumber(
+            valuation.pe,
+            null
+        );
+
+
+    const percentile =
+        safeNumber(
+            valuation.pe_percentile_10y,
+            null
+        );
+
+
+    let metrics = "";
+
+
+    if (
+        pe !== null
+        &&
+        percentile !== null
+    ) {
+
+        metrics =
+
+            ` 当前可比口径PE约为 ${pe.toFixed(2)}，`
+
+            +
+
+            `位于可用历史约 ${percentile.toFixed(1)}% 分位。`;
+
+    }
+
+
+    return (
+
+        buildValuationDescription(
+            data
+        )
+
+        +
+
+        metrics
+
+        +
+
+        " 价格位置、风险情绪、技术状态和短期20日情境均只作为辅助观察。"
+
+    );
+
+}
+
+
+/* =========================================================
+   RISK / CAPITAL INTENSITY
+   ========================================================= */
+
+function getInvestmentN(
+    risk
+) {
+
+    switch (risk) {
+
+        case "conservative":
+
+            return 0.5;
+
+
+        case "aggressive":
+
+            return 1.5;
+
+
+        case "balanced":
+        default:
+
+            return 1.0;
+
+    }
+
+}
+
+
+function getRiskLabel(
+    risk
+) {
+
+    switch (risk) {
+
+        case "conservative":
+
+            return "保守";
+
+
+        case "aggressive":
+
+            return "积极";
+
+
+        default:
+
+            return "均衡";
+
+    }
+
+}
+
+
+/* =========================================================
+   USER SETTINGS
    ========================================================= */
 
 function storageKey(
@@ -560,7 +792,7 @@ function storageKey(
 
     return (
 
-        "indexRadar_"
+        "indexRadar4_"
 
         +
 
@@ -581,31 +813,21 @@ function storageKey(
 
 function loadUserSettings() {
 
-    const position =
-        localStorage.getItem(
-
-            storageKey(
-                "position"
-            )
-
-        );
-
-
-    const profit =
-        localStorage.getItem(
-
-            storageKey(
-                "profit"
-            )
-
-        );
-
-
-    const investment =
+    const base =
         localStorage.getItem(
 
             storageKey(
                 "baseInvestment"
+            )
+
+        );
+
+
+    const max =
+        localStorage.getItem(
+
+            storageKey(
+                "maxInvestment"
             )
 
         );
@@ -621,46 +843,39 @@ function loadUserSettings() {
         );
 
 
-    if ($("positionInput")) {
-
-        $("positionInput").value =
-
-            position !== null
-
-                ? position
-
-                : 50;
-
-    }
-
-
-    if ($("profitInput")) {
-
-        $("profitInput").value =
-
-            profit !== null
-
-                ? profit
-
-                : 0;
-
-    }
-
-
-    if ($("baseInvestmentInput")) {
+    if (
+        $("baseInvestmentInput")
+    ) {
 
         $("baseInvestmentInput").value =
 
-            investment !== null
+            base !== null
 
-                ? investment
+                ? base
 
                 : 3000;
 
     }
 
 
-    if ($("riskSelect")) {
+    if (
+        $("maxInvestmentInput")
+    ) {
+
+        $("maxInvestmentInput").value =
+
+            max !== null
+
+                ? max
+
+                : 6000;
+
+    }
+
+
+    if (
+        $("riskSelect")
+    ) {
 
         $("riskSelect").value =
 
@@ -670,422 +885,95 @@ function loadUserSettings() {
 
     }
 
+
+    updateRiskDescription();
+
 }
 
 
 function saveUserSettings() {
 
-    localStorage.setItem(
+    if (
+        $("baseInvestmentInput")
+    ) {
 
-        storageKey(
-            "position"
-        ),
+        localStorage.setItem(
 
-        $("positionInput").value
+            storageKey(
+                "baseInvestment"
+            ),
 
-    );
+            $("baseInvestmentInput").value
 
+        );
 
-    localStorage.setItem(
-
-        storageKey(
-            "profit"
-        ),
-
-        $("profitInput").value
-
-    );
+    }
 
 
-    localStorage.setItem(
+    if (
+        $("maxInvestmentInput")
+    ) {
 
-        storageKey(
-            "baseInvestment"
-        ),
+        localStorage.setItem(
 
-        $("baseInvestmentInput").value
+            storageKey(
+                "maxInvestment"
+            ),
 
-    );
+            $("maxInvestmentInput").value
+
+        );
+
+    }
 
 
-    localStorage.setItem(
+    if (
+        $("riskSelect")
+    ) {
 
-        storageKey(
-            "risk"
-        ),
+        localStorage.setItem(
 
-        $("riskSelect").value
+            storageKey(
+                "risk"
+            ),
 
-    );
+            $("riskSelect").value
+
+        );
+
+    }
 
 }
 
 
-/* =========================================================
-   ALLOCATION BADGE
-   ========================================================= */
+function updateRiskDescription() {
 
-function setAllocationBadge(
-    label,
-    score
-) {
-
-    const element =
-        $("allocationState");
-
-
-    if (!element) {
+    if (
+        !$("riskSelect")
+        ||
+        !$("riskNDescription")
+    ) {
 
         return;
 
     }
 
 
-    element.className =
-        "allocation-badge";
+    const risk =
+        $("riskSelect").value;
 
 
-    score =
-        safeNumber(
-            score,
-            50
+    const n =
+        getInvestmentN(
+            risk
         );
 
 
-    if (score >= 65) {
+    setText(
 
-        element.classList.add(
-            "allocation-high"
-        );
+        "riskNDescription",
 
-
-    } else if (
-        score >= 45
-    ) {
-
-        element.classList.add(
-            "allocation-neutral"
-        );
-
-
-    } else {
-
-        element.classList.add(
-            "allocation-low"
-        );
-
-    }
-
-
-    element.textContent =
-        label || "--";
-
-}
-
-
-/* =========================================================
-   MARKET-ONLY DECISION
-   首屏的“当前配置状态”
-
-   不读取用户仓位，
-   这里回答市场本身怎么样。
-
-   个性化仓位逻辑放在“当前策略”。
-   ========================================================= */
-
-function buildMarketDecision(
-    data
-) {
-
-    const allocation =
-        safeNumber(
-            data.allocation_score,
-            50
-        );
-
-
-    const temperature =
-        safeNumber(
-            data.market_temperature,
-            50
-        );
-
-
-    const sentiment =
-        data.sentiment
-            ? safeNumber(
-                data.sentiment.score,
-                50
-            )
-            : 50;
-
-
-    const technical =
-        data.technical_state
-        || "中性";
-
-
-    let title = "";
-
-    let description = "";
-
-    let signal =
-        "neutral";
-
-
-    /* =====================================================
-       很有吸引力 + 价格冷
-       ===================================================== */
-
-    if (
-        allocation >= 75
-        &&
-        temperature <= 35
-    ) {
-
-        signal =
-            "opportunity";
-
-
-        if (
-            technical === "弱势" ||
-            technical === "偏弱"
-        ) {
-
-            title =
-                "配置机会正在改善";
-
-
-            description =
-
-                "长期价格条件已经明显改善，但短期趋势仍然偏弱。" +
-
-                "对长期定投者而言，可以继续基础定投，并为后续企稳准备分批增强资金。";
-
-
-        } else {
-
-            title =
-                "适合分批增强";
-
-
-            description =
-
-                "长期配置吸引力较高，价格温度也较低，" +
-
-                "短期技术开始出现改善。" +
-
-                "当前更适合分批增加长期配置，而不是一次性投入。";
-
-        }
-
-
-        return {
-
-            title,
-
-            description,
-
-            signal
-
-        };
-
-    }
-
-
-    /* =====================================================
-       较高配置价值
-       ===================================================== */
-
-    if (
-        allocation >= 65
-        &&
-        temperature <= 50
-    ) {
-
-        signal =
-            "positive";
-
-
-        title =
-            "适合适度增强";
-
-
-        description =
-
-            "长期价格已经进入较有吸引力的区域。" +
-
-            "基础定投可以继续，额外资金可结合市场回撤与技术确认分批投入。";
-
-
-        return {
-
-            title,
-
-            description,
-
-            signal
-
-        };
-
-    }
-
-
-    /* =====================================================
-       极热
-       ===================================================== */
-
-    if (
-        allocation <= 30
-        ||
-        temperature >= 80
-        ||
-        (
-            sentiment >= 80
-            &&
-            temperature >= 65
-        )
-    ) {
-
-        signal =
-            "caution";
-
-
-        title =
-            "暂停额外加仓";
-
-
-        description =
-
-            "当前价格或市场情绪已经处于较热区域。" +
-
-            "基础定投可以保持，但暂时不建议因为上涨而额外追价，" +
-
-            "把更多现金留给未来回撤阶段。";
-
-
-        return {
-
-            title,
-
-            description,
-
-            signal
-
-        };
-
-    }
-
-
-    /* =====================================================
-       略偏贵
-       ===================================================== */
-
-    if (
-        allocation < 45
-        ||
-        temperature >= 65
-    ) {
-
-        signal =
-            "watch";
-
-
-        title =
-            "谨慎增加";
-
-
-        description =
-
-            "当前长期配置性价比一般，或价格已经有所升温。" +
-
-            "更适合维持基础定投，减少额外追涨，等待更好的价格位置。";
-
-
-        return {
-
-            title,
-
-            description,
-
-            signal
-
-        };
-
-    }
-
-
-    /* =====================================================
-       默认
-       ===================================================== */
-
-    title =
-        "维持正常定投";
-
-
-    description =
-
-        "当前长期价格、市场温度和情绪均未出现明显极端状态。" +
-
-        "现阶段更适合维持既定长期计划，而不是因短期涨跌频繁调整。";
-
-
-    return {
-
-        title,
-
-        description,
-
-        signal
-
-    };
-
-}
-
-
-/* =========================================================
-   HERO MARKET LABEL
-   ========================================================= */
-
-function buildHeroMarketLabel(
-    data
-) {
-
-    const temperature =
-        getTemperatureLabel(
-            data.market_temperature
-        );
-
-
-    const sentiment =
-        data.sentiment
-
-            ? getHumanSentimentLabel(
-                data.sentiment.score
-            )
-
-            : "情绪数据不足";
-
-
-    return (
-
-        temperature
-            .replace(
-                "价格",
-                ""
-            )
-
-        +
-
-        " · "
-
-        +
-
-        sentiment
-            .replace(
-                "情绪",
-                ""
-            )
+        `${getRiskLabel(risk)}模式：n = ${n.toFixed(1)}；只改变低估时资金放大程度，不改变估值结论。`
 
     );
 
@@ -1093,165 +981,26 @@ function buildHeroMarketLabel(
 
 
 /* =========================================================
-   CORE CONCLUSION
+   PERIODIC VARIABLE INVESTMENT
    ========================================================= */
 
-function buildCoreConclusion(
+function calculateInvestmentPlan(
     data
 ) {
 
-    const decision =
-        buildMarketDecision(
-            data
-        );
+    const valuation =
+        data.valuation
+        || {};
 
 
-    const probability =
-        data.scenario_probability;
+    const state =
+        valuation.state
+        || "数据不足";
 
 
-    let probabilityText =
-        "";
-
-
-    if (probability) {
-
-        probabilityText =
-
-            ` 历史相似状态下，未来20个交易日最常见的路径为“${probability.path_label}”，` +
-
-            `上涨 ${probability.up_pct}%、震荡 ${probability.sideways_pct}%、下跌 ${probability.down_pct}%。`;
-
-    }
-
-
-    return (
-
-        decision.description
-
-        +
-
-        probabilityText
-
-    );
-
-}
-
-
-/* =========================================================
-   BASE DCA MULTIPLIER
-   ========================================================= */
-
-function getBaseEnhancedMultiplier(
-    allocation
-) {
-
-    allocation =
-        safeNumber(
-            allocation,
-            50
-        );
-
-
-    if (
-        allocation >= 85
-    ) {
-
-        return 1.80;
-
-    }
-
-
-    if (
-        allocation >= 70
-    ) {
-
-        return 1.50;
-
-    }
-
-
-    if (
-        allocation >= 55
-    ) {
-
-        return 1.20;
-
-    }
-
-
-    /*
-       重要：
-       定投作为底仓。
-
-       即使市场偏贵，
-       默认也不因为短期指标直接把基础定投降到0。
-    */
-
-    return 1.00;
-
-}
-
-
-/* =========================================================
-   RISK STYLE
-   ========================================================= */
-
-function getRiskAdjustment(
-    risk
-) {
-
-    if (
-        risk === "conservative"
-    ) {
-
-        return -0.15;
-
-    }
-
-
-    if (
-        risk === "aggressive"
-    ) {
-
-        return 0.15;
-
-    }
-
-
-    return 0;
-
-}
-
-
-/* =========================================================
-   PERSONAL STRATEGY
-   ========================================================= */
-
-function calculateInvestmentStrategy(
-    data
-) {
-
-    const position =
-        clamp(
-
-            safeNumber(
-                $("positionInput").value,
-                50
-            ),
-
-            0,
-
-            100
-
-        );
-
-
-    const profit =
-        safeNumber(
-            $("profitInput").value,
-            0
-        );
+    const formula =
+        valuation.investment_formula
+        || {};
 
 
     const baseInvestment =
@@ -1260,475 +1009,506 @@ function calculateInvestmentStrategy(
             0,
 
             safeNumber(
-                $("baseInvestmentInput").value,
+                $("baseInvestmentInput")
+                    ? $("baseInvestmentInput").value
+                    : 3000,
+
                 3000
             )
 
         );
 
 
-    const risk =
-        $("riskSelect").value;
+    let maxInvestment =
+        Math.max(
 
+            0,
 
-    const allocation =
-        safeNumber(
-            data.allocation_score,
-            50
-        );
+            safeNumber(
+                $("maxInvestmentInput")
+                    ? $("maxInvestmentInput").value
+                    : 6000,
 
-
-    const temperature =
-        safeNumber(
-            data.market_temperature,
-            50
-        );
-
-
-    const sentiment =
-        data.sentiment
-
-            ? safeNumber(
-                data.sentiment.score,
-                50
+                6000
             )
 
-            : 50;
-
-
-    const technical =
-        data.technical_state
-        || "中性";
-
-
-    let multiplier =
-        getBaseEnhancedMultiplier(
-            allocation
         );
 
 
-    /* =====================================================
-       风格
-       ===================================================== */
+    if (
+        maxInvestment === 0
+    ) {
 
-    multiplier +=
-        getRiskAdjustment(
+        maxInvestment =
+            Number.POSITIVE_INFINITY;
+
+    }
+
+
+    const risk =
+        $("riskSelect")
+            ? $("riskSelect").value
+            : "balanced";
+
+
+    const n =
+        getInvestmentN(
             risk
         );
 
 
-    /* =====================================================
-       价格明显偏冷
+    let multiplier = null;
 
-       只在配置吸引力较高时增加。
-       ===================================================== */
+    let recommendedInvestment = null;
 
-    if (
-        allocation >= 60
-        &&
-        temperature <= 20
-    ) {
+    let formulaText = "";
 
-        multiplier +=
-            0.25;
+    let action =
+        valuation.action
+        || "估值数据不足，暂不判断";
 
 
-    } else if (
-        allocation >= 60
-        &&
-        temperature <= 35
-    ) {
-
-        multiplier +=
-            0.12;
-
-    }
+    let explanation = "";
 
 
     /* =====================================================
-       情绪恐慌
-
-       恐慌本身不能作为买入理由。
-
-       只有：
-       情绪谨慎 + 长期配置吸引力较高
-       才适度增加逆向配置。
+       DATA INVALID / PE ABNORMAL
        ===================================================== */
 
     if (
-        allocation >= 60
-        &&
-        sentiment < 25
-    ) {
-
-        multiplier +=
-            0.15;
-
-
-    } else if (
-        allocation >= 60
-        &&
-        sentiment < 40
-    ) {
-
-        multiplier +=
-            0.07;
-
-    }
-
-
-    /* =====================================================
-       市场过热
-
-       不停止基础定投，
-       但暂停额外增强。
-       ===================================================== */
-
-    if (
-        temperature >= 75
+        state === "数据不足"
         ||
-        sentiment >= 80
+        state === "PE异常/需辅助估值"
         ||
-        allocation <= 30
+        valuation.core_decision_enabled === false
     ) {
 
         multiplier =
-            Math.min(
-                multiplier,
-                1.00
-            );
-
-    }
+            null;
 
 
-    /* =====================================================
-       高仓位
-
-       不再增加额外资金。
-       ===================================================== */
-
-    if (
-        position >= 80
-    ) {
-
-        multiplier =
-            Math.min(
-                multiplier,
-                1.00
-            );
+        recommendedInvestment =
+            null;
 
 
-    } else if (
-        position >= 70
-    ) {
-
-        multiplier =
-            Math.min(
-                multiplier,
-                1.15
-            );
-
-    }
+        formulaText =
+            "当前估值数据不足或PE可靠性不足，定期不定额公式暂不启用。";
 
 
-    /* =====================================================
-       长期值得买，但技术还没企稳
-
-       允许：
-       基础定投 + 少量增强
-
-       不允许：
-       一次性大幅增强
-       ===================================================== */
-
-    if (
-        allocation >= 65
-        &&
-        (
-            technical === "弱势"
-            ||
-            technical === "偏弱"
-        )
-    ) {
-
-        multiplier =
-            Math.min(
-                multiplier,
-                1.25
-            );
-
-    }
-
-
-    /* =====================================================
-       长期值得买 + 技术修复
-       ===================================================== */
-
-    if (
-        allocation >= 65
-        &&
-        temperature <= 50
-        &&
-        (
-            technical === "偏强"
-            ||
-            technical === "强势"
-        )
-    ) {
-
-        multiplier +=
-            0.10;
-
-    }
-
-
-    /* =====================================================
-       大幅浮盈 + 高温
-
-       基础定投仍然保留，
-       但不增加额外投入。
-       ===================================================== */
-
-    const rebalanceSignal = (
-
-        profit >= 15
-
-        &&
-
-        position >= 70
-
-        &&
-
-        (
-            temperature >= 75
-            ||
-            allocation <= 30
-        )
-
-    );
-
-
-    if (
-        rebalanceSignal
-    ) {
-
-        multiplier =
-            1.00;
-
-    }
-
-
-    /* =====================================================
-       最终范围
-
-       最低1倍：
-       保留基础定投。
-
-       最高2.2倍：
-       防止模型在极端下跌时给出过激投入。
-       ===================================================== */
-
-    multiplier =
-        clamp(
-            multiplier,
-            1.00,
-            2.20
-        );
-
-
-    const recommendedInvestment =
-
-        Math.round(
-
+        explanation =
             (
-                baseInvestment
-                *
-                multiplier
+                state === "PE异常/需辅助估值"
             )
 
-            / 10
+                ? (
+                    "当前PE可能受到盈利异常波动影响，"
+                    +
+                    "因此不使用一个可能失真的PE去计算定投金额。"
+                )
 
-        ) * 10;
+                : (
+                    "当前历史估值样本不足，"
+                    +
+                    "系统暂不计算投资金额，避免制造虚假精度。"
+                );
 
 
-    let action = "";
+        return {
 
-    let text = "";
+            state,
+
+            action,
+
+            baseInvestment,
+
+            maxInvestment,
+
+            risk,
+
+            n,
+
+            multiplier,
+
+            recommendedInvestment,
+
+            formulaText,
+
+            explanation
+
+        };
+
+    }
 
 
     /* =====================================================
-       再平衡
+       FAIR / EXPENSIVE
+
+       PDF理论：
+       合理估值 -> 持有，停止新增
+       高估 -> 停止新增 / 分批再平衡
        ===================================================== */
 
     if (
-        rebalanceSignal
+        state === "合理"
+        ||
+        state === "偏高估"
+        ||
+        state === "明显高估"
     ) {
 
-        action =
-            "维持定投，考虑仓位再平衡";
+        multiplier =
+            0;
 
 
-        text =
-
-            `当前仓位约 ${position.toFixed(0)}%，` +
-
-            `持仓收益 ${profit >= 0 ? "+" : ""}${profit.toFixed(1)}%，` +
-
-            `同时市场价格已经偏热或长期配置吸引力下降。` +
-
-            `本期维持基础定投即可，不再增加额外投入。` +
-
-            `如果实际仓位已经明显高于你长期设定的目标范围，` +
-
-            `可以考虑通过再平衡逐步回收部分超额仓位，而不是继续追涨。`;
+        recommendedInvestment =
+            0;
 
 
-    /* =====================================================
-       高吸引力 + 冷
-       ===================================================== */
+        formulaText =
+            "当前不处于低估定投区，估值调整公式暂不启用。";
 
-    } else if (
-        allocation >= 70
-        &&
-        temperature <= 40
-    ) {
 
         if (
-            technical === "弱势"
-            ||
-            technical === "偏弱"
+            state === "合理"
         ) {
 
-            action =
-                "继续定投，预留增强资金";
+            explanation =
+                (
+                    "当前估值位于相对合理区域。"
+                    +
+                    "依据估值定投框架，本期估值驱动新增金额为0，"
+                    +
+                    "已有份额继续持有。"
+                );
 
 
-            text =
+        } else if (
+            state === "偏高估"
+        ) {
 
-                `长期配置吸引力已经达到 ${allocation}/100，` +
-
-                `价格温度为 ${temperature}/100，长期价格条件正在改善。` +
-
-                `但短期技术仍为“${getTechnicalDisplay(technical)}”，` +
-
-                `因此不建议一次性投入全部额外资金。` +
-
-                `本期可按约 ${multiplier.toFixed(2)} 倍基础定投执行，` +
-
-                `并为重新站稳 MA20、趋势修复后的下一批加仓保留现金。`;
+            explanation =
+                (
+                    "当前估值已经偏高。"
+                    +
+                    "本期暂停新增长期资金，继续观察基本面和估值变化。"
+                );
 
 
         } else {
 
-            action =
-                "分批增强定投";
-
-
-            text =
-
-                `长期配置吸引力较高，同时价格没有明显过热，` +
-
-                `短期技术也开始改善。` +
-
-                `本期可将投入提高到基础定投的约 ${multiplier.toFixed(2)} 倍，` +
-
-                `但仍建议拆分执行，避免一次性押注短期底部。`;
+            explanation =
+                (
+                    "当前估值处于明显高估区域。"
+                    +
+                    "停止新增；若实际配置比例明显高于长期目标，"
+                    +
+                    "可考虑分批再平衡。"
+                );
 
         }
 
 
+        return {
+
+            state,
+
+            action,
+
+            baseInvestment,
+
+            maxInvestment,
+
+            risk,
+
+            n,
+
+            multiplier,
+
+            recommendedInvestment,
+
+            formulaText,
+
+            explanation
+
+        };
+
+    }
+
+
     /* =====================================================
-       中等吸引力
+       UNDERVALUED
        ===================================================== */
 
-    } else if (
-        allocation >= 55
+    const formulaType =
+        formula.type
+        || valuation.primary_method;
+
+
+    const currentPE =
+        safeNumber(
+            valuation.pe,
+            null
+        );
+
+
+    const currentEY =
+        safeNumber(
+            valuation.earnings_yield_pct,
+            null
+        );
+
+
+    const entryPE =
+        safeNumber(
+            formula.entry_pe,
+            null
+        );
+
+
+    const entryEY =
+        safeNumber(
+            formula.entry_earnings_yield_pct,
+            null
+        );
+
+
+    /* =====================================================
+       EARNINGS YIELD METHOD
+
+       A_t = A_0 × (EY_t / EY_0)^n
+       ===================================================== */
+
+    if (
+        formulaType === "earnings_yield"
         &&
-        temperature <= 60
+        currentEY !== null
+        &&
+        entryEY !== null
+        &&
+        currentEY > 0
+        &&
+        entryEY > 0
     ) {
 
-        action =
-            "基础定投 + 小幅增强";
+        const rawRatio =
+            currentEY
+            /
+            entryEY;
 
 
-        text =
+        multiplier =
+            Math.pow(
+                rawRatio,
+                n
+            );
 
-            `当前长期价格处于相对合理区域，` +
 
-            `适合继续基础定投。` +
+        multiplier =
+            Math.max(
+                1,
+                multiplier
+            );
 
-            `若后续进一步回撤、价格接近MA200年线，` +
 
-            `或市场情绪明显降温，可以逐步增加额外投入。`;
+        formulaText =
+
+            `Aₜ = A₀ × (EYₜ / EY₀)^n = `
+
+            +
+
+            `${formatCurrency(baseInvestment)} × `
+
+            +
+
+            `(${currentEY.toFixed(2)}% / ${entryEY.toFixed(2)}%)^${n.toFixed(1)}`;
 
 
     /* =====================================================
-       热
+       BOGLE PE METHOD
+
+       A_t = A_0 × (PE_0 / PE_t)^n
        ===================================================== */
 
     } else if (
-        allocation <= 30
-        ||
-        temperature >= 75
-        ||
-        sentiment >= 80
+        (
+            formulaType === "pe"
+            ||
+            formulaType === "bogle_pe"
+        )
+        &&
+        currentPE !== null
+        &&
+        entryPE !== null
+        &&
+        currentPE > 0
+        &&
+        entryPE > 0
     ) {
 
-        action =
-            "维持基础定投，暂停额外加仓";
+        const rawRatio =
+            entryPE
+            /
+            currentPE;
 
 
-        text =
+        multiplier =
+            Math.pow(
+                rawRatio,
+                n
+            );
 
-            `当前市场价格或情绪已经偏热。` +
 
-            `基础定投仍然按照长期计划执行，` +
+        multiplier =
+            Math.max(
+                1,
+                multiplier
+            );
 
-            `但暂时不建议增加额外资金，更不建议因为短期上涨而追价。` +
 
-            `新的现金可以留给未来回撤后长期配置吸引力重新提高的阶段。`;
+        formulaText =
+
+            `Aₜ = A₀ × (PE₀ / PEₜ)^n = `
+
+            +
+
+            `${formatCurrency(baseInvestment)} × `
+
+            +
+
+            `(${entryPE.toFixed(2)} / ${currentPE.toFixed(2)})^${n.toFixed(1)}`;
 
 
     /* =====================================================
-       默认
+       FORMULA MISSING
        ===================================================== */
 
     } else {
 
-        action =
-            "维持基础定投";
+        multiplier =
+            1;
 
 
-        text =
+        formulaText =
+            (
+                "当前估值已处于低估区，但估值锚点暂不完整；"
+                +
+                "本期仅按基础定投金额执行，不额外放大。"
+            );
 
-            `当前市场没有出现足够强的长期增配信号，` +
+    }
 
-            `也没有出现需要停止长期计划的极端状态。` +
 
-            `维持基础定投即可，等待价格、情绪或长期配置吸引力出现更明显变化。`;
+    recommendedInvestment =
+        baseInvestment
+        *
+        multiplier;
+
+
+    if (
+        Number.isFinite(
+            maxInvestment
+        )
+    ) {
+
+        recommendedInvestment =
+            Math.min(
+
+                recommendedInvestment,
+
+                maxInvestment
+
+            );
+
+    }
+
+
+    recommendedInvestment =
+        Math.round(
+
+            recommendedInvestment
+            /
+            10
+
+        ) * 10;
+
+
+    const actualMultiplier =
+        (
+            baseInvestment > 0
+        )
+
+            ? (
+                recommendedInvestment
+                /
+                baseInvestment
+            )
+
+            : multiplier;
+
+
+    multiplier =
+        actualMultiplier;
+
+
+    if (
+        state === "明显低估"
+    ) {
+
+        explanation =
+
+            `当前处于明显低估区域，符合增强定投条件。`
+
+            +
+
+            `按照${getRiskLabel(risk)}资金强度（n=${n.toFixed(1)}）计算，`
+
+            +
+
+            `本期估值调整后约为基础金额的 ${multiplier.toFixed(2)} 倍。`
+
+            +
+
+            "短期走势继续下跌不会自动停止这一定投逻辑。";
+
+
+    } else {
+
+        explanation =
+
+            `当前处于低估区域，符合继续定投条件。`
+
+            +
+
+            `按照${getRiskLabel(risk)}资金强度（n=${n.toFixed(1)}）执行定期不定额，`
+
+            +
+
+            `本期约为基础金额的 ${multiplier.toFixed(2)} 倍。`;
 
     }
 
 
     return {
 
-        position,
+        state,
 
-        profit,
+        action,
 
         baseInvestment,
 
+        maxInvestment,
+
         risk,
+
+        n,
 
         multiplier,
 
         recommendedInvestment,
 
-        action,
+        formulaText,
 
-        text,
-
-        rebalanceSignal
+        explanation
 
     };
 
@@ -1736,94 +1516,1141 @@ function calculateInvestmentStrategy(
 
 
 /* =========================================================
-   STRATEGY RENDER
+   FETCH MARKET DATA
    ========================================================= */
 
-function renderStrategy(
-    data
-) {
+async function loadMarketData() {
 
-    const result =
-        calculateInvestmentStrategy(
-            data
+    try {
+
+        const response =
+            await fetch(
+
+                `${DATA_URL}?t=${Date.now()}`,
+
+                {
+                    cache:
+                        "no-store"
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        marketData =
+            await response.json();
+
+
+        setText(
+
+            "updatedAt",
+
+            marketData.updated_at
+            || "--"
+
         );
 
 
-    $("strategyAction").textContent =
-        result.action;
+        renderGuideDynamicText();
+
+        renderCurrentIndex();
 
 
-    $("recommendedInvestment").textContent =
-        formatCurrency(
-            result.recommendedInvestment
+    } catch (error) {
+
+        console.error(
+            "Index Radar 数据加载失败：",
+            error
         );
 
 
-    $("investmentMultiplier").textContent =
-        `${result.multiplier.toFixed(2)}×`;
+        setText(
 
+            "coreConclusion",
 
-    $("strategyText").textContent =
-        result.text;
+            "市场与估值数据加载失败，请稍后刷新页面。"
 
+        );
 
-    const sentimentLabel =
-
-        data.sentiment
-
-            ? getHumanSentimentLabel(
-                data.sentiment.score
-            )
-
-            : "情绪未知";
-
-
-    const tags = [
-
-        `长期配置 ${getAllocationActionLabel(data)}`,
-
-        getTemperatureLabel(
-            data.market_temperature
-        ),
-
-        sentimentLabel,
-
-        `技术 ${getTechnicalDisplay(
-            data.technical_state
-        )}`,
-
-        `仓位 ${result.position.toFixed(0)}%`
-
-    ];
-
-
-    $("strategyTags").innerHTML =
-
-        tags.map(
-
-            tag =>
-
-                `<span class="strategy-tag">
-                    ${tag}
-                </span>`
-
-        ).join("");
+    }
 
 }
 
 
 /* =========================================================
-   FUTURE PATH DESCRIPTION
+   CURRENT DATA
    ========================================================= */
 
-function buildPathDescription(
+function getCurrentData() {
+
+    if (
+        !marketData
+        ||
+        !marketData.indices
+    ) {
+
+        return null;
+
+    }
+
+
+    return (
+        marketData.indices[
+            currentIndex
+        ]
+        || null
+    );
+
+}
+
+
+/* =========================================================
+   VALUATION HERO
+   ========================================================= */
+
+function renderValuationHero(
+    data
+) {
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    const state =
+        valuation.state
+        || "数据不足";
+
+
+    const signal =
+        getValuationSignal(
+            state
+        );
+
+
+    setText(
+        "valuationState",
+        state
+    );
+
+
+    setText(
+        "valuationStateBadge",
+        state
+    );
+
+
+    setText(
+        "valuationAction",
+        valuation.action
+        || "--"
+    );
+
+
+    setText(
+        "valuationDecisionDescription",
+        buildValuationDescription(
+            data
+        )
+    );
+
+
+    setText(
+        "valuationMethod",
+        valuation.method_name
+        || "--"
+    );
+
+
+    setText(
+        "valuationMethodShort",
+        getMethodShortName(
+            currentIndex,
+            valuation
+        )
+    );
+
+
+    setText(
+        "valuationConfidence",
+        valuation.confidence
+        || "--"
+    );
+
+
+    setText(
+        "peReliability",
+        valuation.pe_reliability
+        || "--"
+    );
+
+
+    /* =====================================================
+       BADGE
+       ===================================================== */
+
+    const badge =
+        $("valuationStateBadge");
+
+
+    if (badge) {
+
+        badge.className =
+            "valuation-state-badge";
+
+
+        badge.classList.add(
+            `valuation-${signal}`
+        );
+
+    }
+
+
+    /* =====================================================
+       SIGNAL
+       ===================================================== */
+
+    const signalElement =
+        $("valuationSignal");
+
+
+    if (signalElement) {
+
+        signalElement.className =
+            "valuation-signal";
+
+
+        signalElement.classList.add(
+            `valuation-signal-${signal}`
+        );
+
+    }
+
+
+    /* =====================================================
+       CORE VALUES
+       ===================================================== */
+
+    setText(
+        "valuationPE",
+        formatNumber(
+            valuation.pe,
+            2
+        )
+    );
+
+
+    setText(
+        "earningsYield",
+        formatPlainPercent(
+            valuation.earnings_yield_pct,
+            2
+        )
+    );
+
+
+    setText(
+        "pePercentile",
+
+        valuation.pe_percentile_10y !== null
+        &&
+        valuation.pe_percentile_10y !== undefined
+
+            ? (
+                `${Number(
+                    valuation.pe_percentile_10y
+                ).toFixed(1)}%`
+            )
+
+            : "--"
+
+    );
+
+
+    setText(
+        "dividendYield",
+        formatPlainPercent(
+            valuation.dividend_yield_pct,
+            2
+        )
+    );
+
+
+    if (
+        currentIndex === "sse50"
+    ) {
+
+        setText(
+            "valuationPEHint",
+            "上交所官方月报口径，非严格PE-TTM"
+        );
+
+
+        setText(
+            "dividendYieldHint",
+            "当前可靠自动化数据暂缺"
+        );
+
+
+    } else {
+
+        setText(
+            "valuationPEHint",
+            "指数历史口径；ETF PE仅作交叉校验"
+        );
+
+
+        setText(
+            "dividendYieldHint",
+            "ETF代理股息率"
+        );
+
+    }
+
+
+    setText(
+        "coreConclusion",
+        buildCoreConclusion(
+            data
+        )
+    );
+
+}
+
+
+/* =========================================================
+   VALUATION RANGE
+   ========================================================= */
+
+function renderValuationRange(
+    data
+) {
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    setText(
+        "valuationRangeState",
+        valuation.state
+        || "--"
+    );
+
+
+    setText(
+        "valuationRangePE",
+        formatNumber(
+            valuation.pe,
+            2
+        )
+    );
+
+
+    const percentile =
+        safeNumber(
+            valuation.pe_percentile_10y,
+            null
+        );
+
+
+    const marker =
+        $("valuationScaleMarker");
+
+
+    if (marker) {
+
+        if (
+            percentile === null
+        ) {
+
+            marker.style.display =
+                "none";
+
+
+        } else {
+
+            marker.style.display =
+                "";
+
+
+            marker.style.left =
+                `${clamp(
+                    percentile,
+                    0,
+                    100
+                )}%`;
+
+        }
+
+    }
+
+
+    const band =
+        valuation.pe_band
+        || {};
+
+
+    setText(
+        "peBand20",
+        `P20 ${formatNumber(
+            band.p20,
+            2
+        )}`
+    );
+
+
+    setText(
+        "peBand40",
+        `P40 ${formatNumber(
+            band.p40,
+            2
+        )}`
+    );
+
+
+    setText(
+        "peBand60",
+        `P60 ${formatNumber(
+            band.p60,
+            2
+        )}`
+    );
+
+
+    setText(
+        "peBand80",
+        `P80 ${formatNumber(
+            band.p80,
+            2
+        )}`
+    );
+
+
+    setText(
+        "valuationHistoryCount",
+        valuation.history_count
+        ?? "--"
+    );
+
+
+    setText(
+        "valuationHistoryWindow",
+        valuation.history_window
+        || "--"
+    );
+
+}
+
+
+/* =========================================================
+   RELATIVE VALUE
+   ========================================================= */
+
+function renderRelativeValue(
+    data
+) {
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    const ey =
+        safeNumber(
+            valuation.earnings_yield_pct,
+            null
+        );
+
+
+    const bond =
+        safeNumber(
+            valuation.risk_free_yield_pct,
+            null
+        );
+
+
+    const ratio =
+        safeNumber(
+            valuation.earnings_yield_to_bond,
+            null
+        );
+
+
+    const spread =
+        safeNumber(
+            valuation.earnings_yield_minus_bond_pct,
+            null
+        );
+
+
+    setText(
+        "relativeEarningsYield",
+        formatPlainPercent(
+            ey,
+            2
+        )
+    );
+
+
+    if (
+        currentIndex === "sse50"
+    ) {
+
+        setText(
+            "riskFreeLabel",
+            "中国10年国债"
+        );
+
+
+    } else {
+
+        setText(
+            "riskFreeLabel",
+            "美国10年国债"
+        );
+
+    }
+
+
+    setText(
+        "riskFreeYield",
+        formatPlainPercent(
+            bond,
+            3
+        )
+    );
+
+
+    setText(
+
+        "earningsYieldBondRatio",
+
+        ratio !== null
+            ? `${ratio.toFixed(2)}×`
+            : "--"
+
+    );
+
+
+    setText(
+
+        "earningsYieldBondSpread",
+
+        spread !== null
+
+            ? `${spread >= 0 ? "+" : ""}${spread.toFixed(2)} 个百分点`
+
+            : "--"
+
+    );
+
+
+    if (
+        ey === null
+        ||
+        bond === null
+    ) {
+
+        setText(
+
+            "relativeValueDescription",
+
+            "当前缺少完整的盈利收益率或国债收益率数据，因此不对股票与无风险资产的相对收益补偿作判断。"
+
+        );
+
+
+        return;
+
+    }
+
+
+    setText(
+
+        "relativeValueDescription",
+
+        (
+            `当前指数盈利收益率约 ${ey.toFixed(2)}%，`
+
+            +
+
+            `10年期国债收益率约 ${bond.toFixed(2)}%，`
+
+            +
+
+            `两者相差 ${spread >= 0 ? "+" : ""}${spread.toFixed(2)} 个百分点。`
+
+            +
+
+            "该比较用于理解股票相对无风险资产的收益补偿，不单独决定买卖。"
+        )
+
+    );
+
+}
+
+
+/* =========================================================
+   STRATEGY
+   ========================================================= */
+
+function renderInvestmentPlan(
+    data
+) {
+
+    const plan =
+        calculateInvestmentPlan(
+            data
+        );
+
+
+    setText(
+        "strategyAction",
+        plan.action
+    );
+
+
+    setText(
+
+        "recommendedInvestment",
+
+        plan.recommendedInvestment === null
+
+            ? "--"
+
+            : formatCurrency(
+                plan.recommendedInvestment
+            )
+
+    );
+
+
+    setText(
+
+        "investmentMultiplier",
+
+        plan.multiplier === null
+
+            ? "--"
+
+            : `${plan.multiplier.toFixed(2)}×`
+
+    );
+
+
+    setText(
+        "investmentN",
+        plan.n.toFixed(1)
+    );
+
+
+    setText(
+        "strategyText",
+        plan.explanation
+    );
+
+
+    setText(
+        "investmentFormulaText",
+        plan.formulaText
+    );
+
+
+    /* =====================================================
+       TAGS
+       ===================================================== */
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    const tags = [
+
+        `估值 ${valuation.state || "--"}`,
+
+        `方法 ${getMethodShortName(
+            currentIndex,
+            valuation
+        )}`,
+
+        `可信度 ${valuation.confidence || "--"}`,
+
+        `${getRiskLabel(plan.risk)} n=${plan.n.toFixed(1)}`
+
+    ];
+
+
+    const container =
+        $("strategyTags");
+
+
+    if (container) {
+
+        container.innerHTML =
+            "";
+
+
+        tags.forEach(
+
+            text => {
+
+                const span =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                span.className =
+                    "strategy-tag";
+
+
+                span.textContent =
+                    text;
+
+
+                container.appendChild(
+                    span
+                );
+
+            }
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REASON LIST
+   ========================================================= */
+
+function renderTextList(
+    id,
+    items
+) {
+
+    const container =
+        $(id);
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        "";
+
+
+    const list =
+        Array.isArray(
+            items
+        )
+            ? items
+            : [];
+
+
+    if (
+        list.length === 0
+    ) {
+
+        const row =
+            document.createElement(
+                "div"
+            );
+
+
+        row.className =
+            "reason-row";
+
+
+        row.textContent =
+            "当前暂无可展示信息。";
+
+
+        container.appendChild(
+            row
+        );
+
+
+        return;
+
+    }
+
+
+    list.forEach(
+
+        item => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "reason-row";
+
+
+            const marker =
+                document.createElement(
+                    "span"
+                );
+
+
+            marker.className =
+                "reason-marker";
+
+
+            const text =
+                document.createElement(
+                    "span"
+                );
+
+
+            text.textContent =
+                item;
+
+
+            row.appendChild(
+                marker
+            );
+
+
+            row.appendChild(
+                text
+            );
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   VALUATION REASONS
+   ========================================================= */
+
+function renderValuationReasons(
+    data
+) {
+
+    const valuation =
+        data.valuation
+        || {};
+
+
+    renderTextList(
+
+        "valuationReasons",
+
+        valuation.reasons
+        || []
+
+    );
+
+
+    renderTextList(
+
+        "valuationNotes",
+
+        valuation.notes
+        || []
+
+    );
+
+}
+
+
+/* =========================================================
+   PRICE POSITION
+   ========================================================= */
+
+function renderPricePosition(
+    data
+) {
+
+    const position =
+        data.price_position
+        || {};
+
+
+    setText(
+        "pricePositionState",
+        position.state
+        || "--"
+    );
+
+
+    setText(
+
+        "pricePositionScore",
+
+        position.score !== null
+        &&
+        position.score !== undefined
+
+            ? `${position.score}/100`
+
+            : "--"
+
+    );
+
+
+    setText(
+        "drawdown52w",
+        formatPercent(
+            data.drawdown_52w_pct,
+            2
+        )
+    );
+
+
+    setText(
+        "devMa200",
+        formatPercent(
+            data.dev_ma200_pct,
+            2
+        )
+    );
+
+}
+
+
+/* =========================================================
+   SENTIMENT
+   ========================================================= */
+
+function renderSentiment(
+    data
+) {
+
+    const sentiment =
+        data.sentiment
+        || {};
+
+
+    setText(
+        "sentimentLabel",
+        sentiment.label
+        || "市场风险情绪"
+    );
+
+
+    setText(
+        "sentimentMainState",
+        sentiment.state
+        || "--"
+    );
+
+
+    setText(
+
+        "sentimentMainScore",
+
+        sentiment.score !== null
+        &&
+        sentiment.score !== undefined
+
+            ? `${sentiment.score}/100`
+
+            : "--"
+
+    );
+
+
+    setText(
+        "sentimentSummary",
+        sentiment.summary
+        || "--"
+    );
+
+
+    const primary =
+        sentiment.primary_indicator
+        || {};
+
+
+    setText(
+        "sentimentPrimaryName",
+        primary.name
+        || "--"
+    );
+
+
+    setText(
+        "sentimentPrimaryValue",
+        formatCompactNumber(
+            primary.value,
+            2
+        )
+    );
+
+
+    if (
+        primary.percentile_5y !== null
+        &&
+        primary.percentile_5y !== undefined
+    ) {
+
+        setText(
+
+            "sentimentPrimaryPercentile",
+
+            `5年分位 ${Number(
+                primary.percentile_5y
+            ).toFixed(1)}%`
+
+        );
+
+
+    } else {
+
+        setText(
+            "sentimentPrimaryPercentile",
+            ""
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   TECHNICAL
+   ========================================================= */
+
+function renderTechnical(
+    data
+) {
+
+    setText(
+        "technicalState",
+        data.technical_state
+        || "--"
+    );
+
+
+    setText(
+
+        "technicalScore",
+
+        data.technical_score !== null
+        &&
+        data.technical_score !== undefined
+
+            ? `${data.technical_score}/100`
+
+            : "--"
+
+    );
+
+
+    setText(
+        "rsi14",
+        formatNumber(
+            data.rsi14,
+            1
+        )
+    );
+
+
+    setText(
+        "macdHist",
+        formatNumber(
+            data.macd_hist,
+            2
+        )
+    );
+
+
+    setText(
+        "ma20",
+        formatNumber(
+            data.ma20,
+            2
+        )
+    );
+
+
+    setText(
+        "ma60",
+        formatNumber(
+            data.ma60,
+            2
+        )
+    );
+
+
+    setText(
+        "ma200",
+        formatNumber(
+            data.ma200,
+            2
+        )
+    );
+
+
+    setText(
+        "technicalRsi14",
+        formatNumber(
+            data.rsi14,
+            1
+        )
+    );
+
+
+    setText(
+        "technicalMacdHist",
+        formatNumber(
+            data.macd_hist,
+            2
+        )
+    );
+
+
+    setText(
+        "volatility20",
+        formatPlainPercent(
+            data.volatility20,
+            2
+        )
+    );
+
+}
+
+
+/* =========================================================
+   HISTORICAL SCENARIO
+   ========================================================= */
+
+function buildScenarioDescription(
     probability
 ) {
 
     if (!probability) {
 
         return (
-            "当前历史相似样本不足，暂时无法形成稳定的20日情境统计。"
+            "当前历史相似样本不足，暂时不展示20日情境统计。"
         );
 
     }
@@ -1836,56 +2663,32 @@ function buildPathDescription(
         );
 
 
-    const up =
-        safeNumber(
-            probability.up_pct
-        );
-
-
-    const sideways =
-        safeNumber(
-            probability.sideways_pct
-        );
-
-
-    const down =
-        safeNumber(
-            probability.down_pct
-        );
-
-
-    const avg =
-        safeNumber(
-            probability.average_return_pct
-        );
-
-
     return (
 
-        `历史相似市场状态中，未来20个交易日上涨超过 ${threshold}% 的情形约占 ${up}%，`
+        `历史相似状态中，`
 
         +
 
-        `震荡情形约占 ${sideways}%，`
+        `未来20日上涨超过 ${threshold}% 的样本约占 ${probability.up_pct}%，`
 
         +
 
-        `下跌超过 ${threshold}% 的情形约占 ${down}%。`
+        `震荡约占 ${probability.sideways_pct}%，`
 
         +
 
-        `历史加权平均20日收益为 ${avg >= 0 ? "+" : ""}${avg.toFixed(2)}%。`
+        `下跌超过 ${threshold}% 的样本约占 ${probability.down_pct}%。`
+
+        +
+
+        "这只是历史条件频率，不参与长期估值决策。"
 
     );
 
 }
 
 
-/* =========================================================
-   SCENARIO PROBABILITY
-   ========================================================= */
-
-function renderScenarioProbability(
+function renderScenario(
     data
 ) {
 
@@ -1895,29 +2698,47 @@ function renderScenarioProbability(
 
     if (!probability) {
 
-        $("pathLabel").textContent =
-            "样本不足";
+        setText(
+            "pathLabel",
+            "样本不足"
+        );
 
 
-        $("pathDescription").textContent =
-            "当前历史相似状态样本不足，暂时不展示方向概率。";
+        setText(
+            "pathDescription",
+            buildScenarioDescription(
+                null
+            )
+        );
 
 
-        $("scenarioConfidence").textContent =
-            "较低";
+        setText(
+            "scenarioConfidence",
+            "较低"
+        );
 
 
         [
             "upProbability",
             "sidewaysProbability",
-            "downProbability"
+            "downProbability",
+            "scenarioSampleSize",
+            "effectiveSampleSize",
+            "averageFutureReturn",
+            "medianFutureReturn",
+            "aboveMa20Probability",
+            "aboveMa60Probability",
+            "breakHighProbability",
+            "breakLowProbability"
         ]
         .forEach(
 
             id => {
 
-                $(id).textContent =
-                    "--";
+                setText(
+                    id,
+                    "--"
+                );
 
             }
 
@@ -1929,96 +2750,94 @@ function renderScenarioProbability(
     }
 
 
-    const up =
-        safeNumber(
-            probability.up_pct
-        );
-
-
-    const sideways =
-        safeNumber(
-            probability.sideways_pct
-        );
-
-
-    const down =
-        safeNumber(
-            probability.down_pct
-        );
-
-
-    $("pathLabel").textContent =
+    setText(
+        "pathLabel",
         probability.path_label
-        || "--";
+        || "--"
+    );
 
 
-    $("pathDescription").textContent =
-        buildPathDescription(
+    setText(
+        "pathDescription",
+        buildScenarioDescription(
             probability
-        );
+        )
+    );
 
 
-    $("scenarioConfidence").textContent =
+    setText(
+        "scenarioConfidence",
         probability.confidence
-        || "--";
+        || "--"
+    );
 
 
-    $("upProbability").textContent =
-        `${up}%`;
+    setText(
+        "upProbability",
+        `${probability.up_pct}%`
+    );
 
 
-    $("sidewaysProbability").textContent =
-        `${sideways}%`;
+    setText(
+        "sidewaysProbability",
+        `${probability.sideways_pct}%`
+    );
 
 
-    $("downProbability").textContent =
-        `${down}%`;
+    setText(
+        "downProbability",
+        `${probability.down_pct}%`
+    );
 
 
     setPercentBar(
         "upProbabilityBar",
-        up
+        probability.up_pct
     );
 
 
     setPercentBar(
         "sidewaysProbabilityBar",
-        sideways
+        probability.sideways_pct
     );
 
 
     setPercentBar(
         "downProbabilityBar",
-        down
+        probability.down_pct
     );
 
 
-    $("scenarioSampleSize").textContent =
+    setText(
+        "scenarioSampleSize",
         probability.sample_size
-        ?? "--";
+        ?? "--"
+    );
 
 
-    $("effectiveSampleSize").textContent =
-
-        probability.effective_sample_size !== undefined
-
-            ? Number(
-                probability.effective_sample_size
-            ).toFixed(1)
-
-            : "--";
+    setText(
+        "effectiveSampleSize",
+        probability.effective_sample_size
+        ?? "--"
+    );
 
 
-    $("averageFutureReturn").textContent =
+    setText(
+        "averageFutureReturn",
         formatPercent(
-            probability.average_return_pct
-        );
+            probability.average_return_pct,
+            2
+        )
+    );
 
 
-    $("medianFutureReturn").textContent =
+    setText(
+        "medianFutureReturn",
         formatPercent(
-            probability.median_return_pct
-        );
+            probability.median_return_pct,
+            2
+        )
+    );
 
 
     const events =
@@ -2026,712 +2845,206 @@ function renderScenarioProbability(
         || {};
 
 
-    $("aboveMa20Probability").textContent =
+    setText(
+
+        "aboveMa20Probability",
 
         events.above_ma20_pct !== undefined
 
             ? `${events.above_ma20_pct}%`
 
-            : "--";
+            : "--"
+
+    );
 
 
-    $("aboveMa60Probability").textContent =
+    setText(
+
+        "aboveMa60Probability",
 
         events.above_ma60_pct !== undefined
 
             ? `${events.above_ma60_pct}%`
 
-            : "--";
+            : "--"
+
+    );
 
 
-    $("breakHighProbability").textContent =
+    setText(
+
+        "breakHighProbability",
 
         events.break_high20_pct !== undefined
 
             ? `${events.break_high20_pct}%`
 
-            : "--";
+            : "--"
+
+    );
 
 
-    $("breakLowProbability").textContent =
+    setText(
+
+        "breakLowProbability",
 
         events.break_low20_pct !== undefined
 
             ? `${events.break_low20_pct}%`
 
-            : "--";
+            : "--"
+
+    );
 
 
-    $("ma20Value").textContent =
-        `MA20  ${formatNumber(
-            data.ma20
-        )}`;
+    setText(
+        "ma20Value",
+        `MA20 ${formatNumber(
+            data.ma20,
+            2
+        )}`
+    );
 
 
-    $("ma60Value").textContent =
-        `MA60  ${formatNumber(
-            data.ma60
-        )}`;
+    setText(
+        "ma60Value",
+        `MA60 ${formatNumber(
+            data.ma60,
+            2
+        )}`
+    );
 
 
-    $("high20Value").textContent =
-        `近期高点  ${formatNumber(
-            data.high20
-        )}`;
+    setText(
+        "high20Value",
+        `近20日高点 ${formatNumber(
+            data.high20,
+            2
+        )}`
+    );
 
 
-    $("low20Value").textContent =
-        `近期低点  ${formatNumber(
-            data.low20
-        )}`;
-
-}
-
-
-/* =========================================================
-   LONG TERM POSITION
-   ========================================================= */
-
-function renderLongTermPosition(
-    data
-) {
-
-    $("drawdown52w").textContent =
-        formatPercent(
-            data.drawdown_52w_pct
-        );
-
-
-    $("devMa200").textContent =
-        formatPercent(
-            data.dev_ma200_pct
-        );
-
-
-    $("return20").textContent =
-        formatPercent(
-            data.return20_pct
-        );
-
-
-    $("return60").textContent =
-        formatPercent(
-            data.return60_pct
-        );
-
-
-    const dev =
-        safeNumber(
-            data.dev_ma200_pct
-        );
-
-
-    let description = "";
-
-
-    if (dev > 20) {
-
-        description =
-            "价格显著高于年线，长期价格已经明显升温。";
-
-
-    } else if (
-        dev > 10
-    ) {
-
-        description =
-            "价格明显高于年线，继续追价的性价比较低。";
-
-
-    } else if (
-        dev > 3
-    ) {
-
-        description =
-            "价格温和高于年线，长期趋势仍然偏强。";
-
-
-    } else if (
-        dev >= -5
-    ) {
-
-        description =
-            "价格位于年线附近，长期价格相对均衡。";
-
-
-    } else if (
-        dev >= -15
-    ) {
-
-        description =
-            "价格低于年线，长期配置价格正在改善。";
-
-
-    } else {
-
-        description =
-            "价格明显低于年线，已经进入较深回撤区域。";
-
-    }
-
-
-    $("devMa200Description").textContent =
-        description;
+    setText(
+        "low20Value",
+        `近20日低点 ${formatNumber(
+            data.low20,
+            2
+        )}`
+    );
 
 }
 
 
 /* =========================================================
-   PER-INDEX SENTIMENT
+   METHODOLOGY
    ========================================================= */
 
-function renderSentiment(
+function renderMethodology(
     data
 ) {
 
-    const sentiment =
-        data.sentiment;
-
-
-    if (!sentiment) {
-
-        $("sentimentCardTitle").textContent =
-            "市场情绪";
-
-
-        $("sentimentScore").textContent =
-            "--";
-
-
-        $("sentimentState").textContent =
-            "数据不足";
-
-
-        $("sentimentSectionTitle").textContent =
-            "市场情绪";
-
-
-        $("sentimentLabel").textContent =
-            "市场情绪";
-
-
-        $("sentimentMainScore").textContent =
-            "--";
-
-
-        $("sentimentMainState").textContent =
-            "--";
-
-
-        $("sentimentSummary").textContent =
-            "当前情绪数据暂时不可用。";
-
-
-        return;
-
-    }
-
-
-    const score =
-        safeNumber(
-            sentiment.score,
-            50
-        );
-
-
-    const humanState =
-        getHumanSentimentLabel(
-            score
-        );
-
-
-    /* =====================================================
-       Hero
-       ===================================================== */
-
-    $("sentimentCardTitle").textContent =
-        sentiment.label
-        || "市场情绪";
-
-
-    $("sentimentScore").textContent =
-        score;
-
-
-    $("sentimentState").textContent =
-        humanState;
-
-
-    /* =====================================================
-       Section title
-       ===================================================== */
-
-    $("sentimentSectionTitle").textContent =
-        sentiment.label
-        || "市场情绪";
-
-
-    if (
-        currentIndex === "sse50"
-    ) {
-
-        $("sentimentSectionDesc").textContent =
-            "使用上证50自身价格、回撤、年线与波动状态";
-
-
-    } else if (
-        currentIndex === "nasdaq100"
-    ) {
-
-        $("sentimentSectionDesc").textContent =
-            "核心观察 VXN · Nasdaq-100 Volatility Index";
-
-
-    } else {
-
-        $("sentimentSectionDesc").textContent =
-            "核心观察 VIX · S&P 500 Volatility Index";
-
-    }
-
-
-    /* =====================================================
-       Main sentiment card
-       ===================================================== */
-
-    $("sentimentLabel").textContent =
-        sentiment.label
-        || "市场情绪";
-
-
-    $("sentimentMainScore").textContent =
-        score;
-
-
-    $("sentimentMainState").textContent =
-        humanState;
-
-
-    $("sentimentSummary").textContent =
-        sentiment.summary
-        || "--";
-
-
-    $("sentimentMethod").textContent =
-        sentiment.method
-        || "--";
-
-
-    /* =====================================================
-       Primary indicator
-       ===================================================== */
-
-    const primary =
-        sentiment.primary_indicator
+    const valuation =
+        data.valuation
         || {};
 
 
-    $("sentimentPrimaryName").textContent =
-        primary.name
-        || "--";
+    setText(
+        "methodologyName",
+        valuation.method_name
+        || "--"
+    );
 
-
-    if (
-        primary.value === null
-        ||
-        primary.value === undefined
-    ) {
-
-        $("sentimentPrimaryValue").textContent =
-            "--";
-
-
-    } else {
-
-        $("sentimentPrimaryValue").textContent =
-
-            Number(
-                primary.value
-            )
-            .toLocaleString(
-
-                "zh-CN",
-
-                {
-                    maximumFractionDigits:
-                        2
-                }
-
-            );
-
-    }
-
-
-    $("sentimentPrimaryUnit").textContent =
-        primary.unit
-        || "";
-
-
-    $("sentimentPrimaryState").textContent =
-        primary.state
-        || "";
-
-
-    if (
-        primary.percentile_5y !== null
-        &&
-        primary.percentile_5y !== undefined
-    ) {
-
-        $("sentimentPrimaryPercentile").textContent =
-
-            `5年分位 ${Number(
-                primary.percentile_5y
-            ).toFixed(0)}%`;
-
-
-    } else {
-
-        $("sentimentPrimaryPercentile").textContent =
-            "";
-
-    }
-
-
-    /* =====================================================
-       Components
-       ===================================================== */
-
-    const components =
-        Array.isArray(
-            sentiment.components
-        )
-
-            ? sentiment.components
-
-            : [];
-
-
-    $("sentimentComponents").innerHTML =
-
-        components.map(
-
-            item =>
-
-                `<div class="sentiment-component-item">
-
-                    <span class="sentiment-component-dot"></span>
-
-                    <span>
-                        ${item}
-                    </span>
-
-                </div>`
-
-        ).join("");
-
-
-    $("sentimentNote").textContent =
-        sentiment.note
-        || "";
-
-}
-
-
-/* =========================================================
-   US RATE
-   ========================================================= */
-
-function renderRateEnvironment() {
-
-    const rateSection =
-        $("rateSection");
-
-
-    /*
-       上证50不显示美债模块
-    */
 
     if (
         currentIndex === "sse50"
     ) {
 
-        rateSection.style.display =
-            "none";
+        setText(
 
-        return;
+            "methodologyDescription",
 
-    }
+            "上证50采用盈利收益率法为主。盈利收益率越高，意味着单位企业盈利对应的价格越低；同时结合自身PE历史位置和中国10年期国债收益率理解当前估值环境。"
 
-
-    rateSection.style.display =
-        "";
-
-
-    const macro =
-        marketData
-            ? marketData.macro
-            : null;
-
-
-    const us10y =
-        macro
-            ? macro.us10y
-            : null;
-
-
-    if (
-        !us10y
-        ||
-        us10y.error
-    ) {
-
-        $("us10yValue").textContent =
-            "--";
-
-
-        $("us10yTrend").textContent =
-            "数据暂缺";
-
-
-        $("us10yChange20").textContent =
-            "--";
-
-
-        return;
-
-    }
-
-
-    $("us10yValue").textContent =
-        safeNumber(
-            us10y.yield_pct
-        ).toFixed(3);
-
-
-    $("us10yTrend").textContent =
-        us10y.trend_20d
-        || "--";
-
-
-    const bp =
-        safeNumber(
-            us10y.change_20d_bp
         );
-
-
-    $("us10yChange20").textContent =
-
-        `${bp > 0 ? "+" : ""}`
-
-        +
-
-        `${bp.toFixed(1)} bp`;
-
-}
-
-
-/* =========================================================
-   LEGACY MACRO FIELDS
-   兼容当前HTML隐藏节点
-   ========================================================= */
-
-function renderLegacyMacroFields() {
-
-    if (
-        !marketData ||
-        !marketData.macro
-    ) {
-
-        return;
-
-    }
-
-
-    let volatilityIndex = null;
-
-
-    if (
-        currentIndex === "nasdaq100"
-    ) {
-
-        volatilityIndex =
-            marketData.macro.vxn;
 
 
     } else if (
         currentIndex === "sp500"
     ) {
 
-        volatilityIndex =
-            marketData.macro.vix;
+        setText(
 
-    }
+            "methodologyDescription",
 
+            "标普500采用博格公式框架。当前版本以PE自身历史位置、盈利收益率与股息率为主要可自动化变量；盈利增长将作为后续重要基本面数据接入。"
 
-    if (
-        !volatilityIndex
-        ||
-        volatilityIndex.error
-    ) {
-
-        $("vixValue").textContent =
-            "--";
-
-
-        $("vixState").textContent =
-            "--";
-
-
-        $("vixPercentile").textContent =
-            "--";
-
-
-        $("vixDescription").textContent =
-            "--";
-
-
-        return;
-
-    }
-
-
-    $("vixValue").textContent =
-        formatNumber(
-            volatilityIndex.value
         );
 
 
-    $("vixState").textContent =
-        volatilityIndex.state
-        || "--";
+    } else {
 
+        setText(
 
-    $("vixPercentile").textContent =
+            "methodologyDescription",
 
-        `${safeNumber(
-            volatilityIndex.percentile_5y
-        ).toFixed(1)}%`;
+            "纳斯达克100采用成长型博格框架。核心比较指数自身历史PE，而不是与上证50等盈利结构不同的指数机械比较绝对PE；盈利增长是后续需要继续完善的重要变量。"
 
-
-    $("vixDescription").textContent =
-        volatilityIndex.name
-        || "";
-
-}
-
-
-/* =========================================================
-   REASON LIST
-   ========================================================= */
-
-function renderReasonList(
-    elementId,
-    reasons
-) {
-
-    const element =
-        $(elementId);
-
-
-    if (!element) {
-
-        return;
+        );
 
     }
 
 
-    if (
-        !Array.isArray(
-            reasons
+    setText(
+        "valuationSource",
+        valuation.source
+        || "--"
+    );
+
+
+    setText(
+        "valuationSourceQuality",
+        humanSourceQuality(
+            valuation.source_quality
         )
-        ||
-        reasons.length === 0
+    );
+
+
+    const formula =
+        valuation.investment_formula
+        || {};
+
+
+    if (
+        formula.type === "earnings_yield"
     ) {
 
-        element.innerHTML =
+        setText(
+            "methodologyFormula",
+            "Aₜ = A₀ × (EYₜ / EY₀)ⁿ"
+        );
 
-            `<div class="reason-row">
-                暂无可展示的判断依据
-            </div>`;
 
+    } else {
 
-        return;
+        setText(
+            "methodologyFormula",
+            "Aₜ = A₀ × (PE₀ / PEₜ)ⁿ"
+        );
 
     }
 
 
-    element.innerHTML =
-
-        reasons.map(
-
-            reason =>
-
-                `<div class="reason-row">
-
-                    <span class="reason-marker"></span>
-
-                    <span>
-                        ${reason}
-                    </span>
-
-                </div>`
-
-        ).join("");
+    setText(
+        "methodologyFormulaDescription",
+        formula.description
+        || "--"
+    );
 
 }
 
 
 /* =========================================================
-   TECHNICAL DATA
-   ========================================================= */
-
-function renderTechnicalData(
-    data
-) {
-
-    $("ma20").textContent =
-        formatNumber(
-            data.ma20
-        );
-
-
-    $("ma60").textContent =
-        formatNumber(
-            data.ma60
-        );
-
-
-    $("ma200").textContent =
-        formatNumber(
-            data.ma200
-        );
-
-
-    $("rsi14").textContent =
-        formatNumber(
-            data.rsi14
-        );
-
-
-    $("macdHist").textContent =
-        formatNumber(
-            data.macd_hist
-        );
-
-
-    $("volatility20").textContent =
-
-        `${formatNumber(
-            data.volatility20
-        )}%`;
-
-}
-
-
-/* =========================================================
-   CHART COLORS
-   深海蓝 + 青绿 + 暖金
+   CHART
    ========================================================= */
 
 const CHART_COLORS = {
@@ -2740,10 +3053,10 @@ const CHART_COLORS = {
         "#183A56",
 
     ma20:
-        "#BBC8D3",
+        "#BAC7D1",
 
     ma60:
-        "#507985",
+        "#527B86",
 
     ma200:
         "#B08A54"
@@ -2751,21 +3064,28 @@ const CHART_COLORS = {
 };
 
 
-/* =========================================================
-   LONG-TERM CHART
-   ========================================================= */
-
 function renderChart(
     data
 ) {
+
+    if (
+        typeof Chart === "undefined"
+    ) {
+
+        console.warn(
+            "Chart.js 尚未加载"
+        );
+
+        return;
+
+    }
+
 
     const allHistory =
         Array.isArray(
             data.history
         )
-
             ? data.history
-
             : [];
 
 
@@ -2795,15 +3115,6 @@ function renderChart(
     }
 
 
-    const labels =
-        history.map(
-
-            row =>
-                row.date
-
-        );
-
-
     const ctx =
         canvas.getContext(
             "2d"
@@ -2815,7 +3126,7 @@ function renderChart(
             0,
             0,
             0,
-            570
+            560
         );
 
 
@@ -2837,14 +3148,16 @@ function renderChart(
     );
 
 
+    const labels =
+        history.map(
+            row =>
+                row.date
+        );
+
+
     const datasets = [
 
-        /* =================================================
-           收盘
-           ================================================= */
-
         {
-
             label:
                 "收盘",
 
@@ -2861,13 +3174,7 @@ function renderChart(
                 gradient,
 
             borderWidth:
-                3.4,
-
-            borderCapStyle:
-                "round",
-
-            borderJoinStyle:
-                "round",
+                3.2,
 
             pointRadius:
                 0,
@@ -2884,6 +3191,12 @@ function renderChart(
             pointHoverBorderWidth:
                 2,
 
+            borderCapStyle:
+                "round",
+
+            borderJoinStyle:
+                "round",
+
             tension:
                 0.20,
 
@@ -2892,16 +3205,10 @@ function renderChart(
 
             order:
                 1
-
         },
 
 
-        /* =================================================
-           MA20
-           ================================================= */
-
         {
-
             label:
                 "MA20",
 
@@ -2918,19 +3225,10 @@ function renderChart(
                 CHART_COLORS.ma20,
 
             borderWidth:
-                1.35,
+                1.3,
 
             pointRadius:
                 0,
-
-            pointHoverRadius:
-                3,
-
-            borderCapStyle:
-                "round",
-
-            borderJoinStyle:
-                "round",
 
             tension:
                 0.22,
@@ -2943,16 +3241,10 @@ function renderChart(
 
             order:
                 4
-
         },
 
 
-        /* =================================================
-           MA60
-           ================================================= */
-
         {
-
             label:
                 "MA60",
 
@@ -2969,19 +3261,10 @@ function renderChart(
                 CHART_COLORS.ma60,
 
             borderWidth:
-                2.05,
+                1.9,
 
             pointRadius:
                 0,
-
-            pointHoverRadius:
-                3,
-
-            borderCapStyle:
-                "round",
-
-            borderJoinStyle:
-                "round",
 
             tension:
                 0.22,
@@ -2994,16 +3277,10 @@ function renderChart(
 
             order:
                 3
-
         },
 
 
-        /* =================================================
-           MA200
-           ================================================= */
-
         {
-
             label:
                 "MA200 年线",
 
@@ -3020,19 +3297,10 @@ function renderChart(
                 CHART_COLORS.ma200,
 
             borderWidth:
-                2.75,
+                2.6,
 
             pointRadius:
                 0,
-
-            pointHoverRadius:
-                3,
-
-            borderCapStyle:
-                "round",
-
-            borderJoinStyle:
-                "round",
 
             tension:
                 0.20,
@@ -3045,13 +3313,14 @@ function renderChart(
 
             order:
                 2
-
         }
 
     ];
 
 
-    if (marketChart) {
+    if (
+        marketChart
+    ) {
 
         marketChart.destroy();
 
@@ -3090,7 +3359,7 @@ function renderChart(
                     animation: {
 
                         duration:
-                            520,
+                            500,
 
                         easing:
                             "easeOutQuart"
@@ -3105,27 +3374,6 @@ function renderChart(
 
                         intersect:
                             false
-
-                    },
-
-
-                    layout: {
-
-                        padding: {
-
-                            top:
-                                8,
-
-                            right:
-                                8,
-
-                            bottom:
-                                3,
-
-                            left:
-                                4
-
-                        }
 
                     },
 
@@ -3149,24 +3397,18 @@ function renderChart(
                                     "line",
 
                                 boxWidth:
-                                    30,
-
-                                boxHeight:
-                                    3,
+                                    28,
 
                                 padding:
-                                    22,
+                                    20,
 
                                 color:
-                                    "#68737D",
+                                    "#667782",
 
                                 font: {
 
                                     size:
-                                        11,
-
-                                    weight:
-                                        500
+                                        11
 
                                 }
 
@@ -3177,11 +3419,8 @@ function renderChart(
 
                         tooltip: {
 
-                            enabled:
-                                true,
-
                             backgroundColor:
-                                "rgba(19,39,56,0.96)",
+                                "rgba(17,43,62,0.96)",
 
                             titleColor:
                                 "#FFFFFF",
@@ -3189,66 +3428,17 @@ function renderChart(
                             bodyColor:
                                 "rgba(255,255,255,0.82)",
 
-                            borderWidth:
-                                0,
-
                             cornerRadius:
-                                14,
-
-                            padding:
                                 13,
 
-                            boxPadding:
-                                5,
+                            padding:
+                                12,
 
                             usePointStyle:
                                 true,
 
-                            displayColors:
-                                true,
-
-
-                            titleFont: {
-
-                                size:
-                                    11,
-
-                                weight:
-                                    600
-
-                            },
-
-
-                            bodyFont: {
-
-                                size:
-                                    11
-
-                            },
-
 
                             callbacks: {
-
-                                title:
-                                    function(
-                                        items
-                                    ) {
-
-                                        if (
-                                            !items.length
-                                        ) {
-
-                                            return "";
-
-                                        }
-
-
-                                        return (
-                                            items[0].label
-                                        );
-
-                                    },
-
 
                                 label:
                                     function(
@@ -3272,11 +3462,7 @@ function renderChart(
 
                                         return (
 
-                                            context.dataset.label
-
-                                            +
-
-                                            "  "
+                                            `${context.dataset.label}  `
 
                                             +
 
@@ -3331,14 +3517,11 @@ function renderChart(
                             ticks: {
 
                                 color:
-                                    "#8A949D",
+                                    "#89959D",
 
                                 maxTicksLimit:
-
                                     currentChartRange >= 252
-
                                         ? 9
-
                                         : 7,
 
                                 maxRotation:
@@ -3346,9 +3529,6 @@ function renderChart(
 
                                 autoSkip:
                                     true,
-
-                                padding:
-                                    8,
 
                                 font: {
 
@@ -3419,10 +3599,7 @@ function renderChart(
                             grid: {
 
                                 color:
-                                    "rgba(44,65,82,0.065)",
-
-                                lineWidth:
-                                    1
+                                    "rgba(40,66,83,0.065)"
 
                             },
 
@@ -3430,7 +3607,7 @@ function renderChart(
                             ticks: {
 
                                 color:
-                                    "#8A949D",
+                                    "#89959D",
 
                                 padding:
                                     10,
@@ -3470,113 +3647,46 @@ function renderChart(
         );
 
 
-    $("chartCurrentPrice").textContent =
+    setText(
+        "chartCurrentPrice",
         formatNumber(
-            data.close
-        );
-
-
-    $("chartMa20").textContent =
-        formatNumber(
-            data.ma20
-        );
-
-
-    $("chartMa60").textContent =
-        formatNumber(
-            data.ma60
-        );
-
-
-    $("chartMa200").textContent =
-        formatNumber(
-            data.ma200
-        );
-
-}
-
-
-/* =========================================================
-   HERO DECISION RENDER
-   ========================================================= */
-
-function renderDecision(
-    data
-) {
-
-    const decision =
-        buildMarketDecision(
-            data
-        );
-
-
-    $("decisionTitle").textContent =
-        decision.title;
-
-
-    $("decisionDescription").textContent =
-        decision.description;
-
-
-    const signal =
-        $("decisionSignal");
-
-
-    signal.className =
-        "decision-signal";
-
-
-    signal.classList.add(
-
-        `decision-${decision.signal}`
-
+            data.close,
+            2
+        )
     );
 
 
-    $("decisionAllocation").textContent =
-        getAllocationActionLabel(
-            data
-        );
-
-
-    $("decisionTemperature").textContent =
-        getTemperatureLabel(
-            data.market_temperature
+    setText(
+        "chartMa20",
+        formatNumber(
+            data.ma20,
+            2
         )
-        .replace(
-            "价格",
-            ""
-        );
+    );
 
 
-    $("decisionSentiment").textContent =
-
-        data.sentiment
-
-            ? getHumanSentimentLabel(
-                data.sentiment.score
-            )
-            .replace(
-                "情绪",
-                ""
-            )
-
-            : "--";
+    setText(
+        "chartMa60",
+        formatNumber(
+            data.ma60,
+            2
+        )
+    );
 
 
-    $("decisionPath").textContent =
-
-        data.scenario_probability
-
-            ? data.scenario_probability.path_label
-
-            : "--";
+    setText(
+        "chartMa200",
+        formatNumber(
+            data.ma200,
+            2
+        )
+    );
 
 }
 
 
 /* =========================================================
-   FULL CURRENT INDEX
+   FULL RENDER
    ========================================================= */
 
 function renderCurrentIndex() {
@@ -3596,8 +3706,11 @@ function renderCurrentIndex() {
         data.error
     ) {
 
-        $("coreConclusion").textContent =
-            `行情数据获取失败：${data.error}`;
+        setText(
+            "coreConclusion",
+            `行情数据获取失败：${data.error}`
+        );
+
 
         return;
 
@@ -3608,21 +3721,38 @@ function renderCurrentIndex() {
 
 
     /* =====================================================
-       BASIC INFO
+       INDEX INFO
        ===================================================== */
 
-    $("indexName").textContent =
-        data.name;
+    setText(
+        "indexName",
+        data.name
+        || "--"
+    );
 
 
-    $("indexSymbol").textContent =
+    setText(
 
-        `${data.symbol} · ${data.date} · ${data.source}`;
+        "indexSymbol",
+
+        `${data.symbol || "--"} · ${data.date || "--"} · ${data.source || "--"}`
+
+    );
 
 
-    $("closePrice").textContent =
+    setText(
+        "closePrice",
         formatNumber(
-            data.close
+            data.close,
+            2
+        )
+    );
+
+
+    const change =
+        safeNumber(
+            data.change_pct,
+            0
         );
 
 
@@ -3630,211 +3760,105 @@ function renderCurrentIndex() {
         $("changePct");
 
 
-    changeElement.textContent =
-        formatPercent(
-            data.change_pct
-        );
-
-
-    changeElement.className =
-        "price-change";
-
-
     if (
-        safeNumber(
-            data.change_pct
-        ) > 0
+        changeElement
     ) {
 
-        changeElement.classList.add(
-            "positive"
-        );
+        changeElement.textContent =
+            formatPercent(
+                change,
+                2
+            );
 
 
-    } else if (
-        safeNumber(
-            data.change_pct
-        ) < 0
-    ) {
-
-        changeElement.classList.add(
-            "negative"
-        );
+        changeElement.className =
+            "price-change";
 
 
-    } else {
+        if (
+            change > 0
+        ) {
 
-        changeElement.classList.add(
-            "neutral"
-        );
+            changeElement.classList.add(
+                "positive"
+            );
+
+
+        } else if (
+            change < 0
+        ) {
+
+            changeElement.classList.add(
+                "negative"
+            );
+
+
+        } else {
+
+            changeElement.classList.add(
+                "neutral"
+            );
+
+        }
 
     }
 
 
     /* =====================================================
-       MARKET LABEL
+       MODULES
        ===================================================== */
 
-    $("heroMarketLabel").textContent =
-        buildHeroMarketLabel(
-            data
-        );
-
-
-    /* =====================================================
-       ALLOCATION
-       ===================================================== */
-
-    const allocationLabel =
-        getAllocationActionLabel(
-            data
-        );
-
-
-    $("allocationScore").textContent =
-        data.allocation_score
-        ?? "--";
-
-
-    $("allocationStateText").textContent =
-        allocationLabel;
-
-
-    setAllocationBadge(
-
-        allocationLabel,
-
-        data.allocation_score
-
+    renderValuationHero(
+        data
     );
 
 
-    /* =====================================================
-       TEMPERATURE
-       ===================================================== */
-
-    $("marketTemperature").textContent =
-        data.market_temperature
-        ?? "--";
+    renderValuationRange(
+        data
+    );
 
 
-    $("temperatureState").textContent =
-        getTemperatureLabel(
-            data.market_temperature
-        );
+    renderRelativeValue(
+        data
+    );
 
 
-    /* =====================================================
-       TECHNICAL
-       ===================================================== */
-
-    $("technicalState").textContent =
-        getTechnicalDisplay(
-            data.technical_state
-        );
+    renderInvestmentPlan(
+        data
+    );
 
 
-    /* =====================================================
-       SENTIMENT
-       ===================================================== */
+    renderValuationReasons(
+        data
+    );
+
+
+    renderPricePosition(
+        data
+    );
+
 
     renderSentiment(
         data
     );
 
 
-    /* =====================================================
-       DECISION
-       ===================================================== */
-
-    renderDecision(
+    renderTechnical(
         data
     );
 
-
-    /* =====================================================
-       CORE CONCLUSION
-       ===================================================== */
-
-    $("coreConclusion").textContent =
-        buildCoreConclusion(
-            data
-        );
-
-
-    /* =====================================================
-       PERSONAL STRATEGY
-       ===================================================== */
-
-    renderStrategy(
-        data
-    );
-
-
-    /* =====================================================
-       PROBABILITY
-       ===================================================== */
-
-    renderScenarioProbability(
-        data
-    );
-
-
-    /* =====================================================
-       LONG TERM
-       ===================================================== */
-
-    renderLongTermPosition(
-        data
-    );
-
-
-    /* =====================================================
-       RATE
-       ===================================================== */
-
-    renderRateEnvironment();
-
-
-    renderLegacyMacroFields();
-
-
-    /* =====================================================
-       TECHNICAL DETAIL
-       ===================================================== */
-
-    renderTechnicalData(
-        data
-    );
-
-
-    /* =====================================================
-       REASONS
-       ===================================================== */
-
-    renderReasonList(
-
-        "allocationReasons",
-
-        data.allocation_reasons
-
-    );
-
-
-    renderReasonList(
-
-        "technicalReasons",
-
-        data.technical_reasons
-
-    );
-
-
-    /* =====================================================
-       CHART
-       ===================================================== */
 
     renderChart(
+        data
+    );
+
+
+    renderScenario(
+        data
+    );
+
+
+    renderMethodology(
         data
     );
 
@@ -3845,75 +3869,220 @@ function renderCurrentIndex() {
    GUIDE
    ========================================================= */
 
-function updateGuideContent() {
+function renderGuideDynamicText() {
 
-    if (
-        !marketData
-        ||
-        !marketData.guide
-    ) {
-
-        return;
-
-    }
-
-
-    const guide =
-        marketData.guide;
-
-
-    if (
-        guide.allocation
-        &&
-        $("guideAllocationText")
-    ) {
-
-        $("guideAllocationText").textContent =
-            guide.allocation.meaning;
-
-    }
-
-
-    if (
-        guide.price_temperature
-        &&
-        $("guideTemperatureText")
-    ) {
-
-        $("guideTemperatureText").textContent =
-            guide.price_temperature.meaning;
-
-    }
-
-
-    if (
-        guide.sentiment
-        &&
-        $("guideSentimentText")
-    ) {
-
-        $("guideSentimentText").textContent =
-            guide.sentiment.meaning;
-
-    }
-
-
-    if (
-        guide.probability
-        &&
-        $("guideProbabilityText")
-    ) {
-
-        $("guideProbabilityText").textContent =
-            guide.probability.meaning;
-
-    }
+    /*
+       当前HTML主体说明已经完整，
+       这里主要保留给后续后端guide扩展。
+    */
 
 }
 
 
 /* =========================================================
-   OPEN / CLOSE GUIDE MODAL
+   HELP CONTENT
+   ========================================================= */
+
+function getHelpContent(
+    key
+) {
+
+    const backendGuide =
+        marketData
+        &&
+        marketData.guide
+        &&
+        marketData.guide[
+            key
+        ];
+
+
+    if (
+        backendGuide
+    ) {
+
+        return {
+
+            title:
+                backendGuide.title
+                || "指标说明",
+
+            text:
+                backendGuide.meaning
+                || backendGuide.question
+                || ""
+
+        };
+
+    }
+
+
+    const fallback = {
+
+        valuation: {
+
+            title:
+                "估值状态",
+
+            text:
+                (
+                    "估值是整个Index Radar的最高决策层。"
+                    +
+                    "不同指数采用不同方法，估值决定定投、持有、暂停新增或再平衡。"
+                )
+
+        },
+
+
+        pe: {
+
+            title:
+                "市盈率 PE",
+
+            text:
+                (
+                    "PE反映市场价格相对于企业盈利的倍数。"
+                    +
+                    "不同指数盈利结构不同，因此不能用同一个绝对PE阈值机械比较。"
+                )
+
+        },
+
+
+        earnings_yield: {
+
+            title:
+                "盈利收益率",
+
+            text:
+                (
+                    "盈利收益率 E/P 约等于 1/PE。"
+                    +
+                    "在盈利相对稳定的指数中，盈利收益率越高，通常意味着单位盈利对应的价格越低。"
+                )
+
+        },
+
+
+        pe_percentile: {
+
+            title:
+                "PE历史分位",
+
+            text:
+                (
+                    "表示当前PE在指数自身可比历史中的位置。"
+                    +
+                    "例如20%分位意味着历史上大约只有20%的时期PE比当前更低。"
+                )
+
+        },
+
+
+        dividend_yield: {
+
+            title:
+                "股息率",
+
+            text:
+                (
+                    "股息率是指数长期回报来源之一。"
+                    +
+                    "对于标普500等博格框架，股息率与盈利增长、估值变化共同影响长期回报。"
+                )
+
+        },
+
+
+        investment_formula: {
+
+            title:
+                "定期不定额",
+
+            text:
+                (
+                    "低估区内，估值越低，投入金额越高。"
+                    +
+                    "盈利收益率法使用 Aₜ=A₀×(EYₜ/EY₀)ⁿ；"
+                    +
+                    "PE法使用 Aₜ=A₀×(PE₀/PEₜ)ⁿ。"
+                    +
+                    "n只代表资金放大程度，不改变估值结论。"
+                )
+
+        },
+
+
+        technical: {
+
+            title:
+                "技术状态",
+
+            text:
+                (
+                    "MA、RSI和MACD只描述短期市场走势。"
+                    +
+                    "它们不会因为没有出现所谓技术确认，而推迟已经满足估值条件的定投。"
+                )
+
+        },
+
+
+        sentiment: {
+
+            title:
+                "市场风险情绪",
+
+            text:
+                (
+                    "VIX、VXN或波动状态用于观察市场是否谨慎或亢奋。"
+                    +
+                    "恐慌不自动代表买入，亢奋也不自动代表卖出。"
+                )
+
+        },
+
+
+        probability: {
+
+            title:
+                "短期历史情境",
+
+            text:
+                (
+                    "统计历史相似市场状态之后20个交易日的结果。"
+                    +
+                    "它不是未来真实概率，也不参与估值、定投金额或卖出判断。"
+                )
+
+        }
+
+    };
+
+
+    return (
+
+        fallback[
+            key
+        ]
+
+        ||
+
+        {
+            title:
+                "指标说明",
+
+            text:
+                ""
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   GUIDE MODAL
    ========================================================= */
 
 function openGuideModal() {
@@ -3979,123 +4148,6 @@ function closeGuideModal() {
 
 
 /* =========================================================
-   HELP POPOVER DATA
-   ========================================================= */
-
-function getHelpContent(
-    key
-) {
-
-    const guide =
-        marketData
-        &&
-        marketData.guide
-
-            ? marketData.guide[
-                key
-            ]
-
-            : null;
-
-
-    if (guide) {
-
-        return {
-
-            title:
-                guide.title
-                || "指标说明",
-
-            text:
-                guide.meaning
-                || ""
-
-        };
-
-    }
-
-
-    const fallback = {
-
-        allocation: {
-
-            title:
-                "长期配置吸引力",
-
-            text:
-                "回答现在是否值得增加长期资金。分数越高，代表当前长期价格条件越有吸引力。"
-
-        },
-
-
-        price_temperature: {
-
-            title:
-                "价格温度",
-
-            text:
-                "回答当前价格相对长期锚点热不热。温度低并不等于市场不好，而是代表价格机会可能正在改善。"
-
-        },
-
-
-        sentiment: {
-
-            title:
-                "市场情绪",
-
-            text:
-                "回答投资者当前更谨慎还是更亢奋。上证50、纳指100和标普500使用不同的情绪来源。"
-
-        },
-
-
-        technical: {
-
-            title:
-                "短期技术",
-
-            text:
-                "MA、RSI和MACD主要用于决定分批加减仓时点，不直接代表长期价值。"
-
-        },
-
-
-        probability: {
-
-            title:
-                "历史条件概率",
-
-            text:
-                "上涨、震荡、下跌来自历史相似状态之后20个交易日的加权统计，不是真实未来概率。"
-
-        }
-
-    };
-
-
-    return (
-
-        fallback[
-            key
-        ]
-
-        ||
-
-        {
-            title:
-                "指标说明",
-
-            text:
-                ""
-        }
-
-    );
-
-}
-
-
-/* =========================================================
    HELP POPOVER
    ========================================================= */
 
@@ -4125,12 +4177,16 @@ function openHelpPopover(
         );
 
 
-    $("helpPopoverTitle").textContent =
-        content.title;
+    setText(
+        "helpPopoverTitle",
+        content.title
+    );
 
 
-    $("helpPopoverText").textContent =
-        content.text;
+    setText(
+        "helpPopoverText",
+        content.text
+    );
 
 
     popover.classList.add(
@@ -4143,11 +4199,6 @@ function openHelpPopover(
         "false"
     );
 
-
-    /*
-       桌面端尽量放在按钮旁边。
-       手机端CSS会让它自动居中/贴底。
-    */
 
     const rect =
         button.getBoundingClientRect();
@@ -4249,7 +4300,7 @@ function closeHelpPopover() {
 
 
 /* =========================================================
-   INDEX SWITCH
+   INDEX TABS
    ========================================================= */
 
 document
@@ -4272,11 +4323,13 @@ document
                         )
                         .forEach(
 
-                            item =>
+                            item => {
 
                                 item.classList.remove(
                                     "active"
-                                )
+                                );
+
+                            }
 
                         );
 
@@ -4291,6 +4344,7 @@ document
 
 
                     closeHelpPopover();
+
 
                     renderCurrentIndex();
 
@@ -4327,11 +4381,13 @@ document
                         )
                         .forEach(
 
-                            item =>
+                            item => {
 
                                 item.classList.remove(
                                     "active"
-                                )
+                                );
+
+                            }
 
                         );
 
@@ -4374,13 +4430,12 @@ document
 
 
 /* =========================================================
-   USER INPUT
+   INVESTMENT INPUT EVENTS
    ========================================================= */
 
 [
-    "positionInput",
-    "profitInput",
     "baseInvestmentInput",
+    "maxInvestmentInput",
     "riskSelect"
 ]
 .forEach(
@@ -4403,6 +4458,8 @@ document
 
                 saveUserSettings();
 
+                updateRiskDescription();
+
 
                 const data =
                     getCurrentData();
@@ -4414,7 +4471,7 @@ document
                     !data.error
                 ) {
 
-                    renderStrategy(
+                    renderInvestmentPlan(
                         data
                     );
 
@@ -4440,20 +4497,21 @@ document
 
 
 /* =========================================================
-   GUIDE BUTTON EVENTS
+   GUIDE EVENTS
    ========================================================= */
 
 if (
     $("guideButton")
 ) {
 
-    $("guideButton").addEventListener(
+    $("guideButton")
+        .addEventListener(
 
-        "click",
+            "click",
 
-        openGuideModal
+            openGuideModal
 
-    );
+        );
 
 }
 
@@ -4462,13 +4520,14 @@ if (
     $("guideCloseButton")
 ) {
 
-    $("guideCloseButton").addEventListener(
+    $("guideCloseButton")
+        .addEventListener(
 
-        "click",
+            "click",
 
-        closeGuideModal
+            closeGuideModal
 
-    );
+        );
 
 }
 
@@ -4483,19 +4542,20 @@ if (
     guideBackdrop
 ) {
 
-    guideBackdrop.addEventListener(
+    guideBackdrop
+        .addEventListener(
 
-        "click",
+            "click",
 
-        closeGuideModal
+            closeGuideModal
 
-    );
+        );
 
 }
 
 
 /* =========================================================
-   HELP BUTTON EVENTS
+   HELP EVENTS
    ========================================================= */
 
 document
@@ -4523,10 +4583,12 @@ document
                         activeHelpButton === button
                         &&
                         $("helpPopover")
-                        .classList
-                        .contains(
-                            "open"
-                        )
+                        &&
+                        $("helpPopover")
+                            .classList
+                            .contains(
+                                "open"
+                            )
                     ) {
 
                         closeHelpPopover();
@@ -4537,11 +4599,8 @@ document
 
 
                     openHelpPopover(
-
                         button,
-
                         key
-
                     );
 
                 }
@@ -4570,7 +4629,7 @@ if (
 
 
 /* =========================================================
-   CLICK OUTSIDE HELP
+   CLICK OUTSIDE
    ========================================================= */
 
 document.addEventListener(
@@ -4586,9 +4645,11 @@ document.addEventListener(
         if (
             !popover
             ||
-            !popover.classList.contains(
-                "open"
-            )
+            !popover
+                .classList
+                .contains(
+                    "open"
+                )
         ) {
 
             return;
@@ -4626,7 +4687,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   ESC
+   ESCAPE
    ========================================================= */
 
 document.addEventListener(
@@ -4688,6 +4749,6 @@ setInterval(
 
     loadMarketData,
 
-    5 * 60 * 1000
+    REFRESH_INTERVAL
 
 );
