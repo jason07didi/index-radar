@@ -10,27 +10,32 @@ import yfinance as yf
 
 
 # =========================================================
-# INDEX RADAR
+# INDEX RADAR Strategy 3.0
 #
-# 核心框架：
+# 核心逻辑：
 #
 # 1. 长期配置吸引力
-#    回撤越深、相对MA200越低 → 配置吸引力通常越高
+#    越低估/越深回撤 → 越值得长期关注
 #
 # 2. 市场温度
-#    衡量当前价格是否偏热 / 偏冷
+#    越高 → 越不适合追涨
+#    越低 → 越值得关注分批配置
 #
 # 3. 短期技术状态
 #    MA / RSI / MACD / BOLL
-#    只用于择时辅助，不直接决定长期配置价值
+#    用于决定加仓节奏，而不是长期价值
 #
-# 4. 历史相似情境
-#    根据历史相似技术状态，
-#    统计未来20个交易日的历史结果
+# 4. 历史相似情境概率
+#    寻找历史上与当前状态相似的日期，
+#    统计未来20个交易日的表现
+#
+# 5. 宏观情绪
+#    VIX
+#    美国10年期国债收益率
 #
 # 注意：
-# 当前“长期配置吸引力”是价格型代理指标，
-# 尚未包含PE / PB / 盈利收益率等基本面估值指标。
+# 当前长期配置吸引力仍属于“价格型代理指标”。
+# PE / PB / 盈利收益率等真正估值数据后续再接入。
 # =========================================================
 
 
@@ -59,9 +64,7 @@ US_INDICES = {
 
 def calculate_indicators(df):
 
-    df = df.copy()
-
-    df = df.sort_index()
+    df = df.copy().sort_index()
 
     close = df["Close"]
 
@@ -80,11 +83,13 @@ def calculate_indicators(df):
         .mean()
     )
 
+
     df["MA20"] = (
         close
         .rolling(20)
         .mean()
     )
+
 
     df["MA60"] = (
         close
@@ -92,6 +97,8 @@ def calculate_indicators(df):
         .mean()
     )
 
+
+    # 年线
     df["MA200"] = (
         close
         .rolling(200)
@@ -109,20 +116,24 @@ def calculate_indicators(df):
         .mean()
     )
 
+
     boll_std = (
         close
         .rolling(20)
         .std(ddof=0)
     )
 
+
     df["BOLL_MID"] = (
         boll_mid
     )
+
 
     df["BOLL_UPPER"] = (
         boll_mid
         + 2 * boll_std
     )
+
 
     df["BOLL_LOWER"] = (
         boll_mid
@@ -140,10 +151,12 @@ def calculate_indicators(df):
         .diff()
     )
 
+
     gain = (
         delta
         .clip(lower=0)
     )
+
 
     loss = (
         -delta
@@ -180,11 +193,14 @@ def calculate_indicators(df):
 
 
     df["RSI14"] = (
+
         100
-        - (
+        -
+        (
             100
             / (1 + rs)
         )
+
     )
 
 
@@ -229,35 +245,43 @@ def calculate_indicators(df):
 
 
     df["MACD"] = (
+
         2
-        * (
+        *
+        (
             df["DIF"]
             - df["DEA"]
         )
+
     )
 
 
     # =====================================================
-    # 收益率
+    # 20 / 60 日收益率
     # =====================================================
 
     df["RET20"] = (
+
         close
         .pct_change(20)
+
         * 100
+
     )
 
+
     df["RET60"] = (
+
         close
         .pct_change(60)
+
         * 100
+
     )
 
 
     # =====================================================
-    # 20日波动率
-    #
-    # 年化，仅作为状态描述
+    # 20日年化波动率
     # =====================================================
 
     daily_return = (
@@ -275,6 +299,7 @@ def calculate_indicators(df):
         * math.sqrt(252)
 
         * 100
+
     )
 
 
@@ -299,7 +324,7 @@ def calculate_indicators(df):
     # =====================================================
     # 52周区间
     #
-    # 约252个交易日
+    # 252个交易日
     # =====================================================
 
     df["HIGH252"] = (
@@ -327,8 +352,8 @@ def calculate_indicators(df):
     #
     # 例如：
     #
-    # -5  = 比52周高点低5%
-    # -20 = 比52周高点低20%
+    # -5  → 距离高点回撤5%
+    # -20 → 距离高点回撤20%
     # =====================================================
 
     df["DRAWDOWN_52W"] = (
@@ -344,7 +369,7 @@ def calculate_indicators(df):
 
 
     # =====================================================
-    # 与均线偏离
+    # 价格相对于均线的偏离
     # =====================================================
 
     df["DEV_MA20"] = (
@@ -386,8 +411,8 @@ def calculate_indicators(df):
     # =====================================================
     # MACD标准化
     #
-    # 不同指数点位不同，
-    # 所以需要除以价格才能用于相似度比较
+    # 不同指数点位差异很大，
+    # 用价格标准化后用于历史相似度匹配
     # =====================================================
 
     df["MACD_NORM"] = (
@@ -405,9 +430,13 @@ def calculate_indicators(df):
 # =========================================================
 # 短期技术评分
 #
-# 保留原来的技术体系，
-# 但今后它只用于“择时”
-# 不再直接决定长期目标仓位。
+# 技术强 ≠ 长期值得追涨
+#
+# 它以后主要用来判断：
+#
+# 是否企稳
+# 是否开始修复
+# 加仓是否需要等待确认
 # =========================================================
 
 def calculate_technical_score(latest):
@@ -416,41 +445,51 @@ def calculate_technical_score(latest):
         latest["Close"]
     )
 
+
     ma5 = float(
         latest["MA5"]
     )
+
 
     ma20 = float(
         latest["MA20"]
     )
 
+
     ma60 = float(
         latest["MA60"]
     )
+
 
     boll_mid = float(
         latest["BOLL_MID"]
     )
 
+
     boll_upper = float(
         latest["BOLL_UPPER"]
     )
+
 
     boll_lower = float(
         latest["BOLL_LOWER"]
     )
 
+
     rsi = float(
         latest["RSI14"]
     )
+
 
     dif = float(
         latest["DIF"]
     )
 
+
     dea = float(
         latest["DEA"]
     )
+
 
     macd = float(
         latest["MACD"]
@@ -474,6 +513,7 @@ def calculate_technical_score(latest):
             "指数位于MA20上方"
         )
 
+
     else:
 
         score -= 8
@@ -494,6 +534,7 @@ def calculate_technical_score(latest):
         reasons.append(
             "指数位于MA60上方"
         )
+
 
     else:
 
@@ -516,6 +557,7 @@ def calculate_technical_score(latest):
             "MA5位于MA20上方"
         )
 
+
     else:
 
         score -= 5
@@ -536,6 +578,7 @@ def calculate_technical_score(latest):
         reasons.append(
             "MA20位于MA60上方"
         )
+
 
     else:
 
@@ -558,6 +601,7 @@ def calculate_technical_score(latest):
             "MACD保持多头结构"
         )
 
+
     else:
 
         score -= 6
@@ -570,6 +614,7 @@ def calculate_technical_score(latest):
     if macd > 0:
 
         score += 4
+
 
     else:
 
@@ -646,6 +691,7 @@ def calculate_technical_score(latest):
             "指数运行于BOLL中轨上方"
         )
 
+
     else:
 
         score -= 5
@@ -674,15 +720,22 @@ def calculate_technical_score(latest):
 
 
     score = int(
+
         round(
+
             max(
+
                 0,
+
                 min(
                     100,
                     score
                 )
+
             )
+
         )
+
     )
 
 
@@ -713,11 +766,14 @@ def calculate_technical_score(latest):
 
     return {
 
-        "score": score,
+        "score":
+            score,
 
-        "state": state,
+        "state":
+            state,
 
-        "reasons": reasons
+        "reasons":
+            reasons
 
     }
 
@@ -725,18 +781,16 @@ def calculate_technical_score(latest):
 # =========================================================
 # 长期配置吸引力
 #
-# 这是这一版最重要的变化。
+# 这里与趋势策略相反：
 #
-# 分数越高：
-# 当前价格状态越有利于长期配置。
+# 涨得越高
+# → 不代表越值得加仓
 #
-# 分数越低：
-# 当前价格状态越偏热，
-# 不宜因为上涨而机械增加长期仓位。
+# 回撤越深
+# 长期价格越合理
+# → 配置吸引力提高
 #
-# 注意：
-# 该评分暂时属于“价格型代理指标”，
-# 不是PE/PB意义上的估值。
+# 当前尚未包含PE/PB等基本面估值。
 # =========================================================
 
 def calculate_allocation_attractiveness(latest):
@@ -745,13 +799,16 @@ def calculate_allocation_attractiveness(latest):
         latest["DRAWDOWN_52W"]
     )
 
+
     dev200 = float(
         latest["DEV_MA200"]
     )
 
+
     rsi = float(
         latest["RSI14"]
     )
+
 
     ret20 = float(
         latest["RET20"]
@@ -765,9 +822,6 @@ def calculate_allocation_attractiveness(latest):
 
     # =====================================================
     # 1. 52周回撤
-    #
-    # 回撤越深：
-    # 长期配置吸引力越高
     # =====================================================
 
     if drawdown >= -3:
@@ -826,12 +880,6 @@ def calculate_allocation_attractiveness(latest):
 
     # =====================================================
     # 2. MA200偏离
-    #
-    # 长期价格明显高于MA200：
-    # 配置吸引力下降
-    #
-    # 长期价格低于MA200：
-    # 配置吸引力提高
     # =====================================================
 
     if dev200 > 20:
@@ -900,7 +948,7 @@ def calculate_allocation_attractiveness(latest):
     # =====================================================
     # 3. RSI
     #
-    # 权重明显低于长期指标
+    # 只赋较低权重
     # =====================================================
 
     if rsi > 75:
@@ -932,10 +980,7 @@ def calculate_allocation_attractiveness(latest):
 
 
     # =====================================================
-    # 4. 20日涨跌幅
-    #
-    # 短期急涨降低追高吸引力
-    # 短期急跌提高分批配置价值
+    # 4. 20日涨跌
     # =====================================================
 
     if ret20 > 12:
@@ -967,15 +1012,22 @@ def calculate_allocation_attractiveness(latest):
 
 
     score = int(
+
         round(
+
             max(
+
                 0,
+
                 min(
                     100,
                     score
                 )
+
             )
+
         )
+
     )
 
 
@@ -1006,11 +1058,14 @@ def calculate_allocation_attractiveness(latest):
 
     return {
 
-        "score": score,
+        "score":
+            score,
 
-        "state": state,
+        "state":
+            state,
 
-        "reasons": reasons
+        "reasons":
+            reasons
 
     }
 
@@ -1022,13 +1077,13 @@ def calculate_allocation_attractiveness(latest):
 # 50  = 中性
 # 100 = 极热
 #
-# 与配置吸引力不同：
+# 对长期投资者：
 #
-# 温度越高：
-# 越需要警惕追高
+# 热度越高
+# → 越不应该追涨
 #
-# 温度越低：
-# 越值得关注长期加仓机会
+# 热度越低
+# → 越值得关注长期分批配置
 # =========================================================
 
 def calculate_market_temperature(latest):
@@ -1037,13 +1092,16 @@ def calculate_market_temperature(latest):
         latest["DEV_MA200"]
     )
 
+
     drawdown = float(
         latest["DRAWDOWN_52W"]
     )
 
+
     rsi = float(
         latest["RSI14"]
     )
+
 
     ret20 = float(
         latest["RET20"]
@@ -1054,7 +1112,7 @@ def calculate_market_temperature(latest):
 
 
     # =====================================================
-    # MA200偏离
+    # MA200
     # =====================================================
 
     if dev200 > 20:
@@ -1088,7 +1146,7 @@ def calculate_market_temperature(latest):
 
 
     # =====================================================
-    # 52周回撤
+    # 回撤
     # =====================================================
 
     if drawdown >= -3:
@@ -1180,15 +1238,22 @@ def calculate_market_temperature(latest):
 
 
     temperature = int(
+
         round(
+
             max(
+
                 0,
+
                 min(
                     100,
                     temperature
                 )
+
             )
+
         )
+
     )
 
 
@@ -1219,45 +1284,121 @@ def calculate_market_temperature(latest):
 
     return {
 
-        "score": temperature,
+        "score":
+            temperature,
 
-        "state": state
+        "state":
+            state
 
     }
 
 
 # =========================================================
+# 根据三种方向概率
+# 给出用户容易理解的路径名称
+# =========================================================
+
+def build_path_label(
+    up_pct,
+    sideways_pct,
+    down_pct
+):
+
+    if (
+        up_pct >= 45
+        and up_pct >= down_pct + 10
+    ):
+
+        return "偏强上行"
+
+
+    if (
+        down_pct >= 45
+        and down_pct >= up_pct + 10
+    ):
+
+        return "偏弱下行"
+
+
+    if sideways_pct >= 40:
+
+        if (
+            up_pct
+            >= down_pct + 8
+        ):
+
+            return "震荡偏强"
+
+
+        if (
+            down_pct
+            >= up_pct + 8
+        ):
+
+            return "震荡偏弱"
+
+
+        return "震荡整理"
+
+
+    if up_pct > down_pct:
+
+        return "震荡偏强"
+
+
+    if down_pct > up_pct:
+
+        return "震荡偏弱"
+
+
+    return "震荡整理"
+
+
+# =========================================================
 # 历史相似情境概率
 #
-# 目标：
-# 找到历史上与当前技术状态相似的日期，
-# 然后统计这些日期之后20个交易日发生了什么。
+# 当前定义：
 #
-# 这不是机器学习预测模型，
-# 而是历史相似状态加权频率。
+# 未来20个交易日收益：
+#
+# > +3%  → 上涨
+# -3~+3% → 震荡
+# < -3%  → 下跌
+#
+# 这是历史条件频率，
+# 不是确定性预测。
 # =========================================================
 
 def calculate_historical_scenarios(
     df,
     horizon=20,
-    max_samples=120
+    max_samples=120,
+    direction_threshold=3.0
 ):
 
-    # =====================================================
-    # 当前状态
-    # =====================================================
+    current = (
+        df.iloc[-1]
+    )
 
-    current = df.iloc[-1]
 
+    # =====================================================
+    # 用于寻找历史相似状态的指标
+    # =====================================================
 
     required_features = [
 
         "DEV_MA20",
+
         "DEV_MA60",
+
         "DEV_MA200",
+
         "RSI14",
+
         "DRAWDOWN_52W",
+
         "RET20",
+
         "MACD_NORM"
 
     ]
@@ -1286,27 +1427,31 @@ def calculate_historical_scenarios(
 
 
     # =====================================================
-    # 各指标相似度尺度
-    #
-    # 数值越小：
-    # 对该指标越敏感
+    # 相似度标准化尺度
     # =====================================================
 
     scales = {
 
-        "DEV_MA20": 6.0,
+        "DEV_MA20":
+            6.0,
 
-        "DEV_MA60": 10.0,
+        "DEV_MA60":
+            10.0,
 
-        "DEV_MA200": 15.0,
+        "DEV_MA200":
+            15.0,
 
-        "RSI14": 15.0,
+        "RSI14":
+            15.0,
 
-        "DRAWDOWN_52W": 12.0,
+        "DRAWDOWN_52W":
+            12.0,
 
-        "RET20": 10.0,
+        "RET20":
+            10.0,
 
-        "MACD_NORM": 0.6
+        "MACD_NORM":
+            0.6
 
     }
 
@@ -1315,18 +1460,24 @@ def calculate_historical_scenarios(
 
 
     # =====================================================
-    # 至少需要200日长期均线
-    #
-    # 并且历史日期后面必须还剩20日，
-    # 防止未来数据不完整。
+    # 从拥有完整MA200之后开始
     # =====================================================
 
     start_index = 252
 
+
+    # =====================================================
+    # 必须留下未来20日
+    # =====================================================
+
     end_index = (
+
         len(df)
+
         - horizon
+
         - 1
+
     )
 
 
@@ -1336,18 +1487,24 @@ def calculate_historical_scenarios(
 
 
     # =====================================================
-    # 每隔3个交易日选取一个历史候选点
+    # 每隔3个交易日选择一个候选点
     #
-    # 这样可以减少大量连续日期重复的问题。
+    # 防止连续日期高度重复
     # =====================================================
 
     for i in range(
+
         start_index,
+
         end_index,
+
         3
+
     ):
 
-        row = df.iloc[i]
+        row = (
+            df.iloc[i]
+        )
 
 
         valid = True
@@ -1357,7 +1514,9 @@ def calculate_historical_scenarios(
 
         for feature in required_features:
 
-            value = row[feature]
+            value = row[
+                feature
+            ]
 
 
             if pd.isna(value):
@@ -1371,16 +1530,23 @@ def calculate_historical_scenarios(
 
                 (
                     float(value)
-                    - current_features[feature]
+
+                    - current_features[
+                        feature
+                    ]
                 )
 
-                / scales[feature]
+                / scales[
+                    feature
+                ]
 
             )
 
 
             distance_parts.append(
+
                 difference ** 2
+
             )
 
 
@@ -1395,7 +1561,8 @@ def calculate_historical_scenarios(
                 distance_parts
             )
 
-            / len(
+            /
+            len(
                 distance_parts
             )
 
@@ -1404,9 +1571,11 @@ def calculate_historical_scenarios(
 
         candidates.append({
 
-            "index": i,
+            "index":
+                i,
 
-            "distance": distance
+            "distance":
+                distance
 
         })
 
@@ -1417,7 +1586,8 @@ def calculate_historical_scenarios(
 
 
     # =====================================================
-    # 距离越小越相似
+    # 距离越小
+    # 越相似
     # =====================================================
 
     candidates = sorted(
@@ -1431,14 +1601,19 @@ def calculate_historical_scenarios(
 
 
     selected = candidates[
-        :min(
+
+        :
+        min(
             max_samples,
             len(candidates)
         )
+
     ]
 
 
     total_weight = 0.0
+
+    sum_weight_squared = 0.0
 
 
     up_weight = 0.0
@@ -1457,28 +1632,40 @@ def calculate_historical_scenarios(
     break_high20_weight = 0.0
 
 
-    future_returns = []
-
     weighted_return_sum = 0.0
 
 
+    future_returns = []
+
+    selected_distances = []
+
+
     # =====================================================
-    # 对历史相似日期进行未来20日统计
+    # 分析历史相似日期之后20日
     # =====================================================
 
     for candidate in selected:
 
-        i = candidate["index"]
+        i = candidate[
+            "index"
+        ]
 
-        distance = candidate["distance"]
+
+        distance = candidate[
+            "distance"
+        ]
 
 
         # =================================================
-        # 相似度越高权重越大
+        # 相似度越高
+        # 权重越高
         # =================================================
 
         weight = math.exp(
-            -0.55 * distance
+
+            -0.55
+            * distance
+
         )
 
 
@@ -1487,12 +1674,17 @@ def calculate_historical_scenarios(
             continue
 
 
-        current_row = df.iloc[i]
+        current_row = (
+            df.iloc[i]
+        )
 
 
         future = df.iloc[
-            i + 1:
+
+            i + 1
+            :
             i + horizon + 1
+
         ]
 
 
@@ -1502,12 +1694,21 @@ def calculate_historical_scenarios(
 
 
         start_close = float(
-            current_row["Close"]
+
+            current_row[
+                "Close"
+            ]
+
         )
 
 
         end_close = float(
-            future.iloc[-1]["Close"]
+
+            future
+            .iloc[-1][
+                "Close"
+            ]
+
         )
 
 
@@ -1524,79 +1725,142 @@ def calculate_historical_scenarios(
 
 
         future_returns.append(
+
             future_return
+
+        )
+
+
+        selected_distances.append(
+
+            distance
+
         )
 
 
         weighted_return_sum += (
+
             future_return
             * weight
+
         )
 
 
-        total_weight += weight
+        total_weight += (
+            weight
+        )
+
+
+        sum_weight_squared += (
+
+            weight ** 2
+
+        )
 
 
         # =================================================
         # 三种方向
-        #
-        # 上涨：
-        # 未来20日收益 > +5%
-        #
-        # 震荡：
-        # -5% ~ +5%
-        #
-        # 下跌：
-        # < -5%
         # =================================================
 
-        if future_return > 5:
+        if (
+            future_return
+            > direction_threshold
+        ):
 
-            up_weight += weight
+            up_weight += (
+                weight
+            )
 
 
-        elif future_return < -5:
+        elif (
+            future_return
+            < -direction_threshold
+        ):
 
-            down_weight += weight
+            down_weight += (
+                weight
+            )
 
 
         else:
 
-            sideways_weight += weight
+            sideways_weight += (
+                weight
+            )
 
 
         # =================================================
-        # 关键事件
-        #
-        # 任一未来交易日收盘站上：
-        # MA20
-        # MA60
+        # 当前历史状态对应的关键参考位
         # =================================================
 
-        above_ma20 = (
+        current_ma20 = float(
 
-            future["Close"]
-            > future["MA20"]
+            current_row[
+                "MA20"
+            ]
 
-        ).any()
-
-
-        above_ma60 = (
-
-            future["Close"]
-            > future["MA60"]
-
-        ).any()
+        )
 
 
-        if above_ma20:
+        current_ma60 = float(
+
+            current_row[
+                "MA60"
+            ]
+
+        )
+
+
+        current_low20 = float(
+
+            current_row[
+                "LOW20"
+            ]
+
+        )
+
+
+        current_high20 = float(
+
+            current_row[
+                "HIGH20"
+            ]
+
+        )
+
+
+        # =================================================
+        # 未来20日是否曾站上当前MA20
+        # =================================================
+
+        if (
+
+            future[
+                "Close"
+            ]
+
+            > current_ma20
+
+        ).any():
 
             above_ma20_weight += (
                 weight
             )
 
 
-        if above_ma60:
+        # =================================================
+        # 未来20日是否曾站上当前MA60
+        # =================================================
+
+        if (
+
+            future[
+                "Close"
+            ]
+
+            > current_ma60
+
+        ).any():
 
             above_ma60_weight += (
                 weight
@@ -1604,38 +1868,43 @@ def calculate_historical_scenarios(
 
 
         # =================================================
-        # 当前历史状态下的20日高低点
+        # 未来最低 / 最高
         # =================================================
 
-        current_low20 = float(
-            current_row["LOW20"]
-        )
-
-        current_high20 = float(
-            current_row["HIGH20"]
-        )
-
-
         future_low = float(
-            future["Low"]
+
+            future[
+                "Low"
+            ]
             .min()
+
         )
 
 
         future_high = float(
-            future["High"]
+
+            future[
+                "High"
+            ]
             .max()
+
         )
 
 
-        if future_low < current_low20:
+        if (
+            future_low
+            < current_low20
+        ):
 
             break_low20_weight += (
                 weight
             )
 
 
-        if future_high > current_high20:
+        if (
+            future_high
+            > current_high20
+        ):
 
             break_high20_weight += (
                 weight
@@ -1647,54 +1916,79 @@ def calculate_historical_scenarios(
         return None
 
 
+    # =====================================================
+    # 权重转换为百分比
+    # =====================================================
+
     def pct(weight):
 
         return int(
+
             round(
+
                 weight
                 / total_weight
                 * 100
+
             )
+
         )
 
 
-    up_pct = pct(
-        up_weight
+    up_pct = (
+        pct(
+            up_weight
+        )
     )
 
 
-    down_pct = pct(
-        down_weight
+    down_pct = (
+        pct(
+            down_weight
+        )
     )
 
 
     # =====================================================
-    # 为了保证三方向加起来严格100，
-    # 震荡用剩余值。
+    # 保证三者加起来严格等于100%
     # =====================================================
 
     sideways_pct = (
 
         100
+
         - up_pct
+
         - down_pct
 
     )
 
 
     sideways_pct = max(
+
         0,
+
         sideways_pct
+
     )
 
+
+    # =====================================================
+    # 历史平均收益
+    # =====================================================
 
     weighted_avg_return = (
 
         weighted_return_sum
+
         / total_weight
 
     )
 
+
+    # =====================================================
+    # 历史中位数收益
+    # =====================================================
 
     median_return = float(
 
@@ -1707,41 +2001,127 @@ def calculate_historical_scenarios(
 
 
     # =====================================================
-    # 判断最高概率方向
+    # 平均相似距离
     # =====================================================
 
-    directions = {
+    average_distance = (
 
-        "上涨": up_pct,
+        sum(
+            selected_distances
+        )
 
-        "震荡": sideways_pct,
+        /
+        len(
+            selected_distances
+        )
 
-        "下跌": down_pct
-
-    }
+    )
 
 
-    most_likely = max(
+    # =====================================================
+    # 有效样本量
+    #
+    # 比简单显示120个更合理。
+    # 因为某些样本权重非常低。
+    # =====================================================
 
-        directions,
+    effective_sample_size = (
 
-        key=directions.get
+        (
+            total_weight ** 2
+        )
 
+        /
+        sum_weight_squared
+
+        if sum_weight_squared > 0
+
+        else 0
+
+    )
+
+
+    # =====================================================
+    # 可信度
+    # =====================================================
+
+    if (
+
+        effective_sample_size >= 60
+
+        and average_distance <= 1.25
+
+    ):
+
+        confidence = "较高"
+
+
+    elif (
+
+        effective_sample_size >= 35
+
+        and average_distance <= 1.75
+
+    ):
+
+        confidence = "中等"
+
+
+    else:
+
+        confidence = "较低"
+
+
+    # =====================================================
+    # 最可能路径
+    # =====================================================
+
+    path_label = (
+        build_path_label(
+
+            up_pct,
+
+            sideways_pct,
+
+            down_pct
+
+        )
     )
 
 
     return {
 
-        "horizon_days": horizon,
+        "horizon_days":
+            horizon,
 
-        "sample_size": len(
-            selected
-        ),
+        "sample_size":
+            len(
+                future_returns
+            ),
+
+        "effective_sample_size":
+            round(
+                effective_sample_size,
+                1
+            ),
 
         "method":
             "历史相似状态加权频率",
 
-        "up_pct": up_pct,
+        "confidence":
+            confidence,
+
+        "average_distance":
+            round(
+                average_distance,
+                3
+            ),
+
+        "direction_threshold_pct":
+            direction_threshold,
+
+        "up_pct":
+            up_pct,
 
         "sideways_pct":
             sideways_pct,
@@ -1749,8 +2129,8 @@ def calculate_historical_scenarios(
         "down_pct":
             down_pct,
 
-        "most_likely":
-            most_likely,
+        "path_label":
+            path_label,
 
         "average_return_pct":
             round(
@@ -1792,139 +2172,33 @@ def calculate_historical_scenarios(
 
 
 # =========================================================
-# 整理输出
+# 最近1年走势图
+#
+# 252个交易日
+#
+# 前端以后可以切换：
+#
+# 3个月
+# 6个月
+# 1年
+#
+# 不需要后台重新获取数据。
 # =========================================================
 
-def build_result(
-    name,
-    symbol,
-    source,
-    df
+def build_history(
+    df,
+    periods=252
 ):
-
-    # =====================================================
-    # 计算全部指标
-    # =====================================================
-
-    df = calculate_indicators(
-        df
-    )
-
-
-    # =====================================================
-    # MA200 + 历史概率至少需要较长数据
-    # =====================================================
-
-    if len(df) < 320:
-
-        raise ValueError(
-            f"{name} 长期历史数据不足320个交易日"
-        )
-
-
-    latest = df.iloc[-1]
-
-    previous = df.iloc[-2]
-
-
-    # =====================================================
-    # 检查关键长期指标
-    # =====================================================
-
-    required_latest = [
-
-        "MA200",
-        "HIGH252",
-        "DRAWDOWN_52W",
-        "DEV_MA200",
-        "RET20"
-
-    ]
-
-
-    for field in required_latest:
-
-        if pd.isna(
-            latest[field]
-        ):
-
-            raise ValueError(
-                f"{name} 无法计算长期指标 {field}"
-            )
-
-
-    # =====================================================
-    # 三套独立判断
-    # =====================================================
-
-    technical = (
-        calculate_technical_score(
-            latest
-        )
-    )
-
-
-    attractiveness = (
-        calculate_allocation_attractiveness(
-            latest
-        )
-    )
-
-
-    temperature = (
-        calculate_market_temperature(
-            latest
-        )
-    )
-
-
-    scenarios = (
-        calculate_historical_scenarios(
-            df
-        )
-    )
-
-
-    # =====================================================
-    # 最新行情
-    # =====================================================
-
-    close = float(
-        latest["Close"]
-    )
-
-
-    prev_close = float(
-        previous["Close"]
-    )
-
-
-    change = (
-        close
-        - prev_close
-    )
-
-
-    change_pct = (
-
-        change
-        / prev_close
-        * 100
-
-    )
-
-
-    # =====================================================
-    # 60日图
-    # =====================================================
 
     history = []
 
 
     for index, row in (
+
         df
-        .tail(60)
+        .tail(periods)
         .iterrows()
+
     ):
 
         history.append({
@@ -1934,6 +2208,7 @@ def build_result(
                     "%Y-%m-%d"
                 ),
 
+
             "open":
                 round(
                     float(
@@ -1941,6 +2216,7 @@ def build_result(
                     ),
                     2
                 ),
+
 
             "high":
                 round(
@@ -1950,6 +2226,7 @@ def build_result(
                     2
                 ),
 
+
             "low":
                 round(
                     float(
@@ -1957,6 +2234,7 @@ def build_result(
                     ),
                     2
                 ),
+
 
             "close":
                 round(
@@ -1966,8 +2244,15 @@ def build_result(
                     2
                 ),
 
+
+            # =================================================
+            # MA5仍保留给后台/后续功能
+            # 但下一版图表默认不展示
+            # =================================================
+
             "ma5":
                 (
+
                     round(
                         float(
                             row["MA5"]
@@ -1980,10 +2265,13 @@ def build_result(
                     )
 
                     else None
+
                 ),
+
 
             "ma20":
                 (
+
                     round(
                         float(
                             row["MA20"]
@@ -1996,10 +2284,13 @@ def build_result(
                     )
 
                     else None
+
                 ),
+
 
             "ma60":
                 (
+
                     round(
                         float(
                             row["MA60"]
@@ -2012,76 +2303,279 @@ def build_result(
                     )
 
                     else None
+
                 ),
+
+
+            # =================================================
+            # MA200 年线
+            # =================================================
+
+            "ma200":
+                (
+
+                    round(
+                        float(
+                            row["MA200"]
+                        ),
+                        2
+                    )
+
+                    if pd.notna(
+                        row["MA200"]
+                    )
+
+                    else None
+
+                ),
+
 
             "boll_upper":
                 (
+
                     round(
                         float(
-                            row[
-                                "BOLL_UPPER"
-                            ]
+                            row["BOLL_UPPER"]
                         ),
                         2
                     )
 
                     if pd.notna(
-                        row[
-                            "BOLL_UPPER"
-                        ]
+                        row["BOLL_UPPER"]
                     )
 
                     else None
+
                 ),
+
 
             "boll_mid":
                 (
+
                     round(
                         float(
-                            row[
-                                "BOLL_MID"
-                            ]
+                            row["BOLL_MID"]
                         ),
                         2
                     )
 
                     if pd.notna(
-                        row[
-                            "BOLL_MID"
-                        ]
+                        row["BOLL_MID"]
                     )
 
                     else None
+
                 ),
+
 
             "boll_lower":
                 (
+
                     round(
                         float(
-                            row[
-                                "BOLL_LOWER"
-                            ]
+                            row["BOLL_LOWER"]
                         ),
                         2
                     )
 
                     if pd.notna(
-                        row[
-                            "BOLL_LOWER"
-                        ]
+                        row["BOLL_LOWER"]
                     )
 
                     else None
+
                 )
 
         })
 
 
+    return history
+
+
+# =========================================================
+# 整理单个指数
+# =========================================================
+
+def build_result(
+    name,
+    symbol,
+    source,
+    df
+):
+
+    df = (
+        calculate_indicators(
+            df
+        )
+    )
+
+
     # =====================================================
-    # 输出
+    # MA200 + 历史概率
+    # 至少需要320日
     # =====================================================
 
-    result = {
+    if len(df) < 320:
+
+        raise ValueError(
+
+            f"{name} 长期历史数据不足320个交易日"
+
+        )
+
+
+    latest = (
+        df.iloc[-1]
+    )
+
+
+    previous = (
+        df.iloc[-2]
+    )
+
+
+    required_latest = [
+
+        "MA200",
+
+        "HIGH252",
+
+        "LOW252",
+
+        "DRAWDOWN_52W",
+
+        "DEV_MA200",
+
+        "RET20",
+
+        "RET60",
+
+        "VOL20"
+
+    ]
+
+
+    for field in required_latest:
+
+        if pd.isna(
+            latest[field]
+        ):
+
+            raise ValueError(
+
+                f"{name} 无法计算长期指标 {field}"
+
+            )
+
+
+    # =====================================================
+    # 三套判断
+    # =====================================================
+
+    technical = (
+
+        calculate_technical_score(
+            latest
+        )
+
+    )
+
+
+    attractiveness = (
+
+        calculate_allocation_attractiveness(
+            latest
+        )
+
+    )
+
+
+    temperature = (
+
+        calculate_market_temperature(
+            latest
+        )
+
+    )
+
+
+    # =====================================================
+    # 未来20日历史条件概率
+    # =====================================================
+
+    scenarios = (
+
+        calculate_historical_scenarios(
+
+            df,
+
+            horizon=20,
+
+            max_samples=120,
+
+            direction_threshold=3.0
+
+        )
+
+    )
+
+
+    close = float(
+
+        latest[
+            "Close"
+        ]
+
+    )
+
+
+    prev_close = float(
+
+        previous[
+            "Close"
+        ]
+
+    )
+
+
+    change = (
+
+        close
+
+        - prev_close
+
+    )
+
+
+    change_pct = (
+
+        change
+
+        / prev_close
+
+        * 100
+
+    )
+
+
+    # =====================================================
+    # 最近252个交易日
+    # =====================================================
+
+    history = (
+
+        build_history(
+
+            df,
+
+            periods=252
+
+        )
+
+    )
+
+
+    return {
 
         "name":
             name,
@@ -2100,7 +2594,7 @@ def build_result(
 
 
         # =================================================
-        # 最新行情
+        # 行情
         # =================================================
 
         "close":
@@ -2207,7 +2701,9 @@ def build_result(
         "rsi14":
             round(
                 float(
-                    latest["RSI14"]
+                    latest[
+                        "RSI14"
+                    ]
                 ),
                 2
             ),
@@ -2215,7 +2711,9 @@ def build_result(
         "macd_dif":
             round(
                 float(
-                    latest["DIF"]
+                    latest[
+                        "DIF"
+                    ]
                 ),
                 2
             ),
@@ -2223,7 +2721,9 @@ def build_result(
         "macd_dea":
             round(
                 float(
-                    latest["DEA"]
+                    latest[
+                        "DEA"
+                    ]
                 ),
                 2
             ),
@@ -2231,14 +2731,16 @@ def build_result(
         "macd_hist":
             round(
                 float(
-                    latest["MACD"]
+                    latest[
+                        "MACD"
+                    ]
                 ),
                 2
             ),
 
 
         # =================================================
-        # 区间
+        # 20日位置
         # =================================================
 
         "high20":
@@ -2260,6 +2762,11 @@ def build_result(
                 ),
                 2
             ),
+
+
+        # =================================================
+        # 52周位置
+        # =================================================
 
         "high52w":
             round(
@@ -2373,7 +2880,7 @@ def build_result(
 
 
         # =================================================
-        # 短期技术状态
+        # 短期技术
         # =================================================
 
         "technical_score":
@@ -2393,11 +2900,10 @@ def build_result(
 
 
         # =================================================
-        # 为兼容当前网页
+        # 兼容旧网页
         #
-        # 暂时保留旧字段。
-        #
-        # 下一步修改网页后可不再使用。
+        # 下一步重构前端后，
+        # 这些字段可以不再作为核心展示
         # =================================================
 
         "market_score":
@@ -2417,7 +2923,7 @@ def build_result(
 
 
         # =================================================
-        # 历史相似情境
+        # 未来20日概率
         # =================================================
 
         "scenario_probability":
@@ -2425,7 +2931,7 @@ def build_result(
 
 
         # =================================================
-        # 说明
+        # 估值说明
         # =================================================
 
         "valuation_note":
@@ -2436,7 +2942,7 @@ def build_result(
 
 
         # =================================================
-        # 60日图
+        # 最近1年走势图
         # =================================================
 
         "history":
@@ -2445,13 +2951,12 @@ def build_result(
     }
 
 
-    return result
-
-
 # =========================================================
 # Yahoo Finance
 #
-# 美股指数获取10年历史数据
+# 纳指100 / 标普500
+#
+# 获取10年历史
 # =========================================================
 
 def get_yahoo_history(
@@ -2460,7 +2965,9 @@ def get_yahoo_history(
 ):
 
     print(
+
         f"正在获取长期历史：{name} ({symbol})"
+
     )
 
 
@@ -2483,34 +2990,47 @@ def get_yahoo_history(
     if df.empty:
 
         raise ValueError(
+
             f"{name} Yahoo未返回历史行情"
+
         )
 
 
     df = df[
+
         [
             "Open",
             "High",
             "Low",
             "Close"
         ]
+
     ]
 
 
     df = df.dropna(
+
         subset=[
+
             "Open",
+
             "High",
+
             "Low",
+
             "Close"
+
         ]
+
     )
 
 
     if len(df) < 320:
 
         raise ValueError(
+
             f"{name} Yahoo长期历史数据不足"
+
         )
 
 
@@ -2532,8 +3052,7 @@ def get_yahoo_history(
 #
 # 上证50
 #
-# 请求约1500个交易日，
-# 用于MA200、52周回撤和历史情境分析。
+# 获取约1500个交易日
 # =========================================================
 
 def get_sse50_tencent():
@@ -2544,13 +3063,18 @@ def get_sse50_tencent():
 
 
     print(
+
         f"正在通过腾讯获取长期历史：{name}"
+
     )
 
 
     url = (
+
         "https://web.ifzq.gtimg.cn/"
+
         "appstock/app/fqkline/get"
+
     )
 
 
@@ -2593,20 +3117,28 @@ def get_sse50_tencent():
     response.raise_for_status()
 
 
-    result = response.json()
+    result = (
+        response.json()
+    )
 
 
     if "data" not in result:
 
         raise ValueError(
+
             "腾讯接口没有返回data"
+
         )
 
 
-    if code not in result["data"]:
+    if code not in result[
+        "data"
+    ]:
 
         raise ValueError(
+
             "腾讯接口没有返回上证50"
+
         )
 
 
@@ -2637,7 +3169,12 @@ def get_sse50_tencent():
     if len(klines) < 320:
 
         raise ValueError(
-            f"腾讯上证50长期K线不足320日，实际 {len(klines)} 日"
+
+            (
+                "腾讯上证50长期K线不足320日，"
+                f"实际 {len(klines)} 日"
+            )
+
         )
 
 
@@ -2689,23 +3226,31 @@ def get_sse50_tencent():
     if len(df) < 320:
 
         raise ValueError(
+
             "上证50有效长期K线不足320日"
+
         )
 
 
     df["Date"] = (
+
         pd.to_datetime(
             df["Date"]
         )
+
     )
 
 
     df = (
+
         df
+
         .set_index(
             "Date"
         )
+
         .sort_index()
+
     )
 
 
@@ -2734,37 +3279,490 @@ def get_sse50_data():
     try:
 
         return (
+
             get_sse50_tencent()
+
         )
 
 
     except Exception as e:
 
         print(
+
             f"腾讯长期数据获取失败：{e}"
+
         )
 
 
         print(
+
             "尝试Yahoo备用源..."
+
         )
 
 
-        data = get_yahoo_history(
+        data = (
 
-            "上证50",
+            get_yahoo_history(
 
-            "000016.SS"
+                "上证50",
+
+                "000016.SS"
+
+            )
 
         )
 
 
         data["symbol"] = (
+
             "000016.SH"
+
         )
 
 
         return data
+
+
+# =========================================================
+# VIX
+#
+# 用于美国市场情绪
+# =========================================================
+
+def get_vix_context():
+
+    ticker = yf.Ticker(
+        "^VIX"
+    )
+
+
+    df = ticker.history(
+
+        period="5y",
+
+        interval="1d",
+
+        auto_adjust=False
+
+    )
+
+
+    if df.empty:
+
+        raise ValueError(
+
+            "VIX未返回数据"
+
+        )
+
+
+    close = (
+
+        df["Close"]
+        .dropna()
+
+    )
+
+
+    if len(close) < 30:
+
+        raise ValueError(
+
+            "VIX历史数据不足"
+
+        )
+
+
+    current = float(
+
+        close.iloc[-1]
+
+    )
+
+
+    previous = float(
+
+        close.iloc[-2]
+
+    )
+
+
+    # =====================================================
+    # 当前VIX在过去5年的历史百分位
+    # =====================================================
+
+    percentile_5y = (
+
+        (
+            close
+            <= current
+        )
+        .mean()
+
+        * 100
+
+    )
+
+
+    # =====================================================
+    # 情绪标签
+    # =====================================================
+
+    if current < 15:
+
+        state = "低波动"
+
+        sentiment = (
+            "市场情绪较平静"
+        )
+
+
+    elif current < 20:
+
+        state = "正常"
+
+        sentiment = (
+            "市场情绪总体正常"
+        )
+
+
+    elif current < 30:
+
+        state = "偏高"
+
+        sentiment = (
+            "市场担忧上升"
+        )
+
+
+    elif current < 40:
+
+        state = "恐慌"
+
+        sentiment = (
+            "市场处于明显恐慌区"
+        )
+
+
+    else:
+
+        state = "极端恐慌"
+
+        sentiment = (
+            "市场波动进入极端区间"
+        )
+
+
+    return {
+
+        "name":
+            "VIX",
+
+        "symbol":
+            "^VIX",
+
+        "source":
+            "Yahoo Finance / Cboe",
+
+        "date":
+            close.index[-1]
+            .strftime(
+                "%Y-%m-%d"
+            ),
+
+        "value":
+            round(
+                current,
+                2
+            ),
+
+        "change":
+            round(
+                current
+                - previous,
+                2
+            ),
+
+        "change_pct":
+            round(
+
+                (
+                    current
+                    / previous
+                    - 1
+                )
+
+                * 100,
+
+                2
+
+            ),
+
+        "percentile_5y":
+            round(
+                percentile_5y,
+                1
+            ),
+
+        "state":
+            state,
+
+        "sentiment":
+            sentiment
+
+    }
+
+
+# =========================================================
+# 美国10年期国债收益率
+#
+# ^TNX 数值例如：
+#
+# 4.7
+#
+# 即约4.7%
+# =========================================================
+
+def get_us10y_context():
+
+    ticker = yf.Ticker(
+        "^TNX"
+    )
+
+
+    df = ticker.history(
+
+        period="1y",
+
+        interval="1d",
+
+        auto_adjust=False
+
+    )
+
+
+    if df.empty:
+
+        raise ValueError(
+
+            "美国10年期国债收益率未返回数据"
+
+        )
+
+
+    close = (
+
+        df["Close"]
+        .dropna()
+
+    )
+
+
+    if len(close) < 22:
+
+        raise ValueError(
+
+            "美国10年期国债收益率历史数据不足"
+
+        )
+
+
+    current = float(
+
+        close.iloc[-1]
+
+    )
+
+
+    previous = float(
+
+        close.iloc[-2]
+
+    )
+
+
+    twenty_days_ago = float(
+
+        close.iloc[-21]
+
+    )
+
+
+    # =====================================================
+    # 20日变化
+    #
+    # 1个百分点 = 100bp
+    # =====================================================
+
+    change_20d_bp = (
+
+        current
+        - twenty_days_ago
+
+    ) * 100
+
+
+    if change_20d_bp >= 25:
+
+        trend = "明显上行"
+
+
+    elif change_20d_bp >= 10:
+
+        trend = "温和上行"
+
+
+    elif change_20d_bp <= -25:
+
+        trend = "明显下行"
+
+
+    elif change_20d_bp <= -10:
+
+        trend = "温和下行"
+
+
+    else:
+
+        trend = "基本稳定"
+
+
+    return {
+
+        "name":
+            "美国10年期国债收益率",
+
+        "symbol":
+            "^TNX",
+
+        "source":
+            "Yahoo Finance / Cboe",
+
+        "date":
+            close.index[-1]
+            .strftime(
+                "%Y-%m-%d"
+            ),
+
+        "yield_pct":
+            round(
+                current,
+                3
+            ),
+
+        "daily_change_bp":
+            round(
+
+                (
+                    current
+                    - previous
+                )
+
+                * 100,
+
+                1
+
+            ),
+
+        "change_20d_bp":
+            round(
+                change_20d_bp,
+                1
+            ),
+
+        "trend_20d":
+            trend
+
+    }
+
+
+# =========================================================
+# 宏观数据
+#
+# 即使VIX或美债获取失败，
+# 也不能让三个指数更新失败。
+# =========================================================
+
+def get_macro_context():
+
+    macro = {
+
+        "updated_at":
+
+            datetime.now(
+
+                ZoneInfo(
+                    "Asia/Shanghai"
+                )
+
+            )
+            .strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+    }
+
+
+    # =====================================================
+    # VIX
+    # =====================================================
+
+    try:
+
+        macro["vix"] = (
+
+            get_vix_context()
+
+        )
+
+
+    except Exception as e:
+
+        macro["vix"] = {
+
+            "name":
+                "VIX",
+
+            "symbol":
+                "^VIX",
+
+            "error":
+                str(e)
+
+        }
+
+
+    # =====================================================
+    # US10Y
+    # =====================================================
+
+    try:
+
+        macro["us10y"] = (
+
+            get_us10y_context()
+
+        )
+
+
+    except Exception as e:
+
+        macro["us10y"] = {
+
+            "name":
+                "美国10年期国债收益率",
+
+            "symbol":
+                "^TNX",
+
+            "error":
+                str(e)
+
+        }
+
+
+    return macro
 
 
 # =========================================================
@@ -2776,19 +3774,35 @@ def main():
     market_data = {
 
         "updated_at":
+
             datetime.now(
+
                 ZoneInfo(
                     "Asia/Shanghai"
                 )
+
             )
             .strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
 
+
         "strategy_version":
-            "2.0-value-allocation",
+
+            "3.0-value-allocation-probability",
+
+
+        # =================================================
+        # 宏观市场情绪
+        # =================================================
+
+        "macro":
+
+            get_macro_context(),
+
 
         "indices":
+
             {}
 
     }
@@ -2805,14 +3819,18 @@ def main():
         ][
             "sse50"
         ] = (
+
             get_sse50_data()
+
         )
 
 
     except Exception as e:
 
         print(
+
             f"上证50最终获取失败：{e}"
+
         )
 
 
@@ -2835,11 +3853,13 @@ def main():
 
 
     # =====================================================
-    # 纳指100 / 标普500
+    # 纳斯达克100 / 标普500
     # =====================================================
 
     for key, item in (
+
         US_INDICES.items()
+
     ):
 
         try:
@@ -2849,20 +3869,28 @@ def main():
             ][
                 key
             ] = (
+
                 get_yahoo_history(
 
-                    item["name"],
+                    item[
+                        "name"
+                    ],
 
-                    item["symbol"]
+                    item[
+                        "symbol"
+                    ]
 
                 )
+
             )
 
 
         except Exception as e:
 
             print(
+
                 f"{item['name']} 获取失败：{e}"
+
             )
 
 
@@ -2873,10 +3901,14 @@ def main():
             ] = {
 
                 "name":
-                    item["name"],
+                    item[
+                        "name"
+                    ],
 
                 "symbol":
-                    item["symbol"],
+                    item[
+                        "symbol"
+                    ],
 
                 "error":
                     str(e)
@@ -2885,11 +3917,13 @@ def main():
 
 
     # =====================================================
-    # 保存
+    # 保存 market.json
     # =====================================================
 
     output_path = Path(
+
         "data/market.json"
+
     )
 
 
@@ -2925,36 +3959,91 @@ def main():
         )
 
 
+    # =====================================================
+    # 日志
+    # =====================================================
+
     print(
+
         "\n======================================"
+
     )
 
-    print(
-        "INDEX RADAR Strategy 2.0 更新完成"
-    )
 
     print(
-        "长期配置吸引力 + 市场温度 + 历史相似概率"
+
+        "INDEX RADAR Strategy 3.0 更新完成"
+
     )
 
+
     print(
+
+        "1年趋势 + MA200 + 历史概率 + VIX + US10Y"
+
+    )
+
+
+    print(
+
         "======================================"
+
     )
 
 
     # =====================================================
-    # 日志只打印摘要
+    # 宏观摘要
+    # =====================================================
+
+    macro = market_data.get(
+
+        "macro",
+
+        {}
+
+    )
+
+
+    print(
+
+        "\n宏观情绪："
+
+    )
+
+
+    print(
+
+        json.dumps(
+
+            macro,
+
+            ensure_ascii=False,
+
+            indent=2
+
+        )
+
+    )
+
+
+    # =====================================================
+    # 指数摘要
     # =====================================================
 
     for key, data in (
+
         market_data[
             "indices"
         ].items()
+
     ):
 
         print(
+
             "\n--------------------------------------"
+
         )
+
 
         print(
             key
@@ -2964,60 +4053,151 @@ def main():
         if "error" in data:
 
             print(
+
                 "ERROR:",
-                data["error"]
+
+                data[
+                    "error"
+                ]
+
             )
+
 
             continue
 
 
         print(
+
             "close:",
-            data["close"]
-        )
 
-        print(
-            "allocation:",
-            data["allocation_score"],
-            data["allocation_state"]
-        )
-
-        print(
-            "temperature:",
-            data["market_temperature"],
-            data["temperature_state"]
-        )
-
-        print(
-            "technical:",
-            data["technical_score"],
-            data["technical_state"]
-        )
-
-        print(
-            "drawdown52w:",
-            data["drawdown_52w_pct"]
-        )
-
-        print(
-            "dev_ma200:",
-            data["dev_ma200_pct"]
-        )
-
-
-        if data[
-            "scenario_probability"
-        ]:
-
-            p = data[
-                "scenario_probability"
+            data[
+                "close"
             ]
 
+        )
+
+
+        print(
+
+            "allocation:",
+
+            data[
+                "allocation_score"
+            ],
+
+            data[
+                "allocation_state"
+            ]
+
+        )
+
+
+        print(
+
+            "temperature:",
+
+            data[
+                "market_temperature"
+            ],
+
+            data[
+                "temperature_state"
+            ]
+
+        )
+
+
+        print(
+
+            "technical:",
+
+            data[
+                "technical_score"
+            ],
+
+            data[
+                "technical_state"
+            ]
+
+        )
+
+
+        print(
+
+            "MA200:",
+
+            data[
+                "ma200"
+            ]
+
+        )
+
+
+        print(
+
+            "drawdown52w:",
+
+            data[
+                "drawdown_52w_pct"
+            ]
+
+        )
+
+
+        print(
+
+            "dev_ma200:",
+
+            data[
+                "dev_ma200_pct"
+            ]
+
+        )
+
+
+        probability = (
+
+            data.get(
+                "scenario_probability"
+            )
+
+        )
+
+
+        if probability:
+
             print(
+
+                "20日路径:",
+
+                probability[
+                    "path_label"
+                ]
+
+            )
+
+
+            print(
+
                 "20日概率:",
-                f"上涨 {p['up_pct']}%",
-                f"震荡 {p['sideways_pct']}%",
-                f"下跌 {p['down_pct']}%"
+
+                f"上涨 {probability['up_pct']}%",
+
+                f"震荡 {probability['sideways_pct']}%",
+
+                f"下跌 {probability['down_pct']}%"
+
+            )
+
+
+            print(
+
+                "可信度:",
+
+                probability[
+                    "confidence"
+                ]
+
             )
 
 
