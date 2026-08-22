@@ -6,7 +6,7 @@ let marketChart = null;
 
 
 /* =========================================================
-   工具
+   Utils
    ========================================================= */
 
 function $(id) {
@@ -50,21 +50,15 @@ function clamp(
 ) {
 
     return Math.max(
-
         min,
-
-        Math.min(
-            max,
-            value
-        )
-
+        Math.min(max, value)
     );
 
 }
 
 
 /* =========================================================
-   获取市场数据
+   Load market data
    ========================================================= */
 
 async function loadMarketData() {
@@ -119,7 +113,7 @@ async function loadMarketData() {
 
 
 /* =========================================================
-   当前指数
+   Current index
    ========================================================= */
 
 function getCurrentData() {
@@ -139,7 +133,7 @@ function getCurrentData() {
 
 
 /* =========================================================
-   状态样式
+   State style
    ========================================================= */
 
 function setStateStyle(
@@ -188,35 +182,22 @@ function setStateStyle(
 
 
 /* =========================================================
-   今日市场判断
+   Market summary
    ========================================================= */
 
-function buildMarketSummary(
-    data
-) {
+function buildMarketSummary(data) {
 
     const score =
-        Number(
-            data.market_score
-        );
-
+        Number(data.market_score);
 
     const close =
-        Number(
-            data.close
-        );
-
+        Number(data.close);
 
     const ma20 =
-        Number(
-            data.ma20
-        );
-
+        Number(data.ma20);
 
     const ma60 =
-        Number(
-            data.ma60
-        );
+        Number(data.ma60);
 
 
     let text = "";
@@ -301,8 +282,7 @@ function buildMarketSummary(
 
 
 /* =========================================================
-   localStorage
-   每个指数分别保存仓位
+   Local storage
    ========================================================= */
 
 function storageKey(field) {
@@ -316,10 +296,6 @@ function storageKey(field) {
 
 }
 
-
-/* =========================================================
-   加载用户仓位
-   ========================================================= */
 
 function loadUserSettings() {
 
@@ -359,43 +335,30 @@ function loadUserSettings() {
 }
 
 
-/* =========================================================
-   保存用户仓位
-   ========================================================= */
-
 function saveUserSettings() {
 
     localStorage.setItem(
-
         storageKey("position"),
-
         $("positionInput").value
-
     );
 
 
     localStorage.setItem(
-
         storageKey("profit"),
-
         $("profitInput").value
-
     );
 
 
     localStorage.setItem(
-
         storageKey("risk"),
-
         $("riskSelect").value
-
     );
 
 }
 
 
 /* =========================================================
-   根据市场评分确定基础仓位
+   Target position
    ========================================================= */
 
 function getBaseTargetPosition(
@@ -497,12 +460,10 @@ function getBaseTargetPosition(
 
 
 /* =========================================================
-   用户个性化策略
+   User strategy
    ========================================================= */
 
-function calculateUserStrategy(
-    data
-) {
+function calculateUserStrategy(data) {
 
     let position =
         Number(
@@ -555,11 +516,6 @@ function calculateUserStrategy(
         );
 
 
-    /*
-       高盈利 + RSI较高
-       适度降低目标仓位
-    */
-
     if (
         profit >= 20 &&
         data.rsi14 >= 70
@@ -571,11 +527,6 @@ function calculateUserStrategy(
 
     }
 
-
-    /*
-       大幅浮亏 + 弱势市场
-       避免机械补仓
-    */
 
     if (
         profit <= -10 &&
@@ -682,11 +633,9 @@ function calculateUserStrategy(
     }
 
 
-    /*
-       盈亏提示
-    */
-
-    if (profit >= 20) {
+    if (
+        profit >= 20
+    ) {
 
         text +=
             ` 当前已有 ${profit.toFixed(1)}% 浮盈，` +
@@ -733,17 +682,13 @@ function calculateUserStrategy(
 
 
 /* =========================================================
-   渲染策略
+   Render strategy
    ========================================================= */
 
-function renderStrategy(
-    data
-) {
+function renderStrategy(data) {
 
     const result =
-        calculateUserStrategy(
-            data
-        );
+        calculateUserStrategy(data);
 
 
     $("strategyAction").textContent =
@@ -791,12 +736,10 @@ function renderStrategy(
 
 
 /* =========================================================
-   判断依据
+   Reasons
    ========================================================= */
 
-function renderReasons(
-    data
-) {
+function renderReasons(data) {
 
     const reasons =
         data.market_reasons || [];
@@ -810,8 +753,7 @@ function renderReasons(
 
                 <div class="reason-item">
 
-                    <span class="reason-dot">
-                    </span>
+                    <span class="reason-dot"></span>
 
                     <span>
                         ${item}
@@ -827,12 +769,10 @@ function renderReasons(
 
 
 /* =========================================================
-   下一阶段推演
+   Scenarios
    ========================================================= */
 
-function renderScenarios(
-    data
-) {
+function renderScenarios(data) {
 
     const scenarios = [
 
@@ -905,12 +845,10 @@ function renderScenarios(
 
 
 /* =========================================================
-   Apple风格图表
+   Refined chart
    ========================================================= */
 
-function renderChart(
-    data
-) {
+function renderChart(data) {
 
     const history =
         data.history || [];
@@ -925,6 +863,17 @@ function renderChart(
         );
 
 
+    /*
+       核心视觉逻辑：
+
+       收盘   石墨黑
+       MA5    雾霾蓝灰
+       MA20   暖灰棕
+       MA60   灰紫
+
+       全部降低饱和度
+    */
+
     const datasets = [
 
         {
@@ -938,23 +887,26 @@ function renderChart(
                 ),
 
             borderColor:
-                "#1d1d1f",
+                "#1D1D1F",
 
             backgroundColor:
-                "#1d1d1f",
+                "#1D1D1F",
 
-            borderWidth: 2.6,
+            borderWidth: 2.35,
 
             pointRadius: 0,
 
-            pointHoverRadius: 4,
+            pointHoverRadius: 3.5,
 
-            pointHoverBorderWidth: 0,
+            pointHoverBackgroundColor:
+                "#1D1D1F",
 
-            cubicInterpolationMode:
-                "monotone",
+            pointHoverBorderColor:
+                "#FFFFFF",
 
-            tension: 0.25
+            pointHoverBorderWidth: 2,
+
+            tension: 0.24
 
         },
 
@@ -970,21 +922,26 @@ function renderChart(
                 ),
 
             borderColor:
-                "#0071e3",
+                "#6F8FA8",
 
             backgroundColor:
-                "#0071e3",
+                "#6F8FA8",
 
-            borderWidth: 1.8,
+            borderWidth: 1.55,
 
             pointRadius: 0,
 
             pointHoverRadius: 3,
 
-            cubicInterpolationMode:
-                "monotone",
+            pointHoverBackgroundColor:
+                "#6F8FA8",
 
-            tension: 0.25
+            pointHoverBorderColor:
+                "#FFFFFF",
+
+            pointHoverBorderWidth: 2,
+
+            tension: 0.24
 
         },
 
@@ -1000,21 +957,26 @@ function renderChart(
                 ),
 
             borderColor:
-                "#ff9f0a",
+                "#A58B72",
 
             backgroundColor:
-                "#ff9f0a",
+                "#A58B72",
 
-            borderWidth: 1.7,
+            borderWidth: 1.45,
 
             pointRadius: 0,
 
             pointHoverRadius: 3,
 
-            cubicInterpolationMode:
-                "monotone",
+            pointHoverBackgroundColor:
+                "#A58B72",
 
-            tension: 0.25
+            pointHoverBorderColor:
+                "#FFFFFF",
+
+            pointHoverBorderWidth: 2,
+
+            tension: 0.24
 
         },
 
@@ -1030,21 +992,26 @@ function renderChart(
                 ),
 
             borderColor:
-                "#5e5ce6",
+                "#858292",
 
             backgroundColor:
-                "#5e5ce6",
+                "#858292",
 
-            borderWidth: 1.7,
+            borderWidth: 1.35,
 
             pointRadius: 0,
 
             pointHoverRadius: 3,
 
-            cubicInterpolationMode:
-                "monotone",
+            pointHoverBackgroundColor:
+                "#858292",
 
-            tension: 0.25
+            pointHoverBorderColor:
+                "#FFFFFF",
+
+            pointHoverBorderWidth: 2,
+
+            tension: 0.24
 
         }
 
@@ -1092,7 +1059,7 @@ function renderChart(
 
                     animation: {
 
-                        duration: 450,
+                        duration: 420,
 
                         easing:
                             "easeOutQuart"
@@ -1113,13 +1080,13 @@ function renderChart(
 
                         padding: {
 
-                            top: 5,
+                            top: 4,
 
-                            left: 4,
+                            left: 3,
 
                             right: 8,
 
-                            bottom: 2
+                            bottom: 1
 
                         }
 
@@ -1142,20 +1109,20 @@ function renderChart(
                                 pointStyle:
                                     "line",
 
-                                boxWidth: 20,
+                                boxWidth: 23,
 
-                                boxHeight: 4,
+                                boxHeight: 3,
 
-                                padding: 18,
+                                padding: 19,
 
                                 color:
-                                    "#6e6e73",
+                                    "#7A7A80",
 
                                 font: {
 
-                                    size: 12,
+                                    size: 11,
 
-                                    weight: 550
+                                    weight: 500
 
                                 }
 
@@ -1169,17 +1136,17 @@ function renderChart(
                             enabled: true,
 
                             backgroundColor:
-                                "rgba(29,29,31,0.92)",
+                                "rgba(37,37,39,0.94)",
 
                             titleColor:
-                                "#ffffff",
+                                "#FFFFFF",
 
                             bodyColor:
-                                "rgba(255,255,255,0.82)",
+                                "rgba(255,255,255,0.76)",
 
                             borderWidth: 0,
 
-                            cornerRadius: 13,
+                            cornerRadius: 14,
 
                             padding: 13,
 
@@ -1191,19 +1158,22 @@ function renderChart(
                             displayColors:
                                 true,
 
+
                             titleFont: {
 
-                                size: 12,
+                                size: 11,
 
                                 weight: 600
 
                             },
 
+
                             bodyFont: {
 
-                                size: 12
+                                size: 11
 
                             },
+
 
                             callbacks: {
 
@@ -1216,7 +1186,7 @@ function renderChart(
 
                                         return (
                                             context.dataset.label +
-                                            ": " +
+                                            "   " +
                                             Number(value)
                                                 .toLocaleString(
                                                     "zh-CN",
@@ -1242,30 +1212,35 @@ function renderChart(
 
                             border: {
 
-                                display:
-                                    false
+                                display: false
 
                             },
+
 
                             grid: {
 
-                                display:
-                                    false
+                                display: false
 
                             },
+
 
                             ticks: {
 
                                 color:
-                                    "#86868b",
+                                    "#9A9A9F",
 
-                                maxTicksLimit: 7,
+                                maxTicksLimit:
+                                    7,
 
-                                maxRotation: 0,
+                                maxRotation:
+                                    0,
+
+                                padding:
+                                    8,
 
                                 font: {
 
-                                    size: 11
+                                    size: 10
 
                                 }
 
@@ -1278,32 +1253,33 @@ function renderChart(
 
                             border: {
 
-                                display:
-                                    false
+                                display: false
 
                             },
+
 
                             grid: {
 
                                 color:
-                                    "rgba(60,60,67,0.075)",
+                                    "rgba(60,60,67,0.055)",
 
                                 lineWidth:
                                     1
 
                             },
 
+
                             ticks: {
 
                                 color:
-                                    "#86868b",
+                                    "#9A9A9F",
 
                                 padding:
                                     10,
 
                                 font: {
 
-                                    size: 11
+                                    size: 10
 
                                 },
 
@@ -1332,7 +1308,7 @@ function renderChart(
 
 
 /* =========================================================
-   渲染指数
+   Render current index
    ========================================================= */
 
 function renderIndex() {
@@ -1405,10 +1381,6 @@ function renderIndex() {
     $("marketScore").textContent =
         data.market_score;
 
-
-    /*
-       先归零再动画
-    */
 
     $("scoreProgress").style.width =
         "0%";
@@ -1505,30 +1477,19 @@ function renderIndex() {
         );
 
 
-    renderStrategy(
-        data
-    );
+    renderStrategy(data);
 
+    renderReasons(data);
 
-    renderReasons(
-        data
-    );
+    renderScenarios(data);
 
-
-    renderScenarios(
-        data
-    );
-
-
-    renderChart(
-        data
-    );
+    renderChart(data);
 
 }
 
 
 /* =========================================================
-   指数按钮
+   Index switching
    ========================================================= */
 
 document
@@ -1552,7 +1513,6 @@ document
                         .forEach(
 
                             item =>
-
                                 item.classList.remove(
                                     "active"
                                 )
@@ -1581,7 +1541,7 @@ document
 
 
 /* =========================================================
-   用户仓位变化
+   User input
    ========================================================= */
 
 [
@@ -1608,9 +1568,7 @@ document
 
                 if (data) {
 
-                    renderStrategy(
-                        data
-                    );
+                    renderStrategy(data);
 
                 }
 
@@ -1634,9 +1592,7 @@ document
 
                 if (data) {
 
-                    renderStrategy(
-                        data
-                    );
+                    renderStrategy(data);
 
                 }
 
@@ -1650,15 +1606,14 @@ document
 
 
 /* =========================================================
-   启动
+   Init
    ========================================================= */
 
 loadMarketData();
 
 
 /* =========================================================
-   页面保持打开时
-   每5分钟读取一次新的 market.json
+   Refresh market.json every 5 minutes
    ========================================================= */
 
 setInterval(
