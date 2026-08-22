@@ -1,51 +1,63 @@
 /* =========================================================
    INDEX RADAR
-   Apple-inspired UI
+   Refined Apple-inspired UI
    ========================================================= */
 
 :root {
-    --bg: #f5f5f7;
-    --surface: rgba(255, 255, 255, 0.84);
-    --surface-solid: #ffffff;
-    --surface-soft: rgba(255, 255, 255, 0.62);
 
+    /* Background */
+    --bg: #f5f5f7;
+    --bg-soft: #f8f8fa;
+
+    /* Surface */
+    --surface: rgba(255, 255, 255, 0.82);
+    --surface-solid: #ffffff;
+    --surface-muted: #f2f2f4;
+
+    /* Typography */
     --text: #1d1d1f;
     --text-secondary: #6e6e73;
-    --text-tertiary: #86868b;
+    --text-tertiary: #929297;
 
-    --blue: #0071e3;
-    --blue-light: #eaf4ff;
+    /* Primary accent */
+    --accent: #58769a;
+    --accent-soft: rgba(88, 118, 154, 0.10);
 
-    --red: #d70015;
-    --red-light: #fff0f1;
+    /* Semantic */
+    --up: #c6535d;
+    --up-soft: #f8ecee;
 
-    --green: #16855b;
-    --green-light: #eaf8f2;
+    --down: #4f7f70;
+    --down-soft: #edf4f1;
 
-    --orange: #ff9f0a;
-    --purple: #5e5ce6;
+    --warm: #a58b72;
+    --violet-grey: #858292;
 
-    --border: rgba(0, 0, 0, 0.055);
-    --border-strong: rgba(0, 0, 0, 0.09);
+    /* Border */
+    --border: rgba(0, 0, 0, 0.052);
+    --border-soft: rgba(0, 0, 0, 0.035);
 
-    --shadow-small:
-        0 2px 10px rgba(0, 0, 0, 0.025);
+    /* Shadows */
+    --shadow-xs:
+        0 1px 3px rgba(0, 0, 0, 0.02),
+        0 5px 18px rgba(0, 0, 0, 0.025);
 
     --shadow-card:
-        0 18px 55px rgba(0, 0, 0, 0.055);
+        0 12px 40px rgba(0, 0, 0, 0.045);
 
     --shadow-large:
-        0 35px 100px rgba(0, 0, 0, 0.07);
+        0 24px 75px rgba(0, 0, 0, 0.065);
 
-    --radius-small: 16px;
-    --radius-medium: 22px;
-    --radius-large: 32px;
-    --radius-xl: 38px;
+    /* Radius */
+    --radius-sm: 16px;
+    --radius-md: 22px;
+    --radius-lg: 30px;
+    --radius-xl: 36px;
 }
 
 
 /* =========================================================
-   基础
+   Base
    ========================================================= */
 
 * {
@@ -59,6 +71,7 @@ html {
 
 
 body {
+
     margin: 0;
 
     color: var(--text);
@@ -78,16 +91,19 @@ body {
     text-rendering: optimizeLegibility;
 
     background:
+
         radial-gradient(
-            circle at 12% -5%,
-            rgba(0, 113, 227, 0.08),
-            transparent 30%
+            circle at 10% -5%,
+            rgba(100, 125, 160, 0.055),
+            transparent 27%
         ),
+
         radial-gradient(
-            circle at 92% 5%,
-            rgba(94, 92, 230, 0.055),
-            transparent 28%
+            circle at 92% 0%,
+            rgba(130, 128, 145, 0.04),
+            transparent 24%
         ),
+
         var(--bg);
 }
 
@@ -105,12 +121,17 @@ button {
 
 
 .page {
-    width: min(1260px, calc(100% - 48px));
+
+    width:
+        min(
+            1240px,
+            calc(100% - 48px)
+        );
 
     margin: 0 auto;
 
     padding:
-        54px
+        55px
         0
         90px;
 }
@@ -121,7 +142,6 @@ button {
    ========================================================= */
 
 .header {
-    position: relative;
 
     display: grid;
 
@@ -131,141 +151,128 @@ button {
 
     align-items: start;
 
-    gap: 48px;
+    gap: 45px;
 
     padding:
-        8px
-        8px
+        5px
+        7px
         34px;
 }
 
 
 .brand {
-    display: inline-flex;
 
-    align-items: center;
+    display: inline-block;
 
-    width: fit-content;
+    margin-bottom: 14px;
 
-    padding:
-        6px
-        11px;
-
-    margin-bottom: 15px;
-
-    border-radius: 999px;
-
-    color: var(--blue);
-
-    background:
-        rgba(0, 113, 227, 0.075);
+    color: var(--accent);
 
     font-size: 12px;
 
     font-weight: 750;
 
-    letter-spacing: 1.8px;
+    letter-spacing: 2.1px;
 }
 
 
 .header h1 {
-    margin: 0;
 
-    max-width: 800px;
+    margin: 0;
 
     font-size:
         clamp(
             48px,
-            6.5vw,
-            76px
+            6vw,
+            72px
         );
 
-    line-height: 0.98;
+    line-height: 1;
+
+    font-weight: 730;
 
     letter-spacing: -4px;
-
-    font-weight: 760;
 }
 
 
 .subtitle {
+
     margin:
-        19px
+        18px
         0
         0;
 
     color: var(--text-secondary);
 
-    font-size: 17px;
+    font-size: 16px;
 
     letter-spacing: -0.2px;
 }
 
 
 .update-box {
+
     min-width: 190px;
 
     padding:
-        13px
-        17px;
+        12px
+        16px;
 
     border:
-        1px
-        solid
-        var(--border);
+        1px solid
+        rgba(255, 255, 255, 0.8);
 
     border-radius: 18px;
 
     background:
-        rgba(255, 255, 255, 0.62);
+        rgba(255, 255, 255, 0.56);
 
     backdrop-filter:
-        blur(24px)
-        saturate(150%);
+        blur(24px);
 
     -webkit-backdrop-filter:
-        blur(24px)
-        saturate(150%);
+        blur(24px);
 
     box-shadow:
-        var(--shadow-small);
+        var(--shadow-xs);
 
     text-align: right;
 }
 
 
 .update-box span {
+
     display: block;
 
-    color:
-        var(--text-tertiary);
+    margin-bottom: 4px;
+
+    color: var(--text-tertiary);
 
     font-size: 11px;
-
-    margin-bottom: 4px;
 }
 
 
 .update-box strong {
+
     display: block;
 
-    color:
-        var(--text);
+    color: var(--text);
 
     font-size: 13px;
 
-    font-weight: 650;
+    font-weight: 600;
 }
 
 
 /* =========================================================
-   顶部指数切换
+   Segmented control
    ========================================================= */
 
 .index-tabs {
+
     position: sticky;
 
-    top: 14px;
+    top: 13px;
 
     z-index: 100;
 
@@ -274,8 +281,7 @@ button {
     grid-template-columns:
         repeat(3, 1fr);
 
-    width:
-        min(720px, 100%);
+    width: min(700px, 100%);
 
     gap: 5px;
 
@@ -284,77 +290,84 @@ button {
         auto
         28px;
 
-    padding: 6px;
+    padding: 5px;
+
+    border-radius: 21px;
 
     border:
-        1px
-        solid
-        rgba(255, 255, 255, 0.75);
-
-    border-radius: 22px;
+        1px solid
+        rgba(255, 255, 255, 0.72);
 
     background:
-        rgba(235, 235, 240, 0.74);
+        rgba(230, 230, 234, 0.70);
 
     backdrop-filter:
-        blur(28px)
-        saturate(180%);
+        blur(30px)
+        saturate(140%);
 
     -webkit-backdrop-filter:
-        blur(28px)
-        saturate(180%);
+        blur(30px)
+        saturate(140%);
 
     box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.07);
+        0 8px 28px
+        rgba(0, 0, 0, 0.055);
 }
 
 
 .index-tab {
-    height: 52px;
 
-    border: 0;
+    height: 50px;
 
-    border-radius: 17px;
+    padding: 0 16px;
+
+    border: none;
+
+    border-radius: 16px;
 
     background: transparent;
 
-    color:
-        var(--text-secondary);
-
-    font-weight: 650;
+    color: var(--text-secondary);
 
     cursor: pointer;
 
+    font-size: 14px;
+
+    font-weight: 620;
+
     transition:
-        background 0.22s ease,
-        color 0.22s ease,
-        box-shadow 0.22s ease,
-        transform 0.22s ease;
+        background .2s ease,
+        color .2s ease,
+        box-shadow .2s ease,
+        transform .18s ease;
 }
 
 
 .index-tab:hover {
-    color:
-        var(--text);
+
+    color: var(--text);
 
     background:
-        rgba(255, 255, 255, 0.56);
+        rgba(255, 255, 255, 0.52);
 }
 
 
 .index-tab.active {
-    color: #ffffff;
 
-    background:
-        #1d1d1f;
+    color: #fff;
+
+    background: #242426;
 
     box-shadow:
-        0 5px 16px rgba(0, 0, 0, 0.16);
+        0 4px 13px
+        rgba(0, 0, 0, 0.15);
 }
 
 
 .index-tab:active {
-    transform: scale(0.98);
+
+    transform:
+        scale(.985);
 }
 
 
@@ -363,17 +376,16 @@ button {
    ========================================================= */
 
 .hero-card {
+
     position: relative;
 
     overflow: hidden;
 
-    padding:
-        38px;
+    padding: 36px;
 
     border:
-        1px
-        solid
-        rgba(255, 255, 255, 0.9);
+        1px solid
+        rgba(255, 255, 255, 0.92);
 
     border-radius:
         var(--radius-xl);
@@ -381,15 +393,15 @@ button {
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.96),
-            rgba(255, 255, 255, 0.76)
+            rgba(255, 255, 255, .96),
+            rgba(252, 252, 253, .84)
         );
 
     backdrop-filter:
-        blur(24px);
+        blur(25px);
 
     -webkit-backdrop-filter:
-        blur(24px);
+        blur(25px);
 
     box-shadow:
         var(--shadow-large);
@@ -397,22 +409,23 @@ button {
 
 
 .hero-card::before {
+
     content: "";
 
     position: absolute;
 
-    width: 360px;
-    height: 360px;
+    width: 340px;
+    height: 340px;
 
-    right: -180px;
     top: -210px;
+    right: -150px;
 
     border-radius: 50%;
 
     background:
         radial-gradient(
             circle,
-            rgba(0, 113, 227, 0.11),
+            rgba(88, 118, 154, .075),
             transparent 68%
         );
 
@@ -421,40 +434,45 @@ button {
 
 
 .hero-top {
+
     position: relative;
 
     z-index: 2;
 
     display: flex;
 
-    align-items: center;
-
     justify-content: space-between;
 
-    gap: 25px;
+    align-items: center;
+
+    gap: 20px;
 }
 
 
 .index-name {
-    font-size: 30px;
 
-    font-weight: 720;
+    color: var(--text);
+
+    font-size: 29px;
+
+    font-weight: 700;
 
     letter-spacing: -1px;
 }
 
 
 .index-symbol {
+
     margin-top: 6px;
 
-    color:
-        var(--text-secondary);
+    color: var(--text-secondary);
 
     font-size: 13px;
 }
 
 
 .market-state {
+
     padding:
         9px
         16px;
@@ -463,9 +481,7 @@ button {
 
     font-size: 13px;
 
-    font-weight: 700;
-
-    letter-spacing: -0.1px;
+    font-weight: 650;
 }
 
 
@@ -474,6 +490,7 @@ button {
    ========================================================= */
 
 .hero-main {
+
     position: relative;
 
     z-index: 2;
@@ -485,14 +502,15 @@ button {
         1fr
         1fr;
 
-    gap: 12px;
+    gap: 10px;
 
-    margin-top: 30px;
+    margin-top: 29px;
 }
 
 
 .hero-main > div {
-    min-height: 134px;
+
+    min-height: 130px;
 
     display: flex;
 
@@ -502,49 +520,33 @@ button {
 
     padding:
         20px
-        22px;
+        21px;
 
     border:
-        1px
-        solid
-        rgba(0, 0, 0, 0.025);
+        1px solid
+        var(--border-soft);
 
-    border-radius:
-        24px;
+    border-radius: 23px;
 
     background:
-        rgba(245, 245, 247, 0.82);
-
-    transition:
-        transform 0.22s ease,
-        background 0.22s ease;
-}
-
-
-.hero-main > div:hover {
-    transform:
-        translateY(-2px);
-
-    background:
-        rgba(250, 250, 252, 0.96);
+        rgba(247, 247, 249, .82);
 }
 
 
 .metric-label {
+
     display: block;
 
     margin-bottom: 9px;
 
-    color:
-        var(--text-tertiary);
+    color: var(--text-tertiary);
 
     font-size: 12px;
-
-    font-weight: 520;
 }
 
 
 .price {
+
     font-size:
         clamp(
             42px,
@@ -552,24 +554,26 @@ button {
             60px
         );
 
-    font-weight: 760;
-
-    letter-spacing: -2.8px;
-
     line-height: 1;
+
+    font-weight: 730;
+
+    letter-spacing: -2.6px;
 }
 
 
 .change {
+
     font-size: 30px;
 
-    font-weight: 720;
+    font-weight: 700;
 
     letter-spacing: -1px;
 }
 
 
 .score-box {
+
     display: flex;
 
     align-items: baseline;
@@ -579,17 +583,18 @@ button {
 
 
 .score-box strong {
+
     font-size: 42px;
 
-    font-weight: 740;
+    font-weight: 700;
 
     letter-spacing: -2px;
 }
 
 
 .score-box span {
-    color:
-        var(--text-tertiary);
+
+    color: var(--text-tertiary);
 
     font-size: 13px;
 }
@@ -600,24 +605,26 @@ button {
    ========================================================= */
 
 .score-track {
+
     position: relative;
 
     z-index: 2;
 
-    height: 5px;
-
-    overflow: hidden;
+    height: 4px;
 
     margin-top: 25px;
+
+    overflow: hidden;
 
     border-radius: 999px;
 
     background:
-        rgba(0, 0, 0, 0.07);
+        rgba(0, 0, 0, .06);
 }
 
 
 .score-progress {
+
     width: 0;
 
     height: 100%;
@@ -627,31 +634,27 @@ button {
     background:
         linear-gradient(
             90deg,
-            #0071e3,
-            #40a9ff
+            #6e88a7,
+            #8ea4bd
         );
 
-    box-shadow:
-        0 0 12px
-        rgba(0, 113, 227, 0.35);
-
     transition:
-        width
-        0.65s
+        width .65s
         cubic-bezier(
-            0.2,
-            0.8,
-            0.2,
+            .2,
+            .8,
+            .2,
             1
         );
 }
 
 
 /* =========================================================
-   今日判断
+   Summary
    ========================================================= */
 
 .market-summary {
+
     position: relative;
 
     z-index: 2;
@@ -659,77 +662,75 @@ button {
     margin-top: 24px;
 
     padding:
-        20px
-        22px;
+        19px
+        21px;
 
     border:
-        1px
-        solid
-        rgba(0, 113, 227, 0.07);
+        1px solid
+        rgba(88, 118, 154, .07);
 
-    border-radius: 21px;
+    border-radius: 20px;
 
     background:
-        linear-gradient(
-            135deg,
-            rgba(0, 113, 227, 0.065),
-            rgba(0, 113, 227, 0.025)
-        );
+        rgba(88, 118, 154, .055);
 }
 
 
 .market-summary strong {
-    color:
-        var(--blue);
+
+    color: var(--accent);
 
     font-size: 13px;
 
-    font-weight: 680;
+    font-weight: 650;
 }
 
 
 .market-summary p {
+
     margin:
         7px
         0
         0;
 
-    color:
-        #3a3a3c;
+    color: #404044;
 
     font-size: 15px;
 
-    line-height: 1.75;
+    line-height: 1.72;
 }
 
 
 /* =========================================================
-   Section
+   Sections
    ========================================================= */
 
 .section {
-    margin-top: 62px;
+
+    margin-top: 60px;
 }
 
 
 .section-title {
-    display: flex;
 
-    justify-content: space-between;
+    display: flex;
 
     align-items: flex-end;
 
+    justify-content: space-between;
+
     gap: 20px;
+
+    margin-bottom: 17px;
 
     padding:
         0
         6px;
-
-    margin-bottom: 18px;
 }
 
 
 .section-title > div {
+
     display: flex;
 
     align-items: baseline;
@@ -739,68 +740,61 @@ button {
 
 
 .section-title h2 {
+
     margin: 0;
 
-    color:
-        var(--text);
+    color: var(--text);
 
     font-size: 27px;
 
-    font-weight: 710;
+    font-weight: 690;
 
     letter-spacing: -1px;
 }
 
 
 .section-number {
-    color:
-        var(--blue);
+
+    color: var(--accent);
 
     font-size: 11px;
 
-    font-weight: 760;
+    font-weight: 700;
 }
 
 
 .section-desc {
-    color:
-        var(--text-tertiary);
+
+    color: var(--text-tertiary);
 
     font-size: 12px;
 }
 
 
 /* =========================================================
-   输入仓位
+   Position form
    ========================================================= */
 
 .position-card {
+
     display: grid;
 
     grid-template-columns:
         repeat(3, 1fr);
 
-    gap: 13px;
+    gap: 10px;
 
-    padding:
-        16px;
+    padding: 13px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
     border-radius:
-        var(--radius-large);
+        var(--radius-lg);
 
     background:
         var(--surface);
-
-    backdrop-filter:
-        blur(20px);
-
-    -webkit-backdrop-filter:
-        blur(20px);
 
     box-shadow:
         var(--shadow-card);
@@ -808,18 +802,18 @@ button {
 
 
 .input-group {
-    padding:
-        14px;
 
-    border-radius:
-        21px;
+    padding: 14px;
+
+    border-radius: 20px;
 
     background:
-        rgba(245, 245, 247, 0.76);
+        rgba(246, 246, 248, .8);
 }
 
 
 .input-group label {
+
     display: block;
 
     margin:
@@ -828,140 +822,133 @@ button {
         9px
         2px;
 
-    color:
-        var(--text-secondary);
+    color: var(--text-secondary);
 
     font-size: 12px;
-
-    font-weight: 520;
 }
 
 
 .input-wrap {
+
     position: relative;
 }
 
 
 .input-wrap input,
 select {
+
     width: 100%;
 
-    height: 54px;
+    height: 52px;
 
     outline: none;
 
     border:
-        1px
-        solid
+        1px solid
         transparent;
 
-    border-radius: 15px;
+    border-radius: 14px;
 
-    color:
-        var(--text);
+    color: var(--text);
 
-    background:
-        rgba(255, 255, 255, 0.95);
+    background: #fff;
 
     box-shadow:
-        inset
-        0 0 0 1px
-        rgba(0, 0, 0, 0.035);
+        inset 0 0 0 1px
+        rgba(0, 0, 0, .035);
 
     transition:
-        border 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+        border-color .2s ease,
+        box-shadow .2s ease;
 }
 
 
 .input-wrap input {
+
     padding:
         0
-        46px
+        43px
         0
-        16px;
+        15px;
 
-    font-size: 20px;
+    font-size: 19px;
 
-    font-weight: 650;
+    font-weight: 620;
 }
 
 
 .input-wrap span {
+
     position: absolute;
 
+    right: 15px;
     top: 50%;
-    right: 17px;
 
     transform:
         translateY(-50%);
 
-    color:
-        var(--text-tertiary);
+    color: var(--text-tertiary);
 
     font-size: 13px;
 }
 
 
 select {
+
     padding:
         0
         15px;
 
     cursor: pointer;
 
-    font-weight: 600;
+    font-weight: 580;
 }
 
 
 .input-wrap input:focus,
 select:focus {
+
     border-color:
-        rgba(0, 113, 227, 0.4);
+        rgba(88, 118, 154, .36);
 
     box-shadow:
         0 0 0 4px
-        rgba(0, 113, 227, 0.09);
-
-    background:
-        #ffffff;
+        rgba(88, 118, 154, .085);
 }
 
 
 /* =========================================================
-   个性化策略
+   Strategy
    ========================================================= */
 
 .strategy-card {
+
     position: relative;
 
     overflow: hidden;
 
-    padding:
-        34px;
+    padding: 33px;
 
     border-radius:
-        var(--radius-large);
+        var(--radius-lg);
 
-    color:
-        #ffffff;
+    color: #fff;
 
     background:
         linear-gradient(
             145deg,
-            #1d1d1f,
-            #2c2c2e 62%,
-            #242426
+            #252527,
+            #303033
         );
 
     box-shadow:
-        0 28px 80px
-        rgba(0, 0, 0, 0.15);
+        0 24px 70px
+        rgba(0, 0, 0, .13);
 }
 
 
 .strategy-card::after {
+
     content: "";
 
     position: absolute;
@@ -969,16 +956,16 @@ select:focus {
     width: 300px;
     height: 300px;
 
-    right: -110px;
-    top: -150px;
+    right: -130px;
+    top: -160px;
 
     border-radius: 50%;
 
     background:
         radial-gradient(
             circle,
-            rgba(0, 113, 227, 0.34),
-            transparent 67%
+            rgba(110, 136, 167, .22),
+            transparent 69%
         );
 
     pointer-events: none;
@@ -986,6 +973,7 @@ select:focus {
 
 
 .strategy-header {
+
     position: relative;
 
     z-index: 2;
@@ -996,58 +984,62 @@ select:focus {
 
     align-items: flex-start;
 
-    gap: 25px;
+    gap: 24px;
 }
 
 
 .strategy-card .metric-label {
+
     color:
-        rgba(255, 255, 255, 0.52);
+        rgba(255, 255, 255, .50);
 }
 
 
 .strategy-action {
+
     margin-top: 4px;
 
-    font-size: 36px;
+    color: #fff;
 
-    line-height: 1.1;
+    font-size: 35px;
 
-    font-weight: 720;
+    font-weight: 690;
 
-    letter-spacing: -1.4px;
+    letter-spacing: -1.3px;
 }
 
 
 .target-position {
+
     text-align: right;
 }
 
 
 .target-position span {
-    display: block;
 
     color:
-        rgba(255, 255, 255, 0.5);
+        rgba(255, 255, 255, .48);
 
     font-size: 11px;
 }
 
 
 .target-position strong {
+
     display: block;
 
     margin-top: 5px;
 
-    color: #ffffff;
+    color: #fff;
 
     font-size: 25px;
 
-    font-weight: 680;
+    font-weight: 650;
 }
 
 
 .strategy-text {
+
     position: relative;
 
     z-index: 2;
@@ -1055,20 +1047,21 @@ select:focus {
     max-width: 880px;
 
     margin:
-        25px
+        24px
         0
         0;
 
     color:
-        rgba(255, 255, 255, 0.76);
+        rgba(255, 255, 255, .73);
 
     font-size: 15px;
 
-    line-height: 1.9;
+    line-height: 1.85;
 }
 
 
 .strategy-tags {
+
     position: relative;
 
     z-index: 2;
@@ -1079,51 +1072,50 @@ select:focus {
 
     gap: 7px;
 
-    margin-top: 23px;
+    margin-top: 22px;
 }
 
 
 .strategy-tag {
+
     padding:
         8px
         12px;
 
     border:
-        1px
-        solid
-        rgba(255, 255, 255, 0.08);
+        1px solid
+        rgba(255, 255, 255, .07);
 
     border-radius: 999px;
 
     color:
-        rgba(255, 255, 255, 0.78);
+        rgba(255, 255, 255, .72);
 
     background:
-        rgba(255, 255, 255, 0.07);
-
-    backdrop-filter:
-        blur(10px);
+        rgba(255, 255, 255, .065);
 
     font-size: 11px;
 }
 
 
 /* =========================================================
-   技术指标
+   Metric cards
    ========================================================= */
 
 .metrics-grid {
+
     display: grid;
 
     grid-template-columns:
         repeat(3, 1fr);
 
-    gap: 12px;
+    gap: 10px;
 }
 
 
 .metric-card {
-    min-height: 125px;
+
+    min-height: 120px;
 
     display: flex;
 
@@ -1131,57 +1123,58 @@ select:focus {
 
     justify-content: center;
 
-    padding:
-        23px;
+    padding: 22px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
-    border-radius:
-        25px;
+    border-radius: 23px;
 
     background:
-        rgba(255, 255, 255, 0.84);
+        rgba(255, 255, 255, .83);
 
     box-shadow:
-        var(--shadow-small);
+        var(--shadow-xs);
 
     transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease;
+        transform .2s ease,
+        box-shadow .2s ease;
 }
 
 
 .metric-card:hover {
+
     transform:
-        translateY(-3px);
+        translateY(-2px);
 
     box-shadow:
-        0 15px 35px
-        rgba(0, 0, 0, 0.055);
+        0 12px 30px
+        rgba(0, 0, 0, .045);
 }
 
 
 .metric-card span {
-    color:
-        var(--text-tertiary);
+
+    color: var(--text-tertiary);
 
     font-size: 11px;
 }
 
 
 .metric-card strong {
+
     display: block;
 
     margin-top: 9px;
 
-    font-size: 24px;
+    color: #313135;
 
-    font-weight: 680;
+    font-size: 23px;
 
-    letter-spacing: -0.7px;
+    font-weight: 640;
+
+    letter-spacing: -.6px;
 }
 
 
@@ -1190,31 +1183,24 @@ select:focus {
    ========================================================= */
 
 .chart-card {
+
     position: relative;
 
-    height: 510px;
+    height: 500px;
 
     padding:
-        28px
-        26px
-        20px;
+        25px
+        24px
+        18px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
-    border-radius:
-        34px;
+    border-radius: 32px;
 
     background:
-        rgba(255, 255, 255, 0.88);
-
-    backdrop-filter:
-        blur(20px);
-
-    -webkit-backdrop-filter:
-        blur(20px);
+        rgba(255, 255, 255, .86);
 
     box-shadow:
         var(--shadow-card);
@@ -1222,141 +1208,139 @@ select:focus {
 
 
 /* =========================================================
-   关键位置
+   Levels
    ========================================================= */
 
 .levels-grid {
+
     display: grid;
 
     grid-template-columns:
         repeat(4, 1fr);
 
-    gap: 12px;
+    gap: 10px;
 }
 
 
 .level-card {
-    position: relative;
 
-    overflow: hidden;
+    min-height: 140px;
 
-    min-height: 145px;
-
-    padding:
-        22px;
+    padding: 21px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
-    border-radius:
-        25px;
+    border-radius: 23px;
 
     background:
-        rgba(255, 255, 255, 0.84);
+        rgba(255, 255, 255, .84);
 
     box-shadow:
-        var(--shadow-small);
+        var(--shadow-xs);
 
     transition:
-        transform 0.22s ease;
+        transform .2s ease;
 }
 
 
 .level-card:hover {
+
     transform:
-        translateY(-3px);
+        translateY(-2px);
 }
 
 
 .level-card.support {
+
     background:
         linear-gradient(
             145deg,
-            #ffffff,
-            rgba(22, 133, 91, 0.055)
+            #fff,
+            rgba(79, 127, 112, .045)
         );
 }
 
 
 .level-card.pressure {
+
     background:
         linear-gradient(
             145deg,
-            #ffffff,
-            rgba(215, 0, 21, 0.045)
+            #fff,
+            rgba(198, 83, 93, .04)
         );
 }
 
 
 .level-card span {
-    color:
-        var(--text-secondary);
+
+    color: var(--text-secondary);
 
     font-size: 12px;
 
-    font-weight: 600;
+    font-weight: 580;
 }
 
 
 .level-card strong {
+
     display: block;
 
-    margin-top: 13px;
+    margin-top: 12px;
 
-    font-size: 26px;
+    font-size: 25px;
 
-    font-weight: 680;
+    font-weight: 640;
 
-    letter-spacing: -0.7px;
+    letter-spacing: -.6px;
 }
 
 
 .level-card.support strong {
-    color:
-        var(--green);
+
+    color: var(--down);
 }
 
 
 .level-card.pressure strong {
-    color:
-        var(--red);
+
+    color: var(--up);
 }
 
 
 .level-card p {
+
     margin:
         8px
         0
         0;
 
-    color:
-        var(--text-tertiary);
+    color: var(--text-tertiary);
 
     font-size: 11px;
 }
 
 
 /* =========================================================
-   判断依据
+   Reasons
    ========================================================= */
 
 .reasons-card {
+
     padding:
-        9px
-        25px;
+        8px
+        24px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
-    border-radius:
-        28px;
+    border-radius: 27px;
 
     background:
-        rgba(255, 255, 255, 0.84);
+        rgba(255, 255, 255, .83);
 
     box-shadow:
         var(--shadow-card);
@@ -1364,6 +1348,7 @@ select:focus {
 
 
 .reason-item {
+
     display: flex;
 
     align-items: flex-start;
@@ -1372,89 +1357,84 @@ select:focus {
 
     padding:
         17px
-        2px;
+        1px;
 
-    color:
-        #3a3a3c;
+    border-bottom:
+        1px solid
+        rgba(0, 0, 0, .048);
+
+    color: #424246;
 
     font-size: 14px;
 
     line-height: 1.55;
-
-    border-bottom:
-        1px
-        solid
-        rgba(0, 0, 0, 0.055);
 }
 
 
 .reason-item:last-child {
+
     border-bottom: none;
 }
 
 
 .reason-dot {
-    width: 7px;
-    height: 7px;
+
+    width: 6px;
+    height: 6px;
 
     flex: 0 0 auto;
 
-    margin-top: 7px;
+    margin-top: 8px;
 
     border-radius: 50%;
 
-    background:
-        var(--blue);
-
-    box-shadow:
-        0 0 0 4px
-        rgba(0, 113, 227, 0.08);
+    background: var(--accent);
 }
 
 
 /* =========================================================
-   情景推演
+   Scenarios
    ========================================================= */
 
 .scenario-list {
+
     display: grid;
 
     grid-template-columns:
         repeat(2, 1fr);
 
-    gap: 12px;
+    gap: 10px;
 }
 
 
 .scenario-card {
-    min-height: 152px;
 
-    padding:
-        25px;
+    min-height: 145px;
+
+    padding: 24px;
 
     border:
-        1px
-        solid
+        1px solid
         var(--border);
 
-    border-radius:
-        26px;
+    border-radius: 24px;
 
     background:
-        rgba(255, 255, 255, 0.86);
+        rgba(255, 255, 255, .84);
 
     box-shadow:
-        var(--shadow-small);
+        var(--shadow-xs);
 
     transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease;
+        transform .2s ease,
+        box-shadow .2s ease;
 }
 
 
 .scenario-card:hover {
+
     transform:
-        translateY(-3px);
+        translateY(-2px);
 
     box-shadow:
         var(--shadow-card);
@@ -1462,91 +1442,90 @@ select:focus {
 
 
 .scenario-card strong {
+
     display: block;
+
+    color: #303034;
 
     font-size: 16px;
 
-    font-weight: 680;
+    font-weight: 640;
 
-    letter-spacing: -0.2px;
+    letter-spacing: -.2px;
 }
 
 
 .scenario-card p {
+
     margin:
         10px
         0
         0;
 
-    color:
-        var(--text-secondary);
+    color: var(--text-secondary);
 
     font-size: 13px;
 
-    line-height: 1.75;
+    line-height: 1.72;
 }
 
 
 /* =========================================================
-   涨跌颜色
-   中国市场习惯：红涨绿跌
+   Market semantic colors
    ========================================================= */
 
 .positive {
-    color:
-        var(--red);
+    color: var(--up);
 }
 
 
 .negative {
-    color:
-        var(--green);
+    color: var(--down);
 }
 
 
 .neutral {
-    color:
-        var(--text);
+    color: var(--text);
 }
 
 
 /* =========================================================
-   状态
+   State badges
    ========================================================= */
 
 .state-strong {
-    color:
-        #b4232e;
+
+    color: #98505a;
 
     background:
-        #fff0f1;
+        #f7ecee;
 }
 
 
 .state-positive {
-    color:
-        #ad6700;
+
+    color: #8a7057;
 
     background:
-        #fff4dc;
+        #f4f0ea;
 }
 
 
 .state-neutral {
-    color:
-        #66666b;
+
+    color: #68686e;
 
     background:
-        #efeff2;
+        #eeeeF1;
 }
 
 
 .state-weak {
-    color:
-        #14765a;
+
+    color: #4d7569;
 
     background:
-        #e9f7f2;
+        #edf3f1;
 }
 
 
@@ -1555,20 +1534,19 @@ select:focus {
    ========================================================= */
 
 footer {
-    margin-top: 78px;
+
+    margin-top: 75px;
 
     padding:
-        28px
+        27px
         5px
         0;
 
     border-top:
-        1px
-        solid
-        rgba(0, 0, 0, 0.08);
+        1px solid
+        rgba(0, 0, 0, .07);
 
-    color:
-        var(--text-tertiary);
+    color: var(--text-tertiary);
 
     font-size: 11px;
 
@@ -1577,6 +1555,7 @@ footer {
 
 
 footer p {
+
     margin:
         5px
         0;
@@ -1584,51 +1563,45 @@ footer p {
 
 
 /* =========================================================
-   平板
+   Tablet
    ========================================================= */
 
 @media
 (max-width: 980px) {
 
     .page {
+
         width:
             min(
-                calc(100% - 34px),
-                1260px
+                calc(100% - 32px),
+                1240px
             );
     }
 
 
     .levels-grid {
+
         grid-template-columns:
             repeat(2, 1fr);
-    }
-
-
-    .hero-main {
-        grid-template-columns:
-            1.2fr
-            1fr
-            1fr;
     }
 
 }
 
 
 /* =========================================================
-   手机
+   Mobile
    ========================================================= */
 
 @media
 (max-width: 720px) {
 
     body {
-        background:
-            var(--bg);
+        background: var(--bg);
     }
 
 
     .page {
+
         width:
             calc(100% - 20px);
 
@@ -1640,6 +1613,7 @@ footer p {
 
 
     .header {
+
         display: block;
 
         padding:
@@ -1650,13 +1624,15 @@ footer p {
 
 
     .header h1 {
+
         font-size: 43px;
 
-        letter-spacing: -2.4px;
+        letter-spacing: -2.5px;
     }
 
 
     .subtitle {
+
         margin-top: 12px;
 
         font-size: 14px;
@@ -1664,6 +1640,7 @@ footer p {
 
 
     .update-box {
+
         width: fit-content;
 
         min-width: 0;
@@ -1675,7 +1652,8 @@ footer p {
 
 
     .index-tabs {
-        top: 8px;
+
+        top: 7px;
 
         width: 100%;
 
@@ -1686,11 +1664,10 @@ footer p {
 
 
     .index-tab {
-        height: 45px;
 
-        padding:
-            0
-            5px;
+        height: 44px;
+
+        padding: 0 4px;
 
         border-radius: 14px;
 
@@ -1699,75 +1676,79 @@ footer p {
 
 
     .hero-card {
-        padding: 21px;
 
-        border-radius: 29px;
+        padding: 20px;
+
+        border-radius: 28px;
     }
 
 
     .hero-top {
+
         align-items: flex-start;
     }
 
 
     .index-name {
+
         font-size: 24px;
     }
 
 
     .hero-main {
+
         grid-template-columns:
             repeat(2, 1fr);
 
-        gap: 8px;
+        gap: 7px;
 
-        margin-top: 22px;
+        margin-top: 21px;
     }
 
 
     .hero-main > div {
-        min-height: 105px;
 
-        padding:
-            16px;
+        min-height: 103px;
 
-        border-radius: 19px;
+        padding: 15px;
+
+        border-radius: 18px;
     }
 
 
     .hero-main > div:first-child {
+
         grid-column:
             1 / -1;
     }
 
 
     .price {
-        font-size: 45px;
+
+        font-size: 44px;
     }
 
 
     .change {
+
         font-size: 25px;
     }
 
 
     .score-box strong {
+
         font-size: 34px;
     }
 
 
-    .market-summary {
-        padding:
-            17px;
-    }
-
-
     .section {
-        margin-top: 44px;
+
+        margin-top: 43px;
     }
 
 
     .section-title {
+
         padding:
             0
             3px;
@@ -1777,124 +1758,134 @@ footer p {
 
 
     .section-title h2 {
+
         font-size: 23px;
     }
 
 
     .section-desc {
+
         display: none;
     }
 
 
     .position-card {
-        grid-template-columns:
-            1fr;
 
-        padding: 10px;
+        grid-template-columns: 1fr;
+
+        padding: 9px;
+
+        border-radius: 25px;
+    }
+
+
+    .metrics-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 7px;
+    }
+
+
+    .metric-card {
+
+        min-height: 105px;
+
+        padding: 17px;
+
+        border-radius: 19px;
+    }
+
+
+    .strategy-card {
+
+        padding: 23px;
 
         border-radius: 26px;
     }
 
 
-    .metrics-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
-
-        gap: 8px;
-    }
-
-
-    .metric-card {
-        min-height: 108px;
-
-        padding: 18px;
-
-        border-radius: 20px;
-    }
-
-
-    .strategy-card {
-        padding: 24px;
-
-        border-radius: 27px;
-    }
-
-
     .strategy-header {
+
         display: block;
     }
 
 
     .strategy-action {
-        font-size: 30px;
+
+        font-size: 29px;
     }
 
 
     .target-position {
-        margin-top: 22px;
+
+        margin-top: 21px;
 
         text-align: left;
     }
 
 
     .chart-card {
-        height: 355px;
+
+        height: 350px;
 
         padding:
-            15px
-            9px
-            12px;
+            14px
+            8px
+            11px;
 
-        border-radius: 26px;
+        border-radius: 25px;
     }
 
 
     .levels-grid {
+
         grid-template-columns:
             repeat(2, 1fr);
+
+        gap: 7px;
+    }
+
+
+    .level-card {
+
+        min-height: 120px;
+
+        padding: 17px;
+
+        border-radius: 20px;
+    }
+
+
+    .level-card strong {
+
+        font-size: 20px;
+    }
+
+
+    .scenario-list {
+
+        grid-template-columns:
+            1fr;
 
         gap: 8px;
     }
 
 
-    .level-card {
-        min-height: 125px;
+    .scenario-card {
 
-        padding: 18px;
+        min-height: 0;
+
+        padding: 19px;
 
         border-radius: 21px;
     }
 
 
-    .level-card strong {
-        font-size: 21px;
-    }
-
-
-    .scenario-list {
-        grid-template-columns:
-            1fr;
-
-        gap: 9px;
-    }
-
-
-    .scenario-card {
-        min-height: 0;
-
-        padding: 20px;
-
-        border-radius: 22px;
-    }
-
-
-    .reasons-card {
-        border-radius: 24px;
-    }
-
-
     footer {
-        margin-top: 55px;
+
+        margin-top: 54px;
     }
 
 }
