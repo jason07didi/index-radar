@@ -1,10 +1,15 @@
 {
-  "updated_at": "2026-08-22 16:25:51",
+  "updated_at": "2026-08-22 16:28:44",
   "indices": {
     "sse50": {
       "name": "上证50",
       "symbol": "000016.SH",
-      "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+      "date": "2026-08-21",
+      "close": 2883.55,
+      "previous_close": 2881.44,
+      "change": 2.11,
+      "change_pct": 0.07,
+      "source": "Tencent"
     },
     "nasdaq100": {
       "name": "纳斯达克100",
@@ -13,7 +18,8 @@
       "close": 29308.86,
       "previous_close": 29213.16,
       "change": 95.7,
-      "change_pct": 0.33
+      "change_pct": 0.33,
+      "source": "Yahoo"
     },
     "sp500": {
       "name": "标普500",
@@ -22,7 +28,8 @@
       "close": 7674.37,
       "previous_close": 7641.16,
       "change": 33.21,
-      "change_pct": 0.43
+      "change_pct": 0.43,
+      "source": "Yahoo"
     }
   }
 }
