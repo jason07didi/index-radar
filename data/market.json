@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-22 22:11:47",
+  "updated_at": "2026-08-24 10:22:01",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-08-22 22:11:19",
+    "updated_at": "2026-08-24 10:21:33",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
@@ -79,32 +79,32 @@
       "name": "上证50",
       "symbol": "000016.SH",
       "source": "Tencent",
-      "date": "2026-08-21",
-      "close": 2883.55,
-      "previous_close": 2881.44,
-      "change": 2.11,
-      "change_pct": 0.07,
-      "ma5": 2909.33,
-      "ma20": 2921.78,
-      "ma60": 2925.48,
-      "ma200": 2973.66,
-      "boll_upper": 2972.12,
-      "boll_mid": 2921.78,
-      "boll_lower": 2871.43,
-      "rsi14": 43.12,
-      "macd_dif": -8.72,
-      "macd_dea": -3.63,
-      "macd_hist": -10.18,
+      "date": "2026-08-24",
+      "close": 2884.45,
+      "previous_close": 2883.55,
+      "change": 0.9,
+      "change_pct": 0.03,
+      "ma5": 2897.14,
+      "ma20": 2918.48,
+      "ma60": 2924.87,
+      "ma200": 2972.77,
+      "boll_upper": 2969.53,
+      "boll_mid": 2918.48,
+      "boll_lower": 2867.43,
+      "rsi14": 43.29,
+      "macd_dif": -10.51,
+      "macd_dea": -5.0,
+      "macd_hist": -11.02,
       "high20": 2980.64,
       "low20": 2867.93,
       "high52w": 3177.74,
       "low52w": 2779.6,
-      "drawdown_52w_pct": -9.26,
-      "dev_ma200_pct": -3.03,
-      "return20_pct": -2.46,
-      "return60_pct": -1.05,
-      "volatility20": 12.56,
-      "volatility_percentile_3y": 49.1,
+      "drawdown_52w_pct": -9.23,
+      "dev_ma200_pct": -2.97,
+      "return20_pct": -2.24,
+      "return60_pct": -1.25,
+      "volatility20": 12.57,
+      "volatility_percentile_3y": 49.3,
       "price_position": {
         "score": 55,
         "state": "价格中性",
@@ -142,36 +142,22 @@
         "confidence": "较高",
         "average_distance": 0.325,
         "direction_threshold_pct": 3.0,
-        "up_pct": 11,
+        "up_pct": 12,
         "sideways_pct": 61,
-        "down_pct": 28,
+        "down_pct": 27,
         "path_label": "震荡偏弱",
-        "average_return_pct": -0.52,
-        "median_return_pct": -1.03,
+        "average_return_pct": -0.37,
+        "median_return_pct": -0.97,
         "events": {
           "above_ma20_pct": 61,
           "above_ma60_pct": 67,
-          "break_low20_pct": 76,
+          "break_low20_pct": 75,
           "break_high20_pct": 21
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
       },
       "history": [
-        {
-          "date": "2025-08-08",
-          "open": 2795.78,
-          "high": 2801.08,
-          "low": 2784.38,
-          "close": 2789.17,
-          "ma5": 2789.0,
-          "ma20": 2781.71,
-          "ma60": 2731.64,
-          "ma200": 2678.05,
-          "boll_upper": 2828.66,
-          "boll_mid": 2781.71,
-          "boll_lower": 2734.75
-        },
         {
           "date": "2025-08-11",
           "open": 2791.35,
@@ -3685,6 +3671,20 @@
           "boll_upper": 2972.12,
           "boll_mid": 2921.78,
           "boll_lower": 2871.43
+        },
+        {
+          "date": "2026-08-24",
+          "open": 2882.64,
+          "high": 2888.42,
+          "low": 2872.7,
+          "close": 2884.45,
+          "ma5": 2897.14,
+          "ma20": 2918.48,
+          "ma60": 2924.87,
+          "ma200": 2972.77,
+          "boll_upper": 2969.53,
+          "boll_mid": 2918.48,
+          "boll_lower": 2867.43
         }
       ],
       "valuation": {
@@ -3697,7 +3697,7 @@
         "pe_reliability": "正常",
         "pe": 11.84,
         "pe_percentile_10y": 0.0,
-        "earnings_yield_pct": 8.45,
+        "earnings_yield_pct": 8.44,
         "dividend_yield_pct": null,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
@@ -3724,7 +3724,7 @@
         "reasons": [
           "当前可比口径PE约为 11.84",
           "当前PE位于近10年/可用历史约 0.0% 分位",
-          "对应盈利收益率约 8.45%"
+          "对应盈利收益率约 8.44%"
         ],
         "notes": [
           "SSE官方月报PE基于上一年度年报并剔除亏损公司，不等同于严格PE-TTM。",
@@ -3756,7 +3756,7 @@
       "allocation_reasons": [
         "当前可比口径PE约为 11.84",
         "当前PE位于近10年/可用历史约 0.0% 分位",
-        "对应盈利收益率约 8.45%"
+        "对应盈利收益率约 8.44%"
       ],
       "strategy_basis": {
         "core": "valuation",
