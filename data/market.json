@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-26 05:03:38",
+  "updated_at": "2026-08-26 05:44:27",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-08-26 05:03:09",
+    "updated_at": "2026-08-26 05:43:56",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
@@ -11089,9 +11089,9 @@
         "core_decision_enabled": true,
         "confidence": "中等",
         "pe_reliability": "正常",
-        "pe": 29.49,
+        "pe": 29.59,
         "pe_percentile_10y": 90.9,
-        "earnings_yield_pct": 3.39,
+        "earnings_yield_pct": 3.38,
         "dividend_yield_pct": 1.01,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
@@ -11116,9 +11116,9 @@
         "source_quality": "secondary",
         "proxy_pe": 25.8,
         "reasons": [
-          "当前可比口径PE约为 29.49",
+          "当前可比口径PE约为 29.59",
           "当前PE位于近10年/可用历史约 90.9% 分位",
-          "对应盈利收益率约 3.39%",
+          "对应盈利收益率约 3.38%",
           "ETF代理股息率约 1.01%"
         ],
         "notes": [
@@ -11153,9 +11153,9 @@
       "allocation_state": "明显高估",
       "allocation_action_label": "高仓位可分批再平衡",
       "allocation_reasons": [
-        "当前可比口径PE约为 29.49",
+        "当前可比口径PE约为 29.59",
         "当前PE位于近10年/可用历史约 90.9% 分位",
-        "对应盈利收益率约 3.39%",
+        "对应盈利收益率约 3.38%",
         "ETF代理股息率约 1.01%"
       ],
       "strategy_basis": {
