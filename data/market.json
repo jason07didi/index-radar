@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-01 04:16:31",
+  "updated_at": "2026-09-01 07:59:33",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,15 +39,15 @@
     }
   },
   "macro": {
-    "updated_at": "2026-09-01 04:16:04",
+    "updated_at": "2026-09-01 07:59:06",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
       "date": "2026-08-31",
-      "value": 14.9,
-      "change": 0.47,
-      "change_pct": 3.26,
-      "percentile_5y": 20.6,
+      "value": 14.92,
+      "change": 0.49,
+      "change_pct": 3.4,
+      "percentile_5y": 20.9,
       "state": "较低波动",
       "sentiment_score": 70,
       "source": "Yahoo Finance / Cboe index"
@@ -56,10 +56,10 @@
       "name": "Cboe Nasdaq-100 Volatility Index",
       "symbol": "^VXN",
       "date": "2026-08-31",
-      "value": 20.21,
-      "change": 0.29,
-      "change_pct": 1.46,
-      "percentile_5y": 33.2,
+      "value": 20.18,
+      "change": 0.26,
+      "change_pct": 1.31,
+      "percentile_5y": 32.5,
       "state": "正常",
       "sentiment_score": 55,
       "source": "Yahoo Finance / Cboe index"
@@ -7440,14 +7440,14 @@
         "method": "VXN",
         "primary_indicator": {
           "name": "VXN",
-          "value": 20.21,
+          "value": 20.18,
           "unit": "",
           "state": "正常",
-          "percentile_5y": 33.2
+          "percentile_5y": 32.5
         },
         "components": [
-          "VXN 当前为 20.21",
-          "5年历史分位约 33.2%"
+          "VXN 当前为 20.18",
+          "5年历史分位约 32.5%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
@@ -11093,9 +11093,9 @@
         "core_decision_enabled": true,
         "confidence": "中等",
         "pe_reliability": "正常",
-        "pe": 29.72,
+        "pe": 29.63,
         "pe_percentile_10y": 90.9,
-        "earnings_yield_pct": 3.36,
+        "earnings_yield_pct": 3.37,
         "dividend_yield_pct": 1.01,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
@@ -11120,9 +11120,9 @@
         "source_quality": "secondary",
         "proxy_pe": 25.84,
         "reasons": [
-          "当前可比口径PE约为 29.72",
+          "当前可比口径PE约为 29.63",
           "当前PE位于近10年/可用历史约 90.9% 分位",
-          "对应盈利收益率约 3.36%",
+          "对应盈利收益率约 3.37%",
           "ETF代理股息率约 1.01%"
         ],
         "notes": [
@@ -11141,14 +11141,14 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 14.9,
+          "value": 14.92,
           "unit": "",
           "state": "较低波动",
-          "percentile_5y": 20.6
+          "percentile_5y": 20.9
         },
         "components": [
-          "VIX 当前为 14.9",
-          "5年历史分位约 20.6%"
+          "VIX 当前为 14.92",
+          "5年历史分位约 20.9%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
@@ -11157,9 +11157,9 @@
       "allocation_state": "明显高估",
       "allocation_action_label": "高仓位可分批再平衡",
       "allocation_reasons": [
-        "当前可比口径PE约为 29.72",
+        "当前可比口径PE约为 29.63",
         "当前PE位于近10年/可用历史约 90.9% 分位",
-        "对应盈利收益率约 3.36%",
+        "对应盈利收益率约 3.37%",
         "ETF代理股息率约 1.01%"
       ],
       "strategy_basis": {
