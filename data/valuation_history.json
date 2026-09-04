@@ -14919,7 +14919,7 @@
     {
       "date": "2026-04-01",
       "period": "2026-04",
-      "pe": 26.58,
+      "pe": 25.49,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
@@ -14927,7 +14927,7 @@
     {
       "date": "2026-05-01",
       "period": "2026-05",
-      "pe": 28.32,
+      "pe": 26.09,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
@@ -14935,7 +14935,7 @@
     {
       "date": "2026-06-01",
       "period": "2026-06",
-      "pe": 28.47,
+      "pe": 25.22,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
@@ -14943,23 +14943,23 @@
     {
       "date": "2026-07-01",
       "period": "2026-07",
-      "pe": 28.71,
+      "pe": 25.33,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
     },
     {
-      "date": "2026-08-31",
+      "date": "2026-08-01",
       "period": "2026-08",
-      "pe": 29.63,
+      "pe": 26.11,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
     },
     {
-      "date": "2026-09-04",
+      "date": "2026-09-01",
       "period": "2026-09",
-      "pe": 29.76,
+      "pe": 26.04,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
