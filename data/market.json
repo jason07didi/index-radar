@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-08 07:46:54",
+  "updated_at": "2026-09-08 13:36:27",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-09-08 07:46:26",
+    "updated_at": "2026-09-08 13:35:59",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
@@ -79,32 +79,32 @@
       "name": "上证50",
       "symbol": "000016.SH",
       "source": "Tencent",
-      "date": "2026-09-07",
-      "close": 2911.73,
-      "previous_close": 2923.81,
-      "change": -12.08,
-      "change_pct": -0.41,
-      "ma5": 2922.26,
-      "ma20": 2915.62,
-      "ma60": 2931.9,
-      "ma200": 2967.06,
-      "boll_upper": 2960.87,
-      "boll_mid": 2915.62,
-      "boll_lower": 2870.38,
-      "rsi14": 48.19,
-      "macd_dif": -1.76,
-      "macd_dea": -3.58,
-      "macd_hist": 3.63,
-      "high20": 2971.4,
+      "date": "2026-09-08",
+      "close": 2911.7,
+      "previous_close": 2911.73,
+      "change": -0.03,
+      "change_pct": -0.0,
+      "ma5": 2916.24,
+      "ma20": 2914.71,
+      "ma60": 2931.46,
+      "ma200": 2966.25,
+      "boll_upper": 2959.5,
+      "boll_mid": 2914.71,
+      "boll_lower": 2869.92,
+      "rsi14": 48.18,
+      "macd_dif": -2.12,
+      "macd_dea": -3.29,
+      "macd_hist": 2.33,
+      "high20": 2960.24,
       "low20": 2857.3,
       "high52w": 3177.74,
       "low52w": 2779.6,
       "drawdown_52w_pct": -8.37,
-      "dev_ma200_pct": -1.86,
-      "return20_pct": -1.89,
-      "return60_pct": 0.72,
-      "volatility20": 10.58,
-      "volatility_percentile_3y": 25.8,
+      "dev_ma200_pct": -1.84,
+      "return20_pct": -0.62,
+      "return60_pct": -0.92,
+      "volatility20": 9.66,
+      "volatility_percentile_3y": 19.2,
       "price_position": {
         "score": 55,
         "state": "价格中性",
@@ -140,38 +140,24 @@
         "effective_sample_size": 119.8,
         "method": "历史相似状态加权频率",
         "confidence": "较高",
-        "average_distance": 0.311,
+        "average_distance": 0.302,
         "direction_threshold_pct": 3.0,
         "up_pct": 18,
-        "sideways_pct": 57,
-        "down_pct": 25,
+        "sideways_pct": 59,
+        "down_pct": 23,
         "path_label": "震荡整理",
-        "average_return_pct": -0.35,
-        "median_return_pct": -0.88,
+        "average_return_pct": -0.25,
+        "median_return_pct": -0.81,
         "events": {
-          "above_ma20_pct": 83,
-          "above_ma60_pct": 79,
+          "above_ma20_pct": 81,
+          "above_ma60_pct": 82,
           "break_low20_pct": 55,
-          "break_high20_pct": 42
+          "break_high20_pct": 41
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
       },
       "history": [
-        {
-          "date": "2025-08-25",
-          "open": 2950.65,
-          "high": 2989.85,
-          "low": 2943.98,
-          "close": 2989.85,
-          "ma5": 2888.01,
-          "ma20": 2822.71,
-          "ma60": 2758.33,
-          "ma200": 2688.01,
-          "boll_upper": 2929.06,
-          "boll_mid": 2822.71,
-          "boll_lower": 2716.36
-        },
         {
           "date": "2025-08-26",
           "open": 2975.7,
@@ -3685,6 +3671,20 @@
           "boll_upper": 2960.87,
           "boll_mid": 2915.62,
           "boll_lower": 2870.38
+        },
+        {
+          "date": "2026-09-08",
+          "open": 2915.16,
+          "high": 2923.44,
+          "low": 2907.63,
+          "close": 2911.7,
+          "ma5": 2916.24,
+          "ma20": 2914.71,
+          "ma60": 2931.46,
+          "ma200": 2966.25,
+          "boll_upper": 2959.5,
+          "boll_mid": 2914.71,
+          "boll_lower": 2869.92
         }
       ],
       "valuation": {
@@ -3735,17 +3735,18 @@
       "valuation_note": "核心长期决策以估值为主；价格位置、情绪、技术和短期历史情境均为辅助观察。",
       "sentiment": {
         "label": "A股市场风险状态",
-        "score": 50,
+        "score": 52,
         "state": "平稳",
         "confidence": "中等",
         "method": "近20日动量 + 20日波动率历史分位",
         "primary_indicator": {
           "name": "风险状态综合",
-          "value": 50,
+          "value": 52,
           "unit": "分"
         },
         "components": [
-          "近20日价格变化有限"
+          "近20日价格变化有限",
+          "波动率位于近3年约19%分位，市场较平静"
         ],
         "summary": "该模块只描述短期风险偏好，不参与估值和定投决策。",
         "note": "上证50暂无与VIX/VXN完全对应的单一官方情绪指标，因此使用价格动量与波动状态描述风险环境。"
