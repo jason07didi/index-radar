@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-18 13:33:30",
+  "updated_at": "2026-09-18 18:03:58",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,15 +39,15 @@
     }
   },
   "macro": {
-    "updated_at": "2026-09-18 13:33:02",
+    "updated_at": "2026-09-18 18:03:31",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
-      "date": "2026-09-17",
-      "value": 15.44,
-      "change": -2.27,
-      "change_pct": -12.82,
-      "percentile_5y": 26.2,
+      "date": "2026-09-18",
+      "value": 15.34,
+      "change": -0.1,
+      "change_pct": -0.65,
+      "percentile_5y": 24.7,
       "state": "较低波动",
       "sentiment_score": 70,
       "source": "Yahoo Finance / Cboe index"
@@ -80,31 +80,31 @@
       "symbol": "000016.SH",
       "source": "Tencent",
       "date": "2026-09-18",
-      "close": 2865.35,
+      "close": 2860.77,
       "previous_close": 2844.23,
-      "change": 21.12,
-      "change_pct": 0.74,
-      "ma5": 2856.45,
-      "ma20": 2896.36,
-      "ma60": 2921.74,
-      "ma200": 2961.28,
-      "boll_upper": 2956.7,
-      "boll_mid": 2896.36,
-      "boll_lower": 2836.03,
-      "rsi14": 42.76,
-      "macd_dif": -16.88,
-      "macd_dea": -11.41,
-      "macd_hist": -10.94,
+      "change": 16.54,
+      "change_pct": 0.58,
+      "ma5": 2855.53,
+      "ma20": 2896.13,
+      "ma60": 2921.67,
+      "ma200": 2961.25,
+      "boll_upper": 2956.97,
+      "boll_mid": 2896.13,
+      "boll_lower": 2835.3,
+      "rsi14": 41.59,
+      "macd_dif": -17.24,
+      "macd_dea": -11.48,
+      "macd_hist": -11.52,
       "high20": 2956.55,
       "low20": 2831.0,
       "high52w": 3177.74,
       "low52w": 2779.6,
-      "drawdown_52w_pct": -9.83,
-      "dev_ma200_pct": -3.24,
-      "return20_pct": -0.63,
-      "return60_pct": -1.43,
-      "volatility20": 9.3,
-      "volatility_percentile_3y": 17.1,
+      "drawdown_52w_pct": -9.97,
+      "dev_ma200_pct": -3.39,
+      "return20_pct": -0.79,
+      "return60_pct": -1.59,
+      "volatility20": 9.15,
+      "volatility_percentile_3y": 15.5,
       "price_position": {
         "score": 55,
         "state": "价格中性",
@@ -137,22 +137,22 @@
       "scenario_probability": {
         "horizon_days": 20,
         "sample_size": 120,
-        "effective_sample_size": 119.7,
+        "effective_sample_size": 119.8,
         "method": "历史相似状态加权频率",
         "confidence": "较高",
-        "average_distance": 0.318,
+        "average_distance": 0.325,
         "direction_threshold_pct": 3.0,
-        "up_pct": 18,
-        "sideways_pct": 62,
-        "down_pct": 20,
+        "up_pct": 16,
+        "sideways_pct": 63,
+        "down_pct": 21,
         "path_label": "震荡整理",
-        "average_return_pct": 0.06,
-        "median_return_pct": -0.76,
+        "average_return_pct": -0.19,
+        "median_return_pct": -0.99,
         "events": {
-          "above_ma20_pct": 66,
-          "above_ma60_pct": 71,
-          "break_low20_pct": 69,
-          "break_high20_pct": 21
+          "above_ma20_pct": 60,
+          "above_ma60_pct": 68,
+          "break_low20_pct": 73,
+          "break_high20_pct": 19
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
@@ -571,11 +571,11 @@
           "low": 3028.38,
           "close": 3045.82,
           "ma5": 3012.99,
-          "ma20": 2976.18,
+          "ma20": 2976.19,
           "ma60": 2912.09,
           "ma200": 2743.86,
           "boll_upper": 3051.32,
-          "boll_mid": 2976.18,
+          "boll_mid": 2976.19,
           "boll_lower": 2901.05
         },
         {
@@ -921,11 +921,11 @@
           "low": 2954.71,
           "close": 2969.62,
           "ma5": 2966.49,
-          "ma20": 3009.86,
+          "ma20": 3009.87,
           "ma60": 2987.7,
           "ma200": 2795.39,
           "boll_upper": 3078.45,
-          "boll_mid": 3009.86,
+          "boll_mid": 3009.87,
           "boll_lower": 2941.28
         },
         {
@@ -1789,11 +1789,11 @@
           "low": 2970.58,
           "close": 2992.7,
           "ma5": 3003.22,
-          "ma20": 3041.45,
+          "ma20": 3041.44,
           "ma60": 3045.71,
           "ma200": 2914.9,
           "boll_upper": 3106.86,
-          "boll_mid": 3041.45,
+          "boll_mid": 3041.44,
           "boll_lower": 2976.03
         },
         {
@@ -3677,14 +3677,14 @@
           "open": 2857.05,
           "high": 2870.71,
           "low": 2854.05,
-          "close": 2865.35,
-          "ma5": 2856.45,
-          "ma20": 2896.36,
-          "ma60": 2921.74,
-          "ma200": 2961.28,
-          "boll_upper": 2956.7,
-          "boll_mid": 2896.36,
-          "boll_lower": 2836.03
+          "close": 2860.77,
+          "ma5": 2855.53,
+          "ma20": 2896.13,
+          "ma60": 2921.67,
+          "ma200": 2961.25,
+          "boll_upper": 2956.97,
+          "boll_mid": 2896.13,
+          "boll_lower": 2835.3
         }
       ],
       "valuation": {
@@ -3695,9 +3695,9 @@
         "core_decision_enabled": false,
         "confidence": "较低",
         "pe_reliability": "正常",
-        "pe": 11.76,
+        "pe": 11.74,
         "pe_percentile_10y": 0.0,
-        "earnings_yield_pct": 8.5,
+        "earnings_yield_pct": 8.51,
         "dividend_yield_pct": null,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
@@ -3722,9 +3722,9 @@
         "source_quality": "official",
         "proxy_pe": null,
         "reasons": [
-          "当前可比口径PE约为 11.76",
+          "当前可比口径PE约为 11.74",
           "当前PE位于近10年/可用历史约 0.0% 分位",
-          "对应盈利收益率约 8.50%"
+          "对应盈利收益率约 8.51%"
         ],
         "notes": [
           "SSE官方月报PE基于上一年度年报并剔除亏损公司，不等同于严格PE-TTM。",
@@ -3746,7 +3746,7 @@
         },
         "components": [
           "近20日价格变化有限",
-          "波动率位于近3年约17%分位，市场较平静"
+          "波动率位于近3年约16%分位，市场较平静"
         ],
         "summary": "该模块只描述短期风险偏好，不参与估值和定投决策。",
         "note": "上证50暂无与VIX/VXN完全对应的单一官方情绪指标，因此使用价格动量与波动状态描述风险环境。"
@@ -3755,9 +3755,9 @@
       "allocation_state": "明显低估",
       "allocation_action_label": "增强定投",
       "allocation_reasons": [
-        "当前可比口径PE约为 11.76",
+        "当前可比口径PE约为 11.74",
         "当前PE位于近10年/可用历史约 0.0% 分位",
-        "对应盈利收益率约 8.50%"
+        "对应盈利收益率约 8.51%"
       ],
       "strategy_basis": {
         "core": "valuation",
@@ -11138,14 +11138,14 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 15.44,
+          "value": 15.34,
           "unit": "",
           "state": "较低波动",
-          "percentile_5y": 26.2
+          "percentile_5y": 24.7
         },
         "components": [
-          "VIX 当前为 15.44",
-          "5年历史分位约 26.2%"
+          "VIX 当前为 15.34",
+          "5年历史分位约 24.7%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
