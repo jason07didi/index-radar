@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-23 04:29:13",
+  "updated_at": "2026-09-23 07:12:56",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,14 +39,14 @@
     }
   },
   "macro": {
-    "updated_at": "2026-09-23 04:28:45",
+    "updated_at": "2026-09-23 07:12:27",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
       "date": "2026-09-22",
-      "value": 14.2,
-      "change": -0.67,
-      "change_pct": -4.51,
+      "value": 14.21,
+      "change": -0.66,
+      "change_pct": -4.44,
       "percentile_5y": 14.9,
       "state": "较低波动",
       "sentiment_score": 70,
@@ -11141,13 +11141,13 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 14.2,
+          "value": 14.21,
           "unit": "",
           "state": "较低波动",
           "percentile_5y": 14.9
         },
         "components": [
-          "VIX 当前为 14.2",
+          "VIX 当前为 14.21",
           "5年历史分位约 14.9%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
