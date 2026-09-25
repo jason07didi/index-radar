@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-25 13:49:28",
+  "updated_at": "2026-09-25 19:10:28",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,15 +39,15 @@
     }
   },
   "macro": {
-    "updated_at": "2026-09-25 13:49:01",
+    "updated_at": "2026-09-25 19:10:01",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
-      "date": "2026-09-24",
-      "value": 15.67,
-      "change": 0.49,
-      "change_pct": 3.23,
-      "percentile_5y": 27.9,
+      "date": "2026-09-25",
+      "value": 15.33,
+      "change": -0.34,
+      "change_pct": -2.17,
+      "percentile_5y": 24.9,
       "state": "较低波动",
       "sentiment_score": 70,
       "source": "Yahoo Finance / Cboe index"
@@ -11139,14 +11139,14 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 15.67,
+          "value": 15.33,
           "unit": "",
           "state": "较低波动",
-          "percentile_5y": 27.9
+          "percentile_5y": 24.9
         },
         "components": [
-          "VIX 当前为 15.67",
-          "5年历史分位约 27.9%"
+          "VIX 当前为 15.33",
+          "5年历史分位约 24.9%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
