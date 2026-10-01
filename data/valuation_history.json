@@ -14963,6 +14963,14 @@
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
+    },
+    {
+      "date": "2026-10-01",
+      "period": "2026-10",
+      "pe": 26.15,
+      "source": "Multpl / Robert Shiller dataset",
+      "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
+      "quality": "secondary"
     }
   ],
   "nasdaq100": [
