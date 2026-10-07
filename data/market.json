@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-07 07:16:41",
+  "updated_at": "2026-10-07 14:51:27",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-10-07 07:16:12",
+    "updated_at": "2026-10-07 14:50:58",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
@@ -3773,21 +3773,21 @@
       "symbol": "^NDX",
       "source": "Yahoo",
       "date": "2026-10-06",
-      "close": 31224.69,
+      "close": 31224.47,
       "previous_close": 31076.44,
-      "change": 148.25,
+      "change": 148.03,
       "change_pct": 0.48,
-      "ma5": 30803.82,
-      "ma20": 30070.1,
+      "ma5": 30803.78,
+      "ma20": 30070.09,
       "ma60": 29451.95,
-      "ma200": 27541.12,
-      "boll_upper": 31511.29,
-      "boll_mid": 30070.1,
-      "boll_lower": 28628.91,
-      "rsi14": 69.84,
-      "macd_dif": 414.43,
+      "ma200": 27541.11,
+      "boll_upper": 31511.25,
+      "boll_mid": 30070.09,
+      "boll_lower": 28628.93,
+      "rsi14": 69.83,
+      "macd_dif": 414.41,
       "macd_dea": 315.65,
-      "macd_hist": 197.55,
+      "macd_hist": 197.53,
       "high20": 31361.37,
       "low20": 28753.29,
       "high52w": 31361.37,
@@ -7372,14 +7372,14 @@
           "open": 31255.4,
           "high": 31361.37,
           "low": 31208.2,
-          "close": 31224.69,
-          "ma5": 30803.82,
-          "ma20": 30070.1,
+          "close": 31224.47,
+          "ma5": 30803.78,
+          "ma20": 30070.09,
           "ma60": 29451.95,
-          "ma200": 27541.12,
-          "boll_upper": 31511.29,
-          "boll_mid": 30070.1,
-          "boll_lower": 28628.91
+          "ma200": 27541.11,
+          "boll_upper": 31511.25,
+          "boll_mid": 30070.09,
+          "boll_lower": 28628.93
         }
       ],
       "valuation": {
@@ -7415,7 +7415,7 @@
         },
         "source": "Trendonify Nasdaq-100 PE history; QQQ used as cross-check",
         "source_quality": "secondary",
-        "proxy_pe": 29.09,
+        "proxy_pe": 30.96,
         "reasons": [
           "当前可比口径PE约为 30.51",
           "当前PE位于近10年/可用历史约 100.0% 分位",
@@ -11116,7 +11116,7 @@
         },
         "source": "Multpl / Robert Shiller dataset; SPY used as cross-check",
         "source_quality": "secondary",
-        "proxy_pe": 24.74,
+        "proxy_pe": 25.17,
         "reasons": [
           "当前可比口径PE约为 26.68",
           "当前PE位于近10年/可用历史约 71.9% 分位",
