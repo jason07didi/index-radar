@@ -14965,9 +14965,9 @@
       "quality": "secondary"
     },
     {
-      "date": "2026-10-09",
+      "date": "2026-10-12",
       "period": "2026-10",
-      "pe": 26.66,
+      "pe": 26.64,
       "source": "Multpl / Robert Shiller dataset",
       "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-month",
       "quality": "secondary"
