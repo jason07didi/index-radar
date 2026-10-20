@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-21 05:15:42",
+  "updated_at": "2026-10-21 07:57:22",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-10-21 05:15:14",
+    "updated_at": "2026-10-21 07:56:55",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
