@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-05 04:17:22",
+  "updated_at": "2026-11-05 08:59:38",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,15 +39,15 @@
     }
   },
   "macro": {
-    "updated_at": "2026-11-05 04:16:55",
+    "updated_at": "2026-11-05 08:59:09",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
       "date": "2026-11-04",
-      "value": 16.83,
-      "change": -4.0,
-      "change_pct": -19.2,
-      "percentile_5y": 41.2,
+      "value": 16.61,
+      "change": -4.22,
+      "change_pct": -20.26,
+      "percentile_5y": 39.1,
       "state": "正常",
       "sentiment_score": 55,
       "source": "Yahoo Finance / Cboe index"
@@ -56,10 +56,10 @@
       "name": "Cboe Nasdaq-100 Volatility Index",
       "symbol": "^VXN",
       "date": "2026-11-04",
-      "value": 25.29,
-      "change": -5.24,
-      "change_pct": -17.16,
-      "percentile_5y": 66.1,
+      "value": 25.08,
+      "change": -5.45,
+      "change_pct": -17.85,
+      "percentile_5y": 65.3,
       "state": "偏高波动",
       "sentiment_score": 40,
       "source": "Yahoo Finance / Cboe index"
@@ -3775,31 +3775,31 @@
       "symbol": "^NDX",
       "source": "Yahoo",
       "date": "2026-11-04",
-      "close": 28476.14,
+      "close": 28437.17,
       "previous_close": 28180.26,
-      "change": 295.88,
-      "change_pct": 1.05,
-      "ma5": 28486.72,
-      "ma20": 29492.35,
-      "ma60": 29707.67,
-      "ma200": 27970.21,
-      "boll_upper": 31141.22,
-      "boll_mid": 29492.35,
-      "boll_lower": 27843.49,
-      "rsi14": 38.98,
-      "macd_dif": -438.77,
-      "macd_dea": -277.02,
-      "macd_hist": -323.49,
+      "change": 256.91,
+      "change_pct": 0.91,
+      "ma5": 28478.92,
+      "ma20": 29490.4,
+      "ma60": 29707.02,
+      "ma200": 27970.02,
+      "boll_upper": 31144.15,
+      "boll_mid": 29490.4,
+      "boll_lower": 27836.65,
+      "rsi14": 38.47,
+      "macd_dif": -441.88,
+      "macd_dea": -277.65,
+      "macd_hist": -328.46,
       "high20": 31125.13,
       "low20": 27967.44,
       "high52w": 31361.37,
       "low52w": 22841.42,
-      "drawdown_52w_pct": -9.2,
-      "dev_ma200_pct": 1.81,
-      "return20_pct": -8.61,
-      "return60_pct": -3.55,
-      "volatility20": 22.69,
-      "volatility_percentile_3y": 82.9,
+      "drawdown_52w_pct": -9.32,
+      "dev_ma200_pct": 1.67,
+      "return20_pct": -8.74,
+      "return60_pct": -3.69,
+      "volatility20": 22.58,
+      "volatility_percentile_3y": 82.8,
       "price_position": {
         "score": 55,
         "state": "价格中性",
@@ -3835,19 +3835,19 @@
         "effective_sample_size": 119.2,
         "method": "历史相似状态加权频率",
         "confidence": "较高",
-        "average_distance": 0.466,
+        "average_distance": 0.462,
         "direction_threshold_pct": 3.0,
-        "up_pct": 48,
+        "up_pct": 46,
         "sideways_pct": 32,
-        "down_pct": 20,
+        "down_pct": 22,
         "path_label": "偏强上行",
-        "average_return_pct": 1.83,
-        "median_return_pct": 2.65,
+        "average_return_pct": 1.87,
+        "median_return_pct": 2.49,
         "events": {
-          "above_ma20_pct": 69,
-          "above_ma60_pct": 74,
-          "break_low20_pct": 65,
-          "break_high20_pct": 30
+          "above_ma20_pct": 67,
+          "above_ma60_pct": 72,
+          "break_low20_pct": 73,
+          "break_high20_pct": 26
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
@@ -7372,14 +7372,14 @@
           "open": 28346.81,
           "high": 28829.66,
           "low": 28276.22,
-          "close": 28476.14,
-          "ma5": 28486.72,
-          "ma20": 29492.35,
-          "ma60": 29707.67,
-          "ma200": 27970.21,
-          "boll_upper": 31141.22,
-          "boll_mid": 29492.35,
-          "boll_lower": 27843.49
+          "close": 28437.17,
+          "ma5": 28478.92,
+          "ma20": 29490.4,
+          "ma60": 29707.02,
+          "ma200": 27970.02,
+          "boll_upper": 31144.15,
+          "boll_mid": 29490.4,
+          "boll_lower": 27836.65
         }
       ],
       "valuation": {
@@ -7393,7 +7393,7 @@
         "pe": 30.51,
         "pe_percentile_10y": 100.0,
         "earnings_yield_pct": 3.28,
-        "dividend_yield_pct": 0.42,
+        "dividend_yield_pct": 0.45,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
         "earnings_yield_minus_bond_pct": null,
@@ -7415,12 +7415,12 @@
         },
         "source": "Trendonify Nasdaq-100 PE history; QQQ used as cross-check",
         "source_quality": "secondary",
-        "proxy_pe": 26.52,
+        "proxy_pe": 26.5,
         "reasons": [
           "当前可比口径PE约为 30.51",
           "当前PE位于近10年/可用历史约 100.0% 分位",
           "对应盈利收益率约 3.28%",
-          "ETF代理股息率约 0.42%"
+          "ETF代理股息率约 0.45%"
         ],
         "notes": [
           "纳斯达克100按成长型指数框架处理，核心比较自身历史PE，而不是与上证50做横向绝对PE比较。",
@@ -7438,14 +7438,14 @@
         "method": "VXN",
         "primary_indicator": {
           "name": "VXN",
-          "value": 25.29,
+          "value": 25.08,
           "unit": "",
           "state": "偏高波动",
-          "percentile_5y": 66.1
+          "percentile_5y": 65.3
         },
         "components": [
-          "VXN 当前为 25.29",
-          "5年历史分位约 66.1%"
+          "VXN 当前为 25.08",
+          "5年历史分位约 65.3%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
@@ -7457,7 +7457,7 @@
         "当前可比口径PE约为 30.51",
         "当前PE位于近10年/可用历史约 100.0% 分位",
         "对应盈利收益率约 3.28%",
-        "ETF代理股息率约 0.42%"
+        "ETF代理股息率约 0.45%"
       ],
       "strategy_basis": {
         "core": "valuation",
@@ -7474,31 +7474,31 @@
       "symbol": "^GSPC",
       "source": "Yahoo",
       "date": "2026-11-04",
-      "close": 7698.9,
+      "close": 7688.62,
       "previous_close": 7568.92,
-      "change": 129.98,
-      "change_pct": 1.72,
-      "ma5": 7621.94,
-      "ma20": 7700.63,
-      "ma60": 7696.37,
-      "ma200": 7320.4,
-      "boll_upper": 7851.67,
-      "boll_mid": 7700.63,
-      "boll_lower": 7549.59,
-      "rsi14": 51.14,
-      "macd_dif": -22.18,
-      "macd_dea": -10.9,
-      "macd_hist": -22.57,
+      "change": 119.7,
+      "change_pct": 1.58,
+      "ma5": 7619.88,
+      "ma20": 7700.12,
+      "ma60": 7696.2,
+      "ma200": 7320.35,
+      "boll_upper": 7851.25,
+      "boll_mid": 7700.12,
+      "boll_lower": 7548.99,
+      "rsi14": 50.44,
+      "macd_dif": -23.0,
+      "macd_dea": -11.06,
+      "macd_hist": -23.88,
       "high20": 7821.67,
       "low20": 7527.56,
       "high52w": 7844.52,
       "low52w": 6316.91,
-      "drawdown_52w_pct": -1.86,
-      "dev_ma200_pct": 5.17,
-      "return20_pct": -1.32,
-      "return60_pct": -0.38,
-      "volatility20": 12.79,
-      "volatility_percentile_3y": 59.7,
+      "drawdown_52w_pct": -1.99,
+      "dev_ma200_pct": 5.03,
+      "return20_pct": -1.45,
+      "return60_pct": -0.51,
+      "volatility20": 12.56,
+      "volatility_percentile_3y": 57.4,
       "price_position": {
         "score": 30,
         "state": "价格偏高",
@@ -7514,19 +7514,19 @@
         "state": "偏热",
         "meaning": "价格温度只描述价格位置，不参与估值结论。"
       },
-      "technical_score": 50,
-      "technical_state": "中性",
+      "technical_score": 30,
+      "technical_state": "偏弱",
       "technical_reasons": [
         "指数位于MA20下方",
-        "指数位于MA60上方",
+        "指数位于MA60下方",
         "MACD结构偏弱",
         "RSI处于偏强但未过热区间"
       ],
-      "market_score": 50,
-      "market_state": "中性",
+      "market_score": 30,
+      "market_state": "偏弱",
       "market_reasons": [
         "指数位于MA20下方",
-        "指数位于MA60上方",
+        "指数位于MA60下方",
         "MACD结构偏弱",
         "RSI处于偏强但未过热区间"
       ],
@@ -7536,19 +7536,19 @@
         "effective_sample_size": 119.9,
         "method": "历史相似状态加权频率",
         "confidence": "较高",
-        "average_distance": 0.213,
+        "average_distance": 0.219,
         "direction_threshold_pct": 3.0,
-        "up_pct": 26,
-        "sideways_pct": 61,
+        "up_pct": 27,
+        "sideways_pct": 60,
         "down_pct": 13,
         "path_label": "震荡偏强",
-        "average_return_pct": 0.85,
-        "median_return_pct": 1.36,
+        "average_return_pct": 0.83,
+        "median_return_pct": 1.23,
         "events": {
-          "above_ma20_pct": 87,
-          "above_ma60_pct": 93,
-          "break_low20_pct": 45,
-          "break_high20_pct": 62
+          "above_ma20_pct": 88,
+          "above_ma60_pct": 92,
+          "break_low20_pct": 43,
+          "break_high20_pct": 59
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
@@ -11073,14 +11073,14 @@
           "open": 7635.81,
           "high": 7715.57,
           "low": 7635.81,
-          "close": 7698.9,
-          "ma5": 7621.94,
-          "ma20": 7700.63,
-          "ma60": 7696.37,
-          "ma200": 7320.4,
-          "boll_upper": 7851.67,
-          "boll_mid": 7700.63,
-          "boll_lower": 7549.59
+          "close": 7688.62,
+          "ma5": 7619.88,
+          "ma20": 7700.12,
+          "ma60": 7696.2,
+          "ma200": 7320.35,
+          "boll_upper": 7851.25,
+          "boll_mid": 7700.12,
+          "boll_lower": 7548.99
         }
       ],
       "valuation": {
@@ -11094,7 +11094,7 @@
         "pe": 26.29,
         "pe_percentile_10y": 68.6,
         "earnings_yield_pct": 3.8,
-        "dividend_yield_pct": 0.99,
+        "dividend_yield_pct": 1.0,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
         "earnings_yield_minus_bond_pct": null,
@@ -11116,12 +11116,12 @@
         },
         "source": "Multpl / Robert Shiller dataset; SPY used as cross-check",
         "source_quality": "secondary",
-        "proxy_pe": 24.37,
+        "proxy_pe": 24.35,
         "reasons": [
           "当前可比口径PE约为 26.29",
           "当前PE位于近10年/可用历史约 68.6% 分位",
           "对应盈利收益率约 3.80%",
-          "ETF代理股息率约 0.99%"
+          "ETF代理股息率约 1.00%"
         ],
         "notes": [
           "当前PE历史序列使用Multpl所列TTM as-reported earnings口径；SPY PE仅用于交叉校验，不混入历史分位。",
@@ -11139,14 +11139,14 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 16.83,
+          "value": 16.61,
           "unit": "",
           "state": "正常",
-          "percentile_5y": 41.2
+          "percentile_5y": 39.1
         },
         "components": [
-          "VIX 当前为 16.83",
-          "5年历史分位约 41.2%"
+          "VIX 当前为 16.61",
+          "5年历史分位约 39.1%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
@@ -11158,7 +11158,7 @@
         "当前可比口径PE约为 26.29",
         "当前PE位于近10年/可用历史约 68.6% 分位",
         "对应盈利收益率约 3.80%",
-        "ETF代理股息率约 0.99%"
+        "ETF代理股息率约 1.00%"
       ],
       "strategy_basis": {
         "core": "valuation",
