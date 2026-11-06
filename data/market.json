@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-06 09:04:33",
+  "updated_at": "2026-11-06 15:55:37",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,7 +39,7 @@
     }
   },
   "macro": {
-    "updated_at": "2026-11-06 09:04:04",
+    "updated_at": "2026-11-06 15:55:10",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
@@ -79,32 +79,32 @@
       "name": "上证50",
       "symbol": "000016.SH",
       "source": "Tencent",
-      "date": "2026-11-05",
-      "close": 2811.16,
-      "previous_close": 2808.54,
-      "change": 2.62,
-      "change_pct": 0.09,
-      "ma5": 2778.52,
-      "ma20": 2771.93,
-      "ma60": 2853.77,
-      "ma200": 2930.98,
-      "boll_upper": 2822.72,
-      "boll_mid": 2771.93,
-      "boll_lower": 2721.15,
-      "rsi14": 54.13,
-      "macd_dif": -15.33,
-      "macd_dea": -25.41,
-      "macd_hist": 20.17,
+      "date": "2026-11-06",
+      "close": 2787.41,
+      "previous_close": 2811.16,
+      "change": -23.75,
+      "change_pct": -0.84,
+      "ma5": 2787.58,
+      "ma20": 2770.93,
+      "ma60": 2851.56,
+      "ma200": 2929.19,
+      "boll_upper": 2819.62,
+      "boll_mid": 2770.93,
+      "boll_lower": 2722.24,
+      "rsi14": 48.64,
+      "macd_dif": -13.36,
+      "macd_dea": -23.0,
+      "macd_hist": 19.28,
       "high20": 2832.68,
       "low20": 2676.64,
       "high52w": 3177.74,
       "low52w": 2676.64,
-      "drawdown_52w_pct": -11.54,
-      "dev_ma200_pct": -4.09,
-      "return20_pct": 0.22,
-      "return60_pct": -3.86,
-      "volatility20": 10.48,
-      "volatility_percentile_3y": 28.8,
+      "drawdown_52w_pct": -12.28,
+      "dev_ma200_pct": -4.84,
+      "return20_pct": -0.71,
+      "return60_pct": -4.55,
+      "volatility20": 10.89,
+      "volatility_percentile_3y": 32.8,
       "price_position": {
         "score": 55,
         "state": "价格中性",
@@ -120,60 +120,44 @@
         "state": "平衡",
         "meaning": "价格温度只描述价格位置，不参与估值结论。"
       },
-      "technical_score": 62,
+      "technical_score": 54,
       "technical_state": "中性",
       "technical_reasons": [
         "指数位于MA20上方",
         "指数位于MA60下方",
-        "MACD结构偏强",
-        "RSI处于偏强但未过热区间"
+        "MACD结构偏强"
       ],
-      "market_score": 62,
+      "market_score": 54,
       "market_state": "中性",
       "market_reasons": [
         "指数位于MA20上方",
         "指数位于MA60下方",
-        "MACD结构偏强",
-        "RSI处于偏强但未过热区间"
+        "MACD结构偏强"
       ],
       "scenario_probability": {
         "horizon_days": 20,
         "sample_size": 120,
-        "effective_sample_size": 119.7,
+        "effective_sample_size": 119.6,
         "method": "历史相似状态加权频率",
         "confidence": "较高",
-        "average_distance": 0.396,
+        "average_distance": 0.403,
         "direction_threshold_pct": 3.0,
-        "up_pct": 15,
-        "sideways_pct": 53,
-        "down_pct": 32,
+        "up_pct": 17,
+        "sideways_pct": 49,
+        "down_pct": 34,
         "path_label": "震荡偏弱",
         "average_return_pct": -0.94,
-        "median_return_pct": -1.03,
+        "median_return_pct": -1.39,
         "events": {
-          "above_ma20_pct": 91,
-          "above_ma60_pct": 78,
-          "break_low20_pct": 43,
-          "break_high20_pct": 60
+          "above_ma20_pct": 86,
+          "above_ma60_pct": 67,
+          "break_low20_pct": 52,
+          "break_high20_pct": 50
         },
         "strategy_role": "observation_only",
         "note": "该模块不参与估值、定投金额或卖出判断。"
       },
       "history": [
-        {
-          "date": "2025-10-23",
-          "open": 3002.0,
-          "high": 3030.8,
-          "low": 2985.43,
-          "close": 3026.9,
-          "ma5": 2997.38,
-          "ma20": 2969.54,
-          "ma60": 2908.2,
-          "ma200": 2742.14,
-          "boll_upper": 3042.34,
-          "boll_mid": 2969.54,
-          "boll_lower": 2896.73
-        },
         {
           "date": "2025-10-24",
           "open": 3031.92,
@@ -3687,6 +3671,20 @@
           "boll_upper": 2822.72,
           "boll_mid": 2771.93,
           "boll_lower": 2721.15
+        },
+        {
+          "date": "2026-11-06",
+          "open": 2774.62,
+          "high": 2787.41,
+          "low": 2762.57,
+          "close": 2787.41,
+          "ma5": 2787.58,
+          "ma20": 2770.93,
+          "ma60": 2851.56,
+          "ma200": 2929.19,
+          "boll_upper": 2819.62,
+          "boll_mid": 2770.93,
+          "boll_lower": 2722.24
         }
       ],
       "valuation": {
@@ -3697,9 +3695,9 @@
         "core_decision_enabled": false,
         "confidence": "较低",
         "pe_reliability": "正常",
-        "pe": 11.54,
+        "pe": 11.44,
         "pe_percentile_10y": 0.0,
-        "earnings_yield_pct": 8.66,
+        "earnings_yield_pct": 8.74,
         "dividend_yield_pct": null,
         "risk_free_yield_pct": null,
         "earnings_yield_to_bond": null,
@@ -3724,9 +3722,9 @@
         "source_quality": "official",
         "proxy_pe": null,
         "reasons": [
-          "当前可比口径PE约为 11.54",
+          "当前可比口径PE约为 11.44",
           "当前PE位于近10年/可用历史约 0.0% 分位",
-          "对应盈利收益率约 8.66%"
+          "对应盈利收益率约 8.74%"
         ],
         "notes": [
           "SSE官方月报PE基于上一年度年报并剔除亏损公司，不等同于严格PE-TTM。",
@@ -3756,9 +3754,9 @@
       "allocation_state": "明显低估",
       "allocation_action_label": "增强定投",
       "allocation_reasons": [
-        "当前可比口径PE约为 11.54",
+        "当前可比口径PE约为 11.44",
         "当前PE位于近10年/可用历史约 0.0% 分位",
-        "对应盈利收益率约 8.66%"
+        "对应盈利收益率约 8.74%"
       ],
       "strategy_basis": {
         "core": "valuation",
