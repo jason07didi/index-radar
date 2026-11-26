@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 17:10:35",
+  "updated_at": "2026-11-27 06:07:23",
   "strategy_version": "4.0-valuation-first",
   "theory": {
     "core": "估值决定长期行动，定期不定额决定低估区内投入强度",
@@ -39,15 +39,15 @@
     }
   },
   "macro": {
-    "updated_at": "2026-11-26 17:10:09",
+    "updated_at": "2026-11-27 06:06:56",
     "vix": {
       "name": "Cboe VIX",
       "symbol": "^VIX",
       "date": "2026-11-26",
-      "value": 26.67,
-      "change": -1.62,
-      "change_pct": -5.73,
-      "percentile_5y": 89.2,
+      "value": 26.8,
+      "change": -1.49,
+      "change_pct": -5.27,
+      "percentile_5y": 89.4,
       "state": "高波动",
       "sentiment_score": 25,
       "source": "Yahoo Finance / Cboe index"
@@ -142,16 +142,16 @@
         "confidence": "较高",
         "average_distance": 0.291,
         "direction_threshold_pct": 3.0,
-        "up_pct": 15,
-        "sideways_pct": 58,
-        "down_pct": 27,
+        "up_pct": 16,
+        "sideways_pct": 53,
+        "down_pct": 31,
         "path_label": "震荡偏弱",
-        "average_return_pct": -0.75,
-        "median_return_pct": -1.09,
+        "average_return_pct": -0.63,
+        "median_return_pct": -0.91,
         "events": {
-          "above_ma20_pct": 73,
-          "above_ma60_pct": 59,
-          "break_low20_pct": 68,
+          "above_ma20_pct": 75,
+          "above_ma60_pct": 58,
+          "break_low20_pct": 69,
           "break_high20_pct": 28
         },
         "strategy_role": "observation_only",
@@ -390,7 +390,7 @@
           "close": 3002.01,
           "ma5": 2982.32,
           "ma20": 2999.43,
-          "ma60": 2989.19,
+          "ma60": 2989.2,
           "ma200": 2804.33,
           "boll_upper": 3068.73,
           "boll_mid": 2999.43,
@@ -3245,11 +3245,11 @@
           "low": 2774.21,
           "close": 2776.92,
           "ma5": 2803.27,
-          "ma20": 2846.48,
+          "ma20": 2846.47,
           "ma60": 2897.31,
           "ma200": 2952.06,
           "boll_upper": 2921.59,
-          "boll_mid": 2846.48,
+          "boll_mid": 2846.47,
           "boll_lower": 2771.36
         },
         {
@@ -3525,11 +3525,11 @@
           "low": 2753.37,
           "close": 2765.54,
           "ma5": 2785.24,
-          "ma20": 2767.12,
+          "ma20": 2767.13,
           "ma60": 2842.72,
           "ma200": 2923.83,
           "boll_upper": 2807.65,
-          "boll_mid": 2767.12,
+          "boll_mid": 2767.13,
           "boll_lower": 2726.6
         },
         {
@@ -11136,14 +11136,14 @@
         "method": "VIX",
         "primary_indicator": {
           "name": "VIX",
-          "value": 26.67,
+          "value": 26.8,
           "unit": "",
           "state": "高波动",
-          "percentile_5y": 89.2
+          "percentile_5y": 89.4
         },
         "components": [
-          "VIX 当前为 26.67",
-          "5年历史分位约 89.2%"
+          "VIX 当前为 26.8",
+          "5年历史分位约 89.4%"
         ],
         "summary": "该指标反映风险偏好与波动预期，只用于描述市场环境，不参与估值或定投金额。",
         "note": "美国10年期国债已从情绪模型中移出，归入利率与估值环境。"
